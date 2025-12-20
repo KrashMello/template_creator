@@ -6,6 +6,7 @@
     <title></title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+    <script src="start.js"></script>
   </head>
   <body>
     <main class="flex flex-row items-center justify-center h-screen">
@@ -13,8 +14,13 @@
         <textarea id="data-text-area" class="h-full w-full border-2 border-red-300" value='' ></textarea>
         <textarea id='style-text-area' class="h-full w-full border-2 border-blue-300" value='' ></textarea>
         <textarea id='object-text-area' class="h-full w-full border-2 border-orange-300" value='' ></textarea>
+        <li id="row" class="bg-blue-500 text-white px-4 py-2 rounded-md" ondragstart="dragstartHandler(event)" draggable="true">row</li>
+        <li id="col" class="bg-red-500 text-white px-4 py-2 rounded-md" ondragstart="dragstartHandler(event)" draggable="true">col</li>
       </div>
-      <iframe class='w-full h-full' ></iframe>
+      <div class='w-full h-full'>
+        <div id="frame" class="flex flex-col w-full h-screen" ondrop="dropHandler(event)" ondragover="dragoverHandler(event)" ondragleave="dragLeaveHandler(event)" ondragenter="dragEnterHandler(event)" onchange="frameChange(event)">
+        </div>
+      </div>
     </main> 
     <script type="module" src="script.js"></script>
   </body>
