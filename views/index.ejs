@@ -11,15 +11,21 @@
   <body>
     <main class="flex flex-row items-center justify-center h-screen">
       <div class="w-[30%] h-full flex flex-col">
-        <textarea id="data-text-area" class="h-full w-full border-2 border-red-300" value='' ></textarea>
-        <textarea id='style-text-area' class="h-full w-full border-2 border-blue-300" value='' ></textarea>
-        <textarea id='object-text-area' class="h-full w-full border-2 border-orange-300" value='' ></textarea>
         <li id="row" class="bg-blue-500 text-white px-4 py-2 rounded-md" ondragstart="dragstartHandler(event)" draggable="true">row</li>
         <li id="col" class="bg-red-500 text-white px-4 py-2 rounded-md" ondragstart="dragstartHandler(event)" draggable="true">col</li>
+        <li id="paragraph" class="bg-orange-500 text-white px-4 py-2 rounded-md" ondragstart="dragstartHandler(event)" draggable="true">p</li>
+        <button class="bg-blue-500 text-white px-4 py-2 rounded-md" onclick="previewHandler(event)">preview</button>
       </div>
       <div class='w-full h-full'>
-        <div id="frame" class="flex flex-col w-full h-screen" ondrop="dropHandler(event)" ondragover="dragoverHandler(event)" ondragleave="dragLeaveHandler(event)" ondragenter="dragEnterHandler(event)" onchange="frameChange(event)">
-        </div>
+        <div id="frame" class="flex flex-col w-full h-screen" ondrop="dropHandler(event)" ondragover="dragoverHandler(event)" ondragleave="dragLeaveHandler(event)" ondragenter="dragEnterHandler(event)" onchange="frameChange(event)"></div>
+        <div id="preview" class="flex flex-col w-full h-screen hidden"></div>
+      </div>
+      <div id="options_sidebar" class="w-[20%] h-full flex flex-col">
+        <form class="flex flex-col gap-2"  onsubmit="saveVar(event)">
+          <input type="text" id="var-key" class="h-12 w-full border-2 border-green-300" value='' >
+          <input type="text" id="var-value" class="h-12 w-full border-2 border-green-300" value='' >
+          <button class="bg-green-500 text-white px-4 py-2 rounded-md" type="submit">save</button>
+        </form>
       </div>
     </main> 
     <script type="module" src="script.js"></script>
