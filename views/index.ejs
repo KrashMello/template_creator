@@ -15,20 +15,50 @@
             </div>
         </div>
 
-        <div class="col-span-6  bg-slate-300 p-8 rounded-xl shadow-lg h-full overflow-auto border-4 border-dashed border-gray-300" 
-             id="dropzone"
-          ondragenter="onDragEnter(event)"
-          ondragleave="onDragLeave(event)"
-             >
-            <div id="preview" class="min-h-full" ondragover="onDragOver(event)" 
-             ondrop="onDrop(event)"
-        >
-            </div>
+        <div class="col-span-6 gap-2 flex flex-col bg-slate-300 p-8 rounded-xl shadow-lg h-full overflow-auto border-4 border-dashed border-gray-300"
+          id="dropzone">
+          <ol class="flex flex-row gap-2">
+              <li class="">
+                  <button class="bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg" onclick="showPreview(event)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 48 48"><!-- Icon from IconPark Outline by ByteDance - https://github.com/bytedance/IconPark/blob/master/LICENSE --><g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M24 36c11.046 0 20-12 20-12s-8.954-12-20-12S4 24 4 24s8.954 12 20 12Z"/><path d="M24 29a5 5 0 1 0 0-10a5 5 0 0 0 0 10Z"/></g></svg></button>
+              </li>
+              <li class="">
+                  <button class="bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg" onclick="showScheme(event)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE --><path fill="currentColor" d="m8 18l-6-6l6-6l1.425 1.425l-4.6 4.6L9.4 16.6zm8 0l-1.425-1.425l4.6-4.6L14.6 7.4L16 6l6 6z"/></svg></button>
+              </li>
+          </ol>
+          <div id="preview" class="h-full overflow-y-auto bg-slate-100 rounded-lg" 
+            ondragover="onDragOver(event)" 
+            ondragenter="onDragEnter(event)"
+            ondragleave="onDragLeave(event)"
+            ondrop="onDrop(event)"
+          ></div>
+          <div id='schema' class='hidden flex flex-col'>
+              <h2 class="text-xl font-bold mb-4 text-slate-800">Schema</h2>
+              <pre id="schema-display" class="flex-1 max-h-[70dvh]  bg-slate-50 p-4 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"></pre>
+          </div>
         </div>
-
         <div class="col-span-3 bg-slate-300 p-6 rounded-xl shadow-lg h-full overflow-auto">
-            <h2 class="text-xl font-bold mb-4 text-slate-800">Schema</h2>
-            <pre id="schema-display" class="bg-gray-50 p-4 rounded-lg text-sm font-mono text-gray-700 overflow-auto text-xs"></pre>
+          <div id="options" class="hidden flex flex-col gap-4">
+            <h2 class="text-xl font-bold mb-4 text-slate-800">Options</h2>
+            <form type="submit" class="flex flex-col gap-2" onsubmit="saveDataOptions(event)">
+              <div class="flex flex-col gap-2">
+                <label for="options-class">class</label>
+                <input type="text" id="options-class" class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs" placeholder="classes">
+              </div>
+              <div class="flex flex-col gap-2">
+                <label for="options-content">content</label>
+                <input type="text" id="options-content" class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs" placeholder="contenct">
+              </div>
+              <div class="flex flex-col gap-2">
+                <label for="options-columns">columns</label>
+                <textarea id="options-columns" class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs" placeholder="columns"></textarea>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label for="options-rows">rows</label>
+                <textarea id="options-rows" class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs" placeholder="rows"></textarea>
+              </div>
+              <button type="submit" class="bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg" onclick="saveDataOptions(event)">Save</button>
+            </form>
+          </div>
         </div>
     </div>
 
