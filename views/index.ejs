@@ -1,33 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
+<html lang="es">
+<head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title></title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
-    <script src="start.js"></script>
-  </head>
-  <body>
-    <main class="flex flex-row items-center justify-center h-screen">
-      <div class="w-[30%] h-full flex flex-col">
-        <li id="row" class="bg-blue-500 text-white px-4 py-2 rounded-md" ondragstart="dragstartHandler(event)" draggable="true">row</li>
-        <li id="col" class="bg-red-500 text-white px-4 py-2 rounded-md" ondragstart="dragstartHandler(event)" draggable="true">col</li>
-        <li id="paragraph" class="bg-orange-500 text-white px-4 py-2 rounded-md" ondragstart="dragstartHandler(event)" draggable="true">p</li>
-        <button class="bg-blue-500 text-white px-4 py-2 rounded-md" onclick="previewHandler(event)">preview</button>
-      </div>
-      <div class='w-full h-full'>
-        <div id="frame" class="flex flex-col w-full h-screen" ondrop="dropHandler(event)" ondragover="dragoverHandler(event)" ondragleave="dragLeaveHandler(event)" ondragenter="dragEnterHandler(event)" onchange="frameChange(event)"></div>
-        <div id="preview" class="flex flex-col w-full h-screen hidden"></div>
-      </div>
-      <div id="options_sidebar" class="w-[20%] h-full flex flex-col">
-        <form class="flex flex-col gap-2"  onsubmit="saveVar(event)">
-          <input type="text" id="var-key" class="h-12 w-full border-2 border-green-300" value='' >
-          <input type="text" id="var-value" class="h-12 w-full border-2 border-green-300" value='' >
-          <button class="bg-green-500 text-white px-4 py-2 rounded-md" type="submit">save</button>
-        </form>
-      </div>
-    </main> 
-    <script type="module" src="script.js"></script>
-  </body>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-12 gap-8">
+        <!-- Panel de Componentes -->
+        <div class="col-span-3 bg-white p-6 rounded-xl shadow-lg h-[80vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-6 text-gray-800">Componentes</h2>
+            <div id="componentes" class="space-y-3">
+            </div>
+        </div>
+
+        <div class="col-span-6 bg-white p-8 rounded-xl shadow-lg h-[80vh] overflow-auto border-4 border-dashed border-gray-300" 
+             id="dropzone"
+             ondragover="onDragOver(event)" 
+             ondrop="onDrop(event)">
+            <div id="preview" class="min-h-full">
+            </div>
+        </div>
+
+        <div class="col-span-3 bg-white p-6 rounded-xl shadow-lg h-[80vh] overflow-auto">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Schema</h2>
+            <pre id="schema-display" class="bg-gray-50 p-4 rounded-lg text-sm font-mono text-gray-700 overflow-auto text-xs"></pre>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
 </html>
