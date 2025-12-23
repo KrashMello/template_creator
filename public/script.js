@@ -191,16 +191,26 @@ function insertElementAtPath(root, element, path, position) {
   current.children.splice(position, 0, element);
 }
 
+function replace(root, element) {
+  return root.children.map((v) => {
+    if (v.id !== element.id) {
+      v.children = replace(v, element)
+      return v
+    } else {
+      return element
+    }
+  })
+}
+
 function updateElementAtPath(root, element, path) {
   let current = root;
 
   if (path.length > 1) {
-    for (let i = 0; i < path.length; i++) {
-      current = current.children[path[i]];
-    }
+    schema.children = replace(root, element)
   } else
-    schema[path[0]] = element
+    schema.children[path[0]] = element
 }
+
 function renderPreview() {
   try {
     const html = layoutTemplate(schema);
@@ -292,11 +302,11 @@ function saveDataOptions(event) {
     options_class.value = ''
   }
   if (options_columns) {
-    data.columns = options_columns.value
+    data.columns = JSON.parse(options_columns.value)
     options_columns.value = ''
   }
   if (options_rows) {
-    data.rows = options_rows.value
+    data.rows = JSON.parse(options_rows.value)
     options_rows.value = ''
   }
   if (options_content) {
