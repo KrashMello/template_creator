@@ -11,7 +11,7 @@ const componentes = [
   { tag: 'p', nombre: 'Párrafo', icon: paragraph, data: { content: 'paragraph', class: "p-2 text-slate-800" } },
   { tag: 'table', nombre: 'Tabla', icon: table, data: { table: true, columns: ["column 1", "column 2"], rows: [['column-row-1', 'column-row-2']], class: "w-full text-sm text-left rtl:text-right text-body" } },
   { tag: 'div', nombre: 'Row', icon: row, data: { class: 'flex flex-row gap-4 min-h-7 w-full px-2' } },
-  { tag: 'div', nombre: 'Columna', icon: col, data: { class: 'flex flex-col gap-4min-h-7 w-full ' } }
+  { tag: 'div', nombre: 'Columna', icon: col, data: { class: 'flex flex-col gap-4 min-h-7 w-full ' } }
 ];
 
 Handlebars.registerHelper('json', function (context) {
@@ -75,7 +75,7 @@ function init() {
 function renderComponentes() {
   const container = document.getElementById('componentes');
   container.innerHTML = componentes.map(comp => `
-      <div class="componente px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 cursor-grab active:cursor-grabbing bg-gradient-to-r from-blue-50 to-indigo-50 transition-all draggable-component" 
+      <div class="componente px-4 py-2 rounded-lg hover:border-blue-400 cursor-grab active:cursor-grabbing bg-gradient-to-r from-blue-50 to-indigo-50 transition-all draggable-component" 
             draggable="true" 
             data-tag="${comp.tag}" 
             data-nombre="${comp.nombre}" 
@@ -105,56 +105,102 @@ function onDragStart(event) {
 
 function onDragEnter(event) {
   event.preventDefault();
-  event.currentTarget.classList.add('border-1', 'border-slate-600', 'bg-slate-400');
+  event.stopPropagation();
+
+  const target = event.target.closest('.draggable-component');
+
+  if (target) {
+    target.classList.add('border-slate-400', 'bg-blue-50', 'border-solid');
+    target.classList.remove('border-dashed', 'border-slate-400');
+  }
 }
 
 function onDragLeave(event) {
   event.preventDefault();
-  event.currentTarget.classList.remove('border-1', 'border-slate-600', 'bg-slate-400');
+  event.stopPropagation();
+
+  const target = event.target.closest('.draggable-component');
+
+  if (target) {
+    target.classList.remove('border-slate-400', 'bg-blue-50', 'border-solid');
+    target.classList.add('border-dashed', 'border-slate-400');
+  }
 }
 
 function onDrop(event) {
   event.preventDefault();
-  event.currentTarget.classList.remove('border-2', 'border-slate-600', 'bg-slate-400');
+  event.stopPropagation();
 
-  let transferData = JSON.parse(event.dataTransfer.getData('text/plain'));
-  let action = null
-  let id = null
-  if (transferData.schemaData) {
-    id = transferData.id
-    action = transferData.action
-    transferData = transferData.schemaData
+  const dropTarget = event.target.closest('.draggable-component');
+  if (dropTarget) {
+    dropTarget.classList.remove('border-slate-400', 'bg-blue-50', 'border-solid');
+    dropTarget.classList.add('border-dashed', 'border-slate-400');
   }
+
+  let transferData;
+  try {
+    transferData = JSON.parse(event.dataTransfer.getData('text/plain'));
+  } catch (e) { return; }
+
+  let action = transferData.action || null;
+  let id = transferData.id || null;
+  let schemaData = transferData.schemaData || transferData;
+
+  if (action === 'move' && dropTarget && dropTarget.dataset.id === id) {
+    console.warn("Operación cancelada: No puedes soltar un elemento sobre sí mismo.");
+    return;
+  }
+
+  let nuevoElemento;
   if (action === null) {
-    // Crear nuevo elemento en schema
-    const nuevoElemento = {
+    nuevoElemento = {
       id: crypto.randomUUID().split('-').join(''),
-      tag: transferData.tag,
-      data: {
-        ...transferData.data,
-        class: transferData.data.class ? transferData.data.class : ""
-      },
+      tag: schemaData.tag,
+      data: { ...schemaData.data },
       children: []
     };
-    // Insertar en posición del mouse (simplificado)
-    schema.children.push(nuevoElemento);
-  } else if (action === 'move') {
+  } else {
     const sourcePath = findPathById(schema, id);
-    const targetPath = findPathByElement(schema, event.target);
-    const rect = document.getElementById(id).getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    console.log(event.target.parentNode)
-    const isBefore = x < rect.width / 2 || y < rect.height / 2;
-    if (sourcePath && targetPath && targetPath.join('') !== sourcePath.join('')) {
-      removeElementAtPath(schema, sourcePath);
-      insertElementAtPath(schema, transferData, findPathByElement(schema, event.target), isBefore ? 1 : 0);
-    }
+    if (!sourcePath) return;
+
+    nuevoElemento = schemaData;
+
+    removeElementAtPath(schema, sourcePath);
   }
+
+  if (dropTarget) {
+    const targetId = dropTarget.dataset.id;
+    const targetPath = findPathById(schema, targetId);
+
+    const rect = dropTarget.getBoundingClientRect();
+    const relativeY = event.clientY - rect.top;
+    const isAfter = relativeY > rect.height / 2;
+
+    const targetSchema = getElementByPath(schema, targetPath);
+
+    if (targetSchema && targetSchema.tag === 'div') {
+      if (!targetSchema.children) targetSchema.children = [];
+      targetSchema.children.push(nuevoElemento);
+    } else {
+      const parentPath = targetPath.slice(0, -1);
+      const indexInParent = targetPath[targetPath.length - 1];
+      const finalIndex = isAfter ? indexInParent + 1 : indexInParent;
+      insertElementAtPath(schema, nuevoElemento, parentPath, finalIndex);
+    }
+  } else {
+    schema.children.push(nuevoElemento);
+  }
+
   renderPreview();
   updateSchemaDisplay();
 }
-
+function getElementByPath(root, path) {
+  let current = root;
+  for (let index of path) {
+    current = current.children[index];
+  }
+  return current;
+}
 function findPathById(root, id) {
   if (root.id === id) return [];
 
@@ -178,27 +224,23 @@ function findPathByElement(root, element) {
   return [];
 }
 
-function removeElementAtPath(root, path) {
-  if (path.length === 0) return;
-
-  let current = root;
-  for (let i = 0; i < path.length - 1; i++) {
-    current = current.children[path[i]];
+function insertElementAtPath(root, element, path, index) {
+  let parent = root;
+  for (let i = 0; i < path.length; i++) {
+    parent = parent.children[path[i]];
   }
-
-  const lastIndex = path[path.length - 1];
-  current.children.splice(lastIndex, 1);
+  if (!parent.children) parent.children = [];
+  parent.children.splice(index, 0, element);
 }
 
-function insertElementAtPath(root, element, path, position) {
-  let current = root;
-  if (path.length !== 0) {
-    for (let i = 0; i < path.length; i++) {
-      current = current.children[path[i]];
-    }
-    if (!current.children) current.children = [];
+function removeElementAtPath(root, path) {
+  if (!path || path.length === 0) return;
+  let parent = root;
+  for (let i = 0; i < path.length - 1; i++) {
+    parent = parent.children[path[i]];
   }
-  current.children.splice(position, 0, element);
+  const lastIndex = path[path.length - 1];
+  parent.children.splice(lastIndex, 1);
 }
 
 function replace(root, element) {
@@ -259,45 +301,59 @@ function updateSchemaDisplay() {
 
 function showPreview(event) {
   event.preventDefault();
+  event.stopPropagation();
   document.getElementById('preview').classList.remove('hidden')
   document.getElementById('schema').classList.add('hidden')
 }
 
 function showScheme(event) {
   event.preventDefault();
+  event.stopPropagation();
   document.getElementById('preview').classList.add('hidden')
   document.getElementById('schema').classList.remove('hidden')
 }
 
 function selectedElement(event) {
-  event.preventDefault();
-  selected_element = event.target
-  selected_element.classList.add('border-2', 'border-blue-400', 'bg-blue-50')
-  const element_schema = JSON.parse(selected_element.dataset.schema)
-  if (element_schema && ['p', 'table'].includes(element_schema.tag)) {
-    const options_class = document.getElementById('options-class')
-    const options_content = document.getElementById('options-content')
-    const options_columns = document.getElementById('options-columns')
-    const options_rows = document.getElementById('options-rows')
-    const options = document.getElementById('options')
-    options.classList.remove('hidden')
-    if (element_schema.data.class) {
-      options_class.value = element_schema.data.class
-    }
-    if (element_schema.data.content) {
-      options_content.value = element_schema.data.content
-    }
-    if (element_schema.data.columns) {
-      options_columns.value = JSON.stringify(element_schema.data.columns)
-    }
-    if (element_schema.data.rows) {
-      options_rows.value = JSON.stringify(element_schema.data.rows)
+  event.stopPropagation();
+
+  const component = event.target.closest('.draggable-component');
+
+  if (!component) return;
+
+  if (selected_element) {
+    selected_element.classList.remove('border-2', 'border-blue-400', 'bg-blue-50');
+  }
+
+  selected_element = component;
+  selected_element.classList.add('border-2', 'border-blue-400', 'bg-blue-50');
+
+  const element_schema = JSON.parse(selected_element.dataset.schema);
+
+  if (element_schema) {
+    const options = document.getElementById('options');
+    const options_class = document.getElementById('options-class');
+    const options_content = document.getElementById('options-content');
+    const options_columns = document.getElementById('options-columns');
+    const options_rows = document.getElementById('options-rows');
+
+    options.classList.remove('hidden');
+
+    options_class.value = element_schema.data.class || '';
+    options_content.value = element_schema.data.content || '';
+
+    if (element_schema.tag === 'table') {
+      options_columns.value = JSON.stringify(element_schema.data.columns || []);
+      options_rows.value = JSON.stringify(element_schema.data.rows || []);
+    } else {
+      options_columns.value = '';
+      options_rows.value = '';
     }
   }
 }
 
 function saveDataOptions(event) {
   event.preventDefault();
+  event.stopPropagation();
   const options_class = document.getElementById('options-class')
   const options_columns = document.getElementById('options-columns')
   const options_rows = document.getElementById('options-rows')
