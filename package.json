@@ -1,16 +1,24 @@
 {
   "name": "test_frame",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Layout Builder with Nuxt.js",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
   },
-  "author": "",
-  "license": "ISC",
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "tailwindcss": "^4.1.18",
+    "nuxt": "^4.2.2",
+    "@nuxt/content": "^3.10.0",
+    "better-sqlite3": "^12.6.2"
+  },
   "dependencies": {
-    "ejs": "^3.1.10",
-    "express": "^5.2.1",
     "handlebars": "^4.7.8"
   }
 }
