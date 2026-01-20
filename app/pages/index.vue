@@ -59,6 +59,12 @@
             class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"
             placeholder="columns"></textarea>
         </div>
+        <div :class="`flex-col gap-2 ${options.src ? 'flex' : 'hidden'}`">
+          <label for="options-src">file</label>
+          <textarea id="options-src" v-model="options.src"
+            class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"
+            placeholder="src"></textarea>
+        </div>
         <div :class="` flex-col gap-2 ${options.rows ? 'flex' : 'hidden'}`">
           <label for="options-rows">rows</label>
           <textarea id="options-rows" v-model="options.rows"
@@ -89,7 +95,8 @@ const options = ref({
   class: '',
   content: '',
   columns: '',
-  rows: ''
+  rows: '',
+  src: ''
 })
 
 const renderPreview = () => {
@@ -332,14 +339,9 @@ const selectedElementClick = (event) => {
   if (element_schema) {
     options.value.class = element_schema.data.class || ''
     options.value.content = element_schema.data.content || ''
-
-    if (element_schema.tag === 'table') {
-      options.value.columns = JSON.stringify(element_schema.data.columns || [])
-      options.value.rows = JSON.stringify(element_schema.data.rows || [])
-    } else {
-      options.value.columns = ''
-      options.value.rows = ''
-    }
+    options.value.columns = JSON.stringify(element_schema.data.columns)
+    options.value.rows = JSON.stringify(element_schema.data.rows)
+    options.value.src = element_schema.data.src
   }
 }
 
