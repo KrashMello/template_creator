@@ -1,102 +1,80 @@
 <template>
-  <div class="bg-slate-800 p-8 min-h-screen flex flex-col">
-    <div class="grid grid-cols-12 gap-8 h-full flex-1">
-      <div class="col-span-3 bg-slate-300 p-6 rounded-xl shadow-lg h-full overflow-y-auto">
-        <h2 class="text-xl font-bold mb-6 text-slate-800">Componentes</h2>
-        <div id="componentes" class="space-y-3">
-          <div v-for="comp in componentes" :key="comp.nombre"
-            class="componente px-4 py-2 rounded-lg hover:border-blue-400 cursor-grab active:cursor-grabbing bg-gradient-to-r from-blue-50 to-indigo-50 transition-all draggable-component"
-            draggable="true" :data-tag="comp.tag" :data-nombre="comp.nombre" :data-data="JSON.stringify(comp.data)"
-            @dragenter="onDragEnter" @dragleave="onDragLeave" @dragstart="onDragStart">
-            <div class="flex items-center space-x-3">
-              <span class="text-2xl text-slate-500" v-html="comp.icon"></span>
-              <div>
-                <div class="font-medium text-slate-500">{{ comp.nombre }}</div>
-                <div class="text-xs text-slate-400">{{ comp.tag }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  <div class="col-span-3 bg-slate-300 p-6 rounded-xl shadow-lg h-full overflow-y-auto">
+    <h2 class="text-xl font-bold mb-6 text-slate-800">Componentes</h2>
+    <layout-left-bar />
+  </div>
 
-      <div
-        class="col-span-6 gap-2 flex flex-col bg-slate-300 p-8 rounded-xl shadow-lg h-full overflow-auto border-4 border-dashed border-gray-300"
-        id="dropzone">
-        <ol class="flex flex-row gap-2">
-          <li>
-            <button class="bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg" @click="showPreview">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 48 48">
-                <g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4">
-                  <path d="M24 36c11.046 0 20-12 20-12s-8.954-12-20-12S4 24 4 24s8.954 12 20 12Z" />
-                  <path d="M24 29a5 5 0 1 0 0-10a5 5 0 0 0 0 10Z" />
-                </g>
-              </svg>
-            </button>
-          </li>
-          <li>
-            <button class="bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg" @click="showScheme">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                <path fill="currentColor"
-                  d="m8 18l-6-6l6-6l1.425 1.425l-4.6 4.6L9.4 16.6zm8 0l-1.425-1.425l4.6-4.6L14.6 7.4L16 6l6 6z" />
-              </svg>
-            </button>
-          </li>
-        </ol>
-        <div id="preview" class="h-full overflow-y-auto bg-slate-100 rounded-lg" :class="{ 'hidden': !showPreviewMode }"
-          v-html="previewHtml" @dragenter="onDragEnter" @dragleave="onDragLeave" @drop="onDrop"></div>
-        <div id='schema' class='flex-col' :class="`${showPreviewMode ? 'hidden' : 'flex'}`">
-          <h2 class="text-xl font-bold mb-4 text-slate-800">Schema</h2>
-          <pre id="schema-display"
-            class="flex-1 max-h-[70dvh] bg-slate-50 p-4 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs">
-            {{ schemaJson }}</pre>
-        </div>
-      </div>
+  <div
+    class="col-span-6 gap-2 flex flex-col bg-slate-300 p-8 rounded-xl shadow-lg h-full overflow-auto border-4 border-dashed border-gray-300"
+    id="dropzone">
+    <ol class="flex flex-row gap-2">
+      <li>
+        <button class="bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg" @click="showPreview">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 48 48">
+            <g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4">
+              <path d="M24 36c11.046 0 20-12 20-12s-8.954-12-20-12S4 24 4 24s8.954 12 20 12Z" />
+              <path d="M24 29a5 5 0 1 0 0-10a5 5 0 0 0 0 10Z" />
+            </g>
+          </svg>
+        </button>
+      </li>
+      <li>
+        <button class="bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg" @click="showScheme">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+            <path fill="currentColor"
+              d="m8 18l-6-6l6-6l1.425 1.425l-4.6 4.6L9.4 16.6zm8 0l-1.425-1.425l4.6-4.6L14.6 7.4L16 6l6 6z" />
+          </svg>
+        </button>
+      </li>
+    </ol>
+    <div id="preview" class="h-full overflow-y-auto bg-slate-100 rounded-lg" :class="{ 'hidden': !showPreviewMode }"
+      v-html="previewHtml" @dragenter="onDragEnter" @dragleave="onDragLeave" @drop="onDrop"></div>
+    <div id='schema' class='flex-col' :class="`${showPreviewMode ? 'hidden' : 'flex'}`">
+      <h2 class="text-xl font-bold mb-4 text-slate-800">Schema</h2>
+      <pre id="schema-display"
+        class="flex-1 max-h-[70dvh] bg-slate-50 p-4 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs">
+        {{ schemaJson }}</pre>
+    </div>
+  </div>
 
-      <div class="col-span-3 bg-slate-300 p-6 rounded-xl shadow-lg h-full overflow-auto">
-        <div id="options" class=" flex flex-col gap-4" :class="{ 'hidden': !selectedElement }">
-          <h2 class="text-xl font-bold mb-4 text-slate-800">Options</h2>
-          <form @submit.prevent="saveDataOptions" class="flex flex-col gap-2">
-            <div class="flex flex-col gap-2">
-              <label for="options-class">class</label>
-              <input type="text" id="options-class" v-model="options.class"
-                class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"
-                placeholder="classes">
-            </div>
-            <div class="flex flex-col gap-2">
-              <label for="options-content">content</label>
-              <input type="text" id="options-content" v-model="options.content"
-                class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"
-                placeholder="content">
-            </div>
-            <div class="flex flex-col gap-2">
-              <label for="options-columns">columns</label>
-              <textarea id="options-columns" v-model="options.columns"
-                class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"
-                placeholder="columns"></textarea>
-            </div>
-            <div class="flex flex-col gap-2">
-              <label for="options-rows">rows</label>
-              <textarea id="options-rows" v-model="options.rows"
-                class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"
-                placeholder="rows"></textarea>
-            </div>
-            <button type="submit"
-              class="bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg">Save</button>
-          </form>
+  <div class="col-span-3 bg-slate-300 p-6 rounded-xl shadow-lg h-full overflow-auto">
+    <div id="options" class=" flex flex-col gap-4">
+      <h2 class="text-xl font-bold mb-4 text-slate-800">Options</h2>
+      <form @submit.prevent="saveDataOptions" :class="`${!selectedElement ? 'hidden' : 'flex'} flex-col gap-2`">
+        <div class="flex flex-col gap-2">
+          <label for="options-class">class</label>
+          <input type="text" id="options-class" v-model="options.class"
+            class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"
+            placeholder="classes">
         </div>
-      </div>
+        <div :class="` flex-col gap-2 ${options.content ? 'flex' : 'hidden'}`">
+          <label for="options-content">content</label>
+          <input type="text" id="options-content" v-model="options.content"
+            class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"
+            placeholder="content">
+        </div>
+        <div :class="` flex-col gap-2 ${options.columns ? 'flex' : 'hidden'}`">
+          <label for="options-columns">columns</label>
+          <textarea id="options-columns" v-model="options.columns"
+            class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"
+            placeholder="columns"></textarea>
+        </div>
+        <div :class="` flex-col gap-2 ${options.rows ? 'flex' : 'hidden'}`">
+          <label for="options-rows">rows</label>
+          <textarea id="options-rows" v-model="options.rows"
+            class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"
+            placeholder="rows"></textarea>
+        </div>
+        <button type="submit" class="bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg">Save</button>
+        <button type="button" class="bg-red-500 hover:bg-red-700 text-white font-bold p-2 rounded-lg"
+          @click="deleteElement">Delete</button>
+      </form>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
-
-const col = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path fill="currentColor" d="M29 7.5A4.5 4.5 0 0 0 24.5 3h-17A4.5 4.5 0 0 0 3 7.5v17A4.5 4.5 0 0 0 7.5 29h17a4.5 4.5 0 0 0 4.5-4.5zM16 5v22H7.5A2.5 2.5 0 0 1 5 24.5v-17A2.5 2.5 0 0 1 7.5 5z"/></svg>`
-const row = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 16 16"><path fill="currentColor" d="M4.5 2A2.5 2.5 0 0 0 2 4.5v7A2.5 2.5 0 0 0 4.5 14h7a2.5 2.5 0 0 0 2.5-2.5v-7A2.5 2.5 0 0 0 11.5 2zM3 4.5A1.5 1.5 0 0 1 4.5 3h7A1.5 1.5 0 0 1 13 4.5V8H3z"/></svg>`
-const paragraph = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M9 20v-6q-2.075 0-3.537-1.463T4 9t1.463-3.537T9 4h9v2h-2v14h-2V6h-3v14z"/></svg>`
-const table = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M3 6.25A3.25 3.25 0 0 1 6.25 3h11.5A3.25 3.25 0 0 1 21 6.25v11.5A3.25 3.25 0 0 1 17.75 21H6.25A3.25 3.25 0 0 1 3 17.75zM6.25 4.5A1.75 1.75 0 0 0 4.5 6.25V8.5h4v-4zM4.5 10v4h4v-4zm5.5 0v4h4v-4zm5.5 0v4h4v-4zM14 15.5h-4v4h4zm1.5 4h2.25a1.75 1.75 0 0 0 1.75-1.75V15.5h-4zm0-11h4V6.25a1.75 1.75 0 0 0-1.75-1.75H15.5zm-1.5-4h-4v4h4zm-9.5 11v2.25c0 .966.784 1.75 1.75 1.75H8.5v-4z"/></svg>`
-
 const schema = ref({
   type: 'container',
   children: []
@@ -113,13 +91,6 @@ const options = ref({
   columns: '',
   rows: ''
 })
-
-const componentes = ref([
-  { tag: 'p', nombre: 'Párrafo', icon: paragraph, data: { content: 'paragraph', class: "p-2 text-slate-800" } },
-  { tag: 'table', nombre: 'Tabla', icon: table, data: { table: true, columns: ["column 1", "column 2"], rows: [['column-row-1', 'column-row-2']], class: "w-full text-sm text-left rtl:text-right text-body" } },
-  { tag: 'div', nombre: 'Row', icon: row, data: { class: 'flex flex-row gap-4 min-h-7 w-full px-2' } },
-  { tag: 'div', nombre: 'Columna', icon: col, data: { class: 'flex flex-col gap-4 min-h-7 w-full ' } }
-])
 
 const renderPreview = () => {
   try {
@@ -147,19 +118,48 @@ const generateLayoutHtml = (schema) => {
 }
 
 const generateElementHtml = (element) => {
-  let html = `<div 
-    id="${element.id}"
-    class="draggable-component p-2 border-2 border-dashed border-slate-300 rounded-lg hover:border-slate-400 cursor-grab active:cursor-grabbing bg-gradient-to-r from-slate-50 to-indigo-50 transition-all"
-    draggable="true" 
-    data-schema='${JSON.stringify(element)}' 
-    data-id="${element.id}" 
-    onclick="selectedElement(event)">
-    <${element.tag}
-    class="${element.data.class}"
-    >`
-
-  if (element.data.table) {
-    html += `<thead class="text-sm text-body bg-slate-300 border-b rounded-base border-default">
+  let html = ''
+  let gen = {
+    img: () => {
+      html = `<div 
+      id="${element.id}"
+      class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50 w-fit"
+      draggable="true"
+      data-schema='${JSON.stringify(element)}'
+      data-id="${element.id}"
+      onclick="selectedElement(event)">
+      <${element.tag}
+      src='${element.data.src}'
+      class="${element.data.class}"
+      />
+      </div>`
+    },
+    div: () => {
+      html = `<${element.tag}
+          class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab ${element.data.class}"
+          draggable="true"
+          data-schema='${JSON.stringify(element)}'
+          data-id="${element.id}"
+          onclick="selectedElement(event)"
+        >`
+      if (element.children && element.children.length > 0) {
+        html += element.children.map(child => generateElementHtml(child)).join('')
+      }
+      html += `</${element.tag}>`
+    },
+    table: () => {
+      html = `<div
+        id="${element.id}"
+        class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50 w-fit"
+        draggable="true"
+        data-schema='${JSON.stringify(element)}'
+        data-id="${element.id}"
+        onclick="selectedElement(event)">
+          <${element.tag}
+          class="${element.data.class}"
+          >`
+      if (element.data.table) {
+        html += `<thead class="text-sm text-body bg-slate-300 border-b rounded-base border-default">
       <tr>
         ${element.data.columns.map(col => `<th class="px-6 py-3 font-medium">${col}</th>`).join('')}
       </tr>
@@ -171,31 +171,32 @@ const generateElementHtml = (element) => {
         </tr>
       `).join('')}
     </tbody>`
+      }
+      html += `</${element.tag}></div>`
+    },
+    p: () => {
+      html = `<div
+        id="${element.id}"
+        class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50 w-fit"
+        draggable="true"
+        data-schema='${JSON.stringify(element)}'
+        data-id="${element.id}"
+        onclick="selectedElement(event)">
+          <${element.tag}
+          class="${element.data.class}"
+          >`
+      if (element.data.content) {
+        html += element.data.content
+      }
+      html += `</${element.tag}></div>`
+    }
   }
-
-  if (element.data.content) {
-    html += element.data.content
-  }
-
-  if (element.children && element.children.length > 0) {
-    html += element.children.map(child => generateElementHtml(child)).join('')
-  }
-
-  html += `</${element.tag}></div>`
+  gen[element.tag]()
   return html
 }
 
 const updateSchemaDisplay = () => {
   schemaJson.value = JSON.stringify(schema.value, null, 2)
-}
-
-const onDragStart = (event) => {
-  const tag = event.target.dataset.tag || event.target.closest('.draggable-component')?.dataset.tag
-  const data = event.target.dataset.data ? JSON.parse(event.target.dataset.data) : {}
-  const nombre = event.target.dataset.nombre
-
-  event.dataTransfer.setData('text/plain', JSON.stringify({ tag, data, nombre }))
-  event.dataTransfer.effectAllowed = 'move'
 }
 
 const onDragEnter = (event) => {
@@ -205,7 +206,7 @@ const onDragEnter = (event) => {
   const target = event.target.closest('.draggable-component')
 
   if (target) {
-    target.classList.add('border-slate-400', 'bg-blue-50', 'border-solid')
+    target.classList.add('border-slate-600', 'border-solid')
     target.classList.remove('border-dashed', 'border-slate-400')
   }
 }
@@ -217,7 +218,7 @@ const onDragLeave = (event) => {
   const target = event.target.closest('.draggable-component')
 
   if (target) {
-    target.classList.remove('border-slate-400', 'bg-blue-50', 'border-solid')
+    target.classList.remove('border-slate-600', 'border-solid')
     target.classList.add('border-dashed', 'border-slate-400')
   }
 }
@@ -318,14 +319,14 @@ const selectedElementClick = (event) => {
   const component = event.target.closest('.draggable-component')
 
   if (!component) return
-
   if (selectedElement.value) {
-    selectedElement.value.classList.remove('border-2', 'border-blue-400', 'bg-blue-50')
+    selectedElement.value.classList.remove('border-slate-600')
+    selectedElement.value.classList.add('border-slate-400')
   }
-
   selectedElement.value = component
-  selectedElement.value.classList.add('border-2', 'border-blue-400', 'bg-blue-50')
 
+  selectedElement.value.classList.add('border-slate-600')
+  selectedElement.value.classList.remove('border-slate-400')
   const element_schema = JSON.parse(selectedElement.value.dataset.schema)
 
   if (element_schema) {
@@ -375,7 +376,15 @@ const saveDataOptions = () => {
   renderPreview()
   updateSchemaDisplay()
 }
+const deleteElement = () => {
+  if (!selectedElement.value) return
+  const path = findPathById(schema.value, selectedElement.value.dataset.id)
+  removeElementAtPath(schema.value, path)
 
+  selectedElement.value = null
+  renderPreview()
+  updateSchemaDisplay()
+}
 const getElementByPath = (root, path) => {
   let current = root
   for (let index of path) {
