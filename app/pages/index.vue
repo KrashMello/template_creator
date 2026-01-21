@@ -40,7 +40,19 @@
   <div class="col-span-3 bg-slate-300 p-6 rounded-xl shadow-lg h-full overflow-auto">
     <div id="options" class=" flex flex-col gap-4">
       <h2 class="text-xl font-bold mb-4 text-slate-800">Options</h2>
-      <form @submit.prevent="saveDataOptions" :class="`${!selectedElement ? 'hidden' : 'flex'} flex-col gap-2`">
+      <div class="flex flex-row gap-2">
+        <button class="bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg"
+          @click="() => showStyles = true">styles</button>
+
+        <button
+          :class="` ${selectedElement ? 'flex' : 'hidden'} bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg`"
+          @click="() => showStyles = false">config</button>
+      </div>
+      <textarea v-model="cssCode"
+        :class="`${showStyles ? '' : 'hidden'} w-full h-72 md:h-[80vh] font-mono text-sm bg-slate-500 text-slate-100 border-2 border-slate-700 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-none resize-none`"
+        spellcheck="false" />
+      <form @submit.prevent="saveDataOptions"
+        :class="`${!selectedElement || showStyles ? 'hidden' : 'flex'} flex-col gap-2`">
         <div class="flex flex-col gap-2">
           <label for="options-class">class</label>
           <input type="text" id="options-class" v-model="options.class"
@@ -85,7 +97,27 @@ const schema = ref({
   type: 'container',
   children: []
 })
+const cssCode = ref(`
+`.trim())
 
+const styleEl = ref(null)
+const showStyles = ref(true)
+if (process.client) {
+  if (!styleEl.value) {
+    const el = document.createElement('style')
+    el.setAttribute('data-dynamic-css', 'true')
+    document.head.appendChild(el)
+    styleEl.value = el
+  }
+
+  styleEl.value.textContent = cssCode.value
+
+  watch(cssCode, (val) => {
+    if (styleEl.value) {
+      styleEl.value.textContent = val
+    }
+  })
+}
 const selectedElement = ref(null)
 const showPreviewMode = ref(true)
 const previewHtml = ref('')
@@ -374,6 +406,7 @@ const saveDataOptions = () => {
   const path = findPathById(schema.value, selectedElement.value.dataset.id)
   updateElementAtPath(schema.value, dataTransfer, path)
   selectedElement.value = null
+  showStyles.value = true
 
   renderPreview()
   updateSchemaDisplay()
