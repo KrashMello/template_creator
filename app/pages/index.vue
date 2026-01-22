@@ -1,6 +1,5 @@
 <template>
   <div class="col-span-3 bg-slate-300 p-6 rounded-xl shadow-lg h-full overflow-y-auto">
-    <h2 class="text-xl font-bold mb-6 text-slate-800">Componentes</h2>
     <layout-left-bar />
   </div>
 
@@ -38,21 +37,14 @@
   </div>
 
   <div class="col-span-3 bg-slate-300 p-6 rounded-xl shadow-lg h-full overflow-auto">
-    <div id="options" class=" flex flex-col gap-4">
+    <div id="options" class=" flex flex-col gap-4 h-full">
       <h2 class="text-xl font-bold mb-4 text-slate-800">Options</h2>
       <div class="flex flex-row gap-2">
-        <button class="bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg"
-          @click="() => showStyles = true">styles</button>
-
         <button
           :class="` ${selectedElement ? 'flex' : 'hidden'} bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg`"
-          @click="() => showStyles = false">config</button>
+          @click="() => { return; }">config</button>
       </div>
-      <textarea v-model="cssCode"
-        :class="`${showStyles ? '' : 'hidden'} w-full h-72 md:h-[80vh] font-mono text-sm bg-slate-500 text-slate-100 border-2 border-slate-700 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-none resize-none`"
-        spellcheck="false" />
-      <form @submit.prevent="saveDataOptions"
-        :class="`${!selectedElement || showStyles ? 'hidden' : 'flex'} flex-col gap-2`">
+      <form @submit.prevent="saveDataOptions" :class="`${!selectedElement ? 'hidden' : 'flex'} flex-col gap-2`">
         <div class="flex flex-col gap-2">
           <label for="options-class">class</label>
           <input type="text" id="options-class" v-model="options.class"
@@ -93,150 +85,16 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
-const schema = ref({
-  type: 'container',
-  children: []
-})
-const cssCode = ref(`
-`.trim())
+import { templateStore } from '../stores/templateStore'
+const schema = templateStore().schema
+const selectedElement = computed(() => templateStore().selectedElement)
+const showPreviewMode = computed(() => templateStore().showPreviewMode)
+const previewHtml = computed(() => templateStore().previewHtml)
+const schemaJson = computed(() => templateStore().schemaJson)
 
-const styleEl = ref(null)
-const showStyles = ref(true)
-if (process.client) {
-  if (!styleEl.value) {
-    const el = document.createElement('style')
-    el.setAttribute('data-dynamic-css', 'true')
-    document.head.appendChild(el)
-    styleEl.value = el
-  }
-
-  styleEl.value.textContent = cssCode.value
-
-  watch(cssCode, (val) => {
-    if (styleEl.value) {
-      styleEl.value.textContent = val
-    }
-  })
-}
-const selectedElement = ref(null)
-const showPreviewMode = ref(true)
-const previewHtml = ref('')
-const schemaJson = ref('')
-
-const options = ref({
-  class: '',
-  content: '',
-  columns: '',
-  rows: '',
-  src: ''
-})
-
-const renderPreview = () => {
-  try {
-    const html = generateLayoutHtml(schema.value)
-    previewHtml.value = html
-
-    nextTick(() => {
-      document.querySelectorAll('#preview .draggable-component').forEach(el => {
-        el.draggable = true
-        el.addEventListener('dragstart', handlePreviewDragStart)
-        el.addEventListener('dragend', handlePreviewDragEnd)
-        el.addEventListener('dragenter', onDragEnter)
-        el.addEventListener('dragleave', onDragLeave)
-      })
-    })
-  } catch (e) {
-    console.error('Error renderizando preview:', e)
-  }
-}
-
-const generateLayoutHtml = (schema) => {
-  if (!schema.children || schema.children.length === 0) return ''
-
-  return schema.children.map(child => generateElementHtml(child)).join('')
-}
-
-const generateElementHtml = (element) => {
-  let html = ''
-  let gen = {
-    img: () => {
-      html = `<div 
-      id="${element.id}"
-      class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50 w-fit"
-      draggable="true"
-      data-schema='${JSON.stringify(element)}'
-      data-id="${element.id}"
-      onclick="selectedElement(event)">
-      <${element.tag}
-      src='${element.data.src}'
-      class="${element.data.class}"
-      />
-      </div>`
-    },
-    div: () => {
-      html = `<${element.tag}
-          class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab ${element.data.class}"
-          draggable="true"
-          data-schema='${JSON.stringify(element)}'
-          data-id="${element.id}"
-          onclick="selectedElement(event)"
-        >`
-      if (element.children && element.children.length > 0) {
-        html += element.children.map(child => generateElementHtml(child)).join('')
-      }
-      html += `</${element.tag}>`
-    },
-    table: () => {
-      html = `<div
-        id="${element.id}"
-        class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50 w-fit"
-        draggable="true"
-        data-schema='${JSON.stringify(element)}'
-        data-id="${element.id}"
-        onclick="selectedElement(event)">
-          <${element.tag}
-          class="${element.data.class}"
-          >`
-      if (element.data.table) {
-        html += `<thead class="text-sm text-body bg-slate-300 border-b rounded-base border-default">
-      <tr>
-        ${element.data.columns.map(col => `<th class="px-6 py-3 font-medium">${col}</th>`).join('')}
-      </tr>
-    </thead>
-    <tbody>
-      ${element.data.rows.map(row => `
-        <tr class="bg-neutral-primary border-b border-default">
-          ${row.map(cell => `<td class="px-6 py-4">${cell}</td>`).join('')}
-        </tr>
-      `).join('')}
-    </tbody>`
-      }
-      html += `</${element.tag}></div>`
-    },
-    p: () => {
-      html = `<div
-        id="${element.id}"
-        class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50 w-fit"
-        draggable="true"
-        data-schema='${JSON.stringify(element)}'
-        data-id="${element.id}"
-        onclick="selectedElement(event)">
-          <${element.tag}
-          class="${element.data.class}"
-          >`
-      if (element.data.content) {
-        html += element.data.content
-      }
-      html += `</${element.tag}></div>`
-    }
-  }
-  gen[element.tag]()
-  return html
-}
-
-const updateSchemaDisplay = () => {
-  schemaJson.value = JSON.stringify(schema.value, null, 2)
-}
+const options = computed(() => templateStore().options)
+const renderPreview = templateStore().renderPreview
+const updateSchemaDisplay = templateStore().updateSchemaDisplay
 
 const onDragEnter = (event) => {
   event.preventDefault()
@@ -262,226 +120,15 @@ const onDragLeave = (event) => {
   }
 }
 
-const onDrop = (event) => {
-  event.preventDefault()
-  event.stopPropagation()
+const onDrop = templateStore().onDrop
 
-  const dropTarget = event.target.closest('.draggable-component')
-  if (dropTarget) {
-    dropTarget.classList.remove('border-slate-400', 'bg-blue-50', 'border-solid')
-    dropTarget.classList.add('border-dashed', 'border-slate-400')
-  }
+const showPreview = templateStore().showPreview
 
-  let transferData
-  try {
-    transferData = JSON.parse(event.dataTransfer.getData('text/plain'))
-  } catch (e) { return }
+const showScheme = templateStore().showScheme
 
-  let action = transferData.action || null
-  let id = transferData.id || null
-  let schemaData = transferData.schemaData || transferData
-
-  if (action === 'move' && dropTarget && dropTarget.dataset.id === id) {
-    console.warn("Operación cancelada: No puedes soltar un elemento sobre sí mismo.")
-    return
-  }
-
-  let nuevoElemento
-  if (action === null) {
-    nuevoElemento = {
-      id: crypto.randomUUID().split('-').join(''),
-      tag: schemaData.tag,
-      data: { ...schemaData.data },
-      children: []
-    }
-  } else {
-    const sourcePath = findPathById(schema.value, id)
-    if (!sourcePath) return
-
-    nuevoElemento = schemaData
-    removeElementAtPath(schema.value, sourcePath)
-  }
-
-  if (dropTarget) {
-    const targetId = dropTarget.dataset.id
-    const targetPath = findPathById(schema.value, targetId)
-
-    const rect = dropTarget.getBoundingClientRect()
-    const relativeY = event.clientY - rect.top
-    const isAfter = relativeY > rect.height / 2
-
-    const targetSchema = getElementByPath(schema.value, targetPath)
-
-    if (targetSchema && targetSchema.tag === 'div') {
-      if (!targetSchema.children) targetSchema.children = []
-      targetSchema.children.push(nuevoElemento)
-    } else {
-      const parentPath = targetPath.slice(0, -1)
-      const indexInParent = targetPath[targetPath.length - 1]
-      const finalIndex = isAfter ? indexInParent + 1 : indexInParent
-      insertElementAtPath(schema.value, nuevoElemento, parentPath, finalIndex)
-    }
-  } else {
-    schema.value.children.push(nuevoElemento)
-  }
-
-  renderPreview()
-  updateSchemaDisplay()
-}
-
-const handlePreviewDragStart = (event) => {
-  const element = event.target.closest('.draggable-component')
-  const schemaData = JSON.parse(element.dataset.schema)
-  const id = element.dataset.id
-  event.dataTransfer.setData('text/plain', JSON.stringify({
-    action: 'move',
-    id,
-    schemaData
-  }))
-}
-
-const handlePreviewDragEnd = (event) => {
-  renderPreview()
-}
-
-const showPreview = () => {
-  showPreviewMode.value = true
-}
-
-const showScheme = () => {
-  showPreviewMode.value = false
-  updateSchemaDisplay()
-}
-
-const selectedElementClick = (event) => {
-  event.stopPropagation()
-  const component = event.target.closest('.draggable-component')
-
-  if (!component) return
-  if (selectedElement.value) {
-    selectedElement.value.classList.remove('border-slate-600')
-    selectedElement.value.classList.add('border-slate-400')
-  }
-  selectedElement.value = component
-
-  selectedElement.value.classList.add('border-slate-600')
-  selectedElement.value.classList.remove('border-slate-400')
-  const element_schema = JSON.parse(selectedElement.value.dataset.schema)
-
-  if (element_schema) {
-    options.value.class = element_schema.data.class || ''
-    options.value.content = element_schema.data.content || ''
-    options.value.columns = JSON.stringify(element_schema.data.columns)
-    options.value.rows = JSON.stringify(element_schema.data.rows)
-    options.value.src = element_schema.data.src
-  }
-}
-
-const saveDataOptions = () => {
-  if (!selectedElement.value) return
-
-  const element_schema = JSON.parse(selectedElement.value.dataset.schema)
-  let data = {
-    ...element_schema.data
-  }
-
-  if (options.value.class) {
-    data.class = options.value.class
-  }
-  if (options.value.columns) {
-    data.columns = JSON.parse(options.value.columns)
-  }
-  if (options.value.rows) {
-    data.rows = JSON.parse(options.value.rows)
-  }
-  if (options.value.content) {
-    data.content = options.value.content
-  }
-
-  const dataTransfer = {
-    ...element_schema,
-    data,
-  }
-
-  const path = findPathById(schema.value, selectedElement.value.dataset.id)
-  updateElementAtPath(schema.value, dataTransfer, path)
-  selectedElement.value = null
-  showStyles.value = true
-
-  renderPreview()
-  updateSchemaDisplay()
-}
-const deleteElement = () => {
-  if (!selectedElement.value) return
-  const path = findPathById(schema.value, selectedElement.value.dataset.id)
-  removeElementAtPath(schema.value, path)
-
-  selectedElement.value = null
-  renderPreview()
-  updateSchemaDisplay()
-}
-const getElementByPath = (root, path) => {
-  let current = root
-  for (let index of path) {
-    current = current.children[index]
-  }
-  return current
-}
-
-const findPathById = (root, id) => {
-  if (root.id === id) return []
-
-  if (root.children) {
-    for (let i = 0; i < root.children.length; i++) {
-      const child = root.children[i]
-      const path = findPathById(child, id)
-      if (path !== null) {
-        return [i, ...path]
-      }
-    }
-  }
-  return null
-}
-
-const insertElementAtPath = (root, element, path, index) => {
-  let parent = root
-  for (let i = 0; i < path.length; i++) {
-    parent = parent.children[path[i]]
-  }
-  if (!parent.children) parent.children = []
-  parent.children.splice(index, 0, element)
-}
-
-const removeElementAtPath = (root, path) => {
-  if (!path || path.length === 0) return
-  let parent = root
-  for (let i = 0; i < path.length - 1; i++) {
-    parent = parent.children[path[i]]
-  }
-  const lastIndex = path[path.length - 1]
-  parent.children.splice(lastIndex, 1)
-}
-
-const replace = (root, element) => {
-  return root.children.map((v) => {
-    if (v.id !== element.id) {
-      v.children = replace(v, element)
-      return v
-    } else {
-      return element
-    }
-  })
-}
-
-const updateElementAtPath = (root, element, path) => {
-  let current = root
-
-  if (path.length > 1) {
-    root.children = replace(root, element)
-  } else {
-    root.children[path[0]] = element
-  }
-}
+const selectedElementClick = templateStore().selectedElementClick
+const saveDataOptions = templateStore().saveDataOptions
+const deleteElement = templateStore().deleteElement
 
 onMounted(() => {
   renderPreview()
