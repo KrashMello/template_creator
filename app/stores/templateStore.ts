@@ -46,7 +46,7 @@ export const templateStore = defineStore('template', {
       return schema.children.map(child => this.generateElementHtml(child)).join('')
     },
     updateSchemaDisplay() {
-      this.schemaJson = JSON.stringify(this.schema, null, 2)
+      this.schemaJson = JSON.stringify({ style: this.styleEl.textContent, schema: this.schema }, null, 2).trim()
     },
     generateElementHtml(element) {
       let html = ''
