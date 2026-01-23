@@ -52,10 +52,10 @@
             placeholder="classes">
         </div>
         <div :class="` flex-col gap-2 ${options.content ? 'flex' : 'hidden'}`">
-          <label for="options-content">content</label>
-          <input type="text" id="options-content" v-model="options.content"
+          <label for="options-content">texto</label>
+          <textarea type="text" id="options-content" v-model="options.content"
             class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"
-            placeholder="content">
+            placeholder="content"></textarea>
         </div>
         <div :class="` flex-col gap-2 ${options.columns ? 'flex' : 'hidden'}`">
           <label for="options-columns">columns</label>
@@ -65,9 +65,9 @@
         </div>
         <div :class="`flex-col gap-2 ${options.src ? 'flex' : 'hidden'}`">
           <label for="options-src">file</label>
-          <textarea id="options-src" v-model="options.src"
+          <input id="options-src" type="file" acepted="image/*"
             class="bg-slate-50 p-2 rounded-lg text-sm font-mono text-slate-700 overflow-auto text-xs"
-            placeholder="src"></textarea>
+            v-on:change="options.src = $event.target.files[0]" placeholder="src" />
         </div>
         <div :class="` flex-col gap-2 ${options.rows ? 'flex' : 'hidden'}`">
           <label for="options-rows">rows</label>
