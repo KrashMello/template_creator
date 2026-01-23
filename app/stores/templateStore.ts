@@ -48,7 +48,7 @@ export const templateStore = defineStore('template', {
       return schema.children.map(child => this.generateElementHtml(child)).join('')
     },
     updateSchemaDisplay() {
-      this.schemaJson = JSON.stringify({ style: this.styleEl.textContent, schema: this.schema }, null, 2).trim()
+      this.schemaJson = JSON.stringify({ style: this.cssCode, schema: this.schema }, null, 2).trim()
     },
     generateElementHtml(element) {
       let html = ''
@@ -314,7 +314,6 @@ export const templateStore = defineStore('template', {
         this.selectedElement.classList.add('border-slate-400')
       }
       this.selectedElement = component
-
       this.selectedElement.classList.add('border-slate-600')
       this.selectedElement.classList.remove('border-slate-400')
       const element_schema = JSON.parse(this.selectedElement.dataset.schema)
@@ -366,14 +365,9 @@ export const templateStore = defineStore('template', {
       this.renderPreview()
       this.updateSchemaDisplay()
     }
-
-
   },
-  persist: true,
-},
-  {
-    persist: {
-      storage: sessionStorage,
-      pick: ['styleEl', 'schema'],
-    },
-  })
+  persist: {
+    storage: sessionStorage,
+    pick: ['styleEl', 'cssCode', 'schema'],
+  },
+})
