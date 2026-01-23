@@ -1,4 +1,5 @@
 import tailwindcss from "@tailwindcss/vite"
+
 export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ['./app/assets/css/main.css'],
@@ -20,7 +21,7 @@ export default defineNuxtConfig({
       tailwindcss()
     ]
   },
-  modules: ['@pinia/nuxt'],
+  modules: ['@pinia/nuxt', 'pinia-plugin-persistedstate'],
   pinia: {
     storesDirs: ['./stores/**'],
   },
