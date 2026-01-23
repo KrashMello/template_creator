@@ -23,7 +23,7 @@ import image from '../svg/image.vue'
 import { templateStore } from '../../stores/templateStore'
 
 const componentes = shallowRef([
-  { tag: 'p', name: 'Párrafo', icon: paragraph, data: { content: 'paragraph', class: "p-2 text-slate-800" } },
+  { tag: 'p', name: 'Párrafo', icon: paragraph, data: { content: 'paragraph', class: "p-2 text-slate-800 whitespace-pre-wrap leading-relaxed" } },
   {
     tag: 'table', name: 'Tabla', icon: table, data: {
       table: true, columns: ["column 1", "column 2"], rows:
@@ -37,16 +37,19 @@ const componentes = shallowRef([
 const styleEl = templateStore().styleEl
 const setStyleElTexContent = templateStore().setStyleElTexContent
 const setStyleEl = templateStore().setStyleEl
-const cssCode = ref(`
-`.trim())
-
-if (process.client) {
-  if (!styleEl) {
-    const el = document.createElement('style')
-    el.setAttribute('data-dynamic-css', 'true')
-    document.head.appendChild(el)
-    setStyleEl(el)
+const cssCode = computed({
+  get() {
+    return templateStore().cssCode
+  },
+  set(val) {
+    templateStore().cssCode = val
   }
+})
+if (process.client) {
+  const el = document.createElement('style')
+  el.setAttribute('data-dynamic-css', 'true')
+  document.head.appendChild(el)
+  setStyleEl(el)
 
   setStyleElTexContent(cssCode.value)
 
