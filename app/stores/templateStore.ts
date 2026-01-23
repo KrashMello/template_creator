@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, nextTick } from 'vue'
+
 export const templateStore = defineStore('template', {
   state: () => ({
     styleEl: null,
     selectedElement: null,
     showPreviewMode: true,
+    cssCode: '',
     schema: {
       type: 'container',
       children: []
@@ -293,14 +295,13 @@ export const templateStore = defineStore('template', {
       return root.children.map((v) => {
         if (v.id !== element.id) {
           v.children = this.replace(v, element)
-          console.log(v)
           return v
         } else {
           return element
         }
       })
     },
-    updateElementAtPath(element, path) {
+    updateElementAtPath(element) {
       this.schema.children = this.replace(this.schema, element)
     },
     selectedElementClick(event) {
@@ -346,20 +347,33 @@ export const templateStore = defineStore('template', {
       if (this.options.content) {
         data.content = this.options.content
       }
+      if (this.options.src) {
+        if (this.options.src.type.includes('image/png')) {
+          const reader = new FileReader()
+          reader.onload = () => {
+            data.src = reader.result
+          }
+          reader.readAsDataURL(this.options.src)
+        }
+      }
 
       const dataTransfer = {
         ...element_schema,
         data,
       }
-
-      const path = this.findPathById(this.schema, this.selectedElement.dataset.id)
-      this.updateElementAtPath(dataTransfer, path)
+      this.updateElementAtPath(dataTransfer)
       this.selectedElement = null
-
       this.renderPreview()
       this.updateSchemaDisplay()
     }
 
 
   },
-})
+  persist: true,
+},
+  {
+    persist: {
+      storage: sessionStorage,
+      pick: ['styleEl', 'schema'],
+    },
+  })
