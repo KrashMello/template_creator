@@ -367,7 +367,6 @@ export const templateStore = defineStore('template', {
     }
   },
   persist: {
-    storage: sessionStorage,
     pick: ['styleEl', 'cssCode', 'schema'],
   },
 })
