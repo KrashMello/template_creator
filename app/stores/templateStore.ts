@@ -326,7 +326,7 @@ export const templateStore = defineStore('template', {
         this.options.src = element_schema.data.src
       }
     },
-    saveDataOptions() {
+    async saveDataOptions() {
       if (!this.selectedElement) return
 
       const element_schema = JSON.parse(this.selectedElement.dataset.schema)
@@ -348,14 +348,9 @@ export const templateStore = defineStore('template', {
       }
       if (this.options.src) {
         if (this.options.src.type.includes('image/png')) {
-          const reader = new FileReader()
-          reader.onload = () => {
-            data.src = reader.result
-          }
-          reader.readAsDataURL(this.options.src)
+          data.src = await fileToBase64(this.options.src)
         }
       }
-
       const dataTransfer = {
         ...element_schema,
         data,
@@ -370,3 +365,17 @@ export const templateStore = defineStore('template', {
     pick: ['styleEl', 'cssCode', 'schema'],
   },
 })
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      const result = reader.result?.toString() || ''
+      resolve(result)
+    }
+
+    reader.onerror = (error) => reject(error)
+
+    reader.readAsDataURL(file)
+  })
+}
