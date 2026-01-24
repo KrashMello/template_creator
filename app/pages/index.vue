@@ -26,7 +26,7 @@
         </button>
       </li>
     </ol>
-    <div id="preview" class="h-full overflow-y-auto bg-slate-100 rounded-lg" :class="{ 'hidden': !showPreviewMode }"
+    <div id="preview" class="h-[85vh] overflow-y-auto bg-slate-100 rounded-lg" :class="{ 'hidden': !showPreviewMode }"
       v-html="previewHtml" @dragenter="onDragEnter" @dragleave="onDragLeave" @drop="onDrop"></div>
     <div id='schema' class='flex-col' :class="`${showPreviewMode ? 'hidden' : 'flex'}`">
       <h2 class="text-xl font-bold mb-4 text-slate-800">Schema</h2>
