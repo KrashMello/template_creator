@@ -25,4 +25,9 @@ export default defineNuxtConfig({
   pinia: {
     storesDirs: ['./stores/**'],
   },
+  piniaPluginPersistedstate: {
+    storage: 'sessionStorage',
+    maxAge: 24 * 60 * 60,
+    debug: true,
+  },
 })
