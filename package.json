@@ -21,6 +21,7 @@
   "dependencies": {
     "@pinia/nuxt": "^0.11.3",
     "handlebars": "^4.7.8",
-    "pinia-plugin-persistedstate": "^4.7.1"
+    "pinia-plugin-persistedstate": "^4.7.1",
+    "puppeteer": "^24.36.0"
   }
 }
