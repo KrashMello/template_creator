@@ -63,7 +63,6 @@ ${schema.children.map(child => this.generateElementHtml(child, pdf)).join('')}
       this.schemaJson = JSON.stringify({ style: this.cssCode, schema: this.schema }, null, 2).trim()
     },
     generateElementHtml(element, pdf = false) {
-      console.log(pdf)
       let html = ''
       const divDraggable = `<div 
       id="${element.id}"
@@ -197,7 +196,6 @@ ${schema.children.map(child => this.generateElementHtml(child, pdf)).join('')}
       parent.children.splice(lastIndex, 1)
     },
     setStyleEl(el) {
-      console.log(el)
       this.styleEl = el
     },
     setStyleElTexContent(css) {
@@ -393,3 +391,4 @@ const fileToBase64 = (file: File): Promise<string> => {
     reader.readAsDataURL(file)
   })
 }
+
