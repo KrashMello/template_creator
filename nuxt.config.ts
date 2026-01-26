@@ -4,6 +4,9 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ['./app/assets/css/main.css'],
   compatibilityDate: '2024-04-03',
+  nitro: {
+    preset: 'vercel', // Auto-detect en Vercel
+  },
   app: {
     head: {
       link: [
