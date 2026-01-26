@@ -2,8 +2,14 @@ import tailwindcss from "@tailwindcss/vite"
 
 export default defineNuxtConfig({
   devtools: { enabled: true },
+  ssr: true,
   css: ['./app/assets/css/main.css'],
   compatibilityDate: '2024-04-03',
+  runtimeConfig: {
+    public: {
+      apiBase: process.env.API_BASE_URL || '/api' // Para entornos separados
+    }
+  },
   nitro: {
     preset: 'vercel', // Auto-detect en Vercel
   },

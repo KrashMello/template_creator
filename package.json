@@ -20,8 +20,10 @@
   },
   "dependencies": {
     "@pinia/nuxt": "^0.11.3",
+    "@sparticuz/chromium": "^143.0.4",
     "handlebars": "^4.7.8",
     "pinia-plugin-persistedstate": "^4.7.1",
-    "puppeteer": "^24.36.0"
+    "puppeteer": "^24.36.0",
+    "puppeteer-core": "^24.36.0"
   }
 }
