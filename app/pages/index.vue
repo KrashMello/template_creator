@@ -25,6 +25,11 @@
           </svg>
         </button>
       </li>
+      <li>
+        <button class="bg-slate-500 hover:bg-slate-700 text-white font-bold p-2 rounded-lg" @click="generateDocument">
+          descargar pdf
+        </button>
+      </li>
     </ol>
     <div id="preview" class="h-[85vh] overflow-y-auto bg-slate-100 rounded-lg" :class="{ 'hidden': !showPreviewMode }"
       v-html="previewHtml" @dragenter="onDragEnter" @dragleave="onDragLeave" @drop="onDrop"></div>
@@ -129,6 +134,7 @@ const showScheme = templateStore().showScheme
 const selectedElementClick = templateStore().selectedElementClick
 const saveDataOptions = templateStore().saveDataOptions
 const deleteElement = templateStore().deleteElement
+const generateDocument = templateStore().generateDocument
 
 onMounted(() => {
   renderPreview()

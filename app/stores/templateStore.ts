@@ -42,52 +42,61 @@ export const templateStore = defineStore('template', {
         console.error('Error renderizando preview:', e)
       }
     },
-    generateLayoutHtml(schema) {
+    generateLayoutHtml(schema, pdf = false) {
       if (!schema.children || schema.children.length === 0) return ''
-
-      return schema.children.map(child => this.generateElementHtml(child)).join('')
+      const html = `
+<html>
+<head>
+<style>
+${this.cssCode}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body>
+${schema.children.map(child => this.generateElementHtml(child, pdf)).join('')}
+</body>
+</html>
+`
+      return html
     },
     updateSchemaDisplay() {
       this.schemaJson = JSON.stringify({ style: this.cssCode, schema: this.schema }, null, 2).trim()
     },
-    generateElementHtml(element) {
+    generateElementHtml(element, pdf = false) {
+      console.log(pdf)
       let html = ''
-      let gen = {
-        img: () => {
-          html = `<div 
+      const divDraggable = `<div 
       id="${element.id}"
-      class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50 w-fit"
+      class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50 w-fit h-fit"
       draggable="true"
       data-schema='${JSON.stringify(element)}'
       data-id="${element.id}"
-      onclick="selectedElement(event)">
+      onclick="selectedElement(event)">`
+
+      let gen = {
+        img: () => {
+          html = `${!pdf ? divDraggable : ''}
       <${element.tag}
       src='${element.data.src}'
       class="${element.data.class}"
       />
-      </div>`
+      ${!pdf ? '</div>' : ''}`
         },
         div: () => {
           html = `<${element.tag}
-          class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab ${element.data.class}"
+          class="${!pdf ? 'draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab' : ''} ${element.data.class}"
           draggable="true"
           data-schema='${JSON.stringify(element)}'
           data-id="${element.id}"
           onclick="selectedElement(event)"
         >`
           if (element.children && element.children.length > 0) {
-            html += element.children.map(child => this.generateElementHtml(child)).join('')
+            html += element.children.map(child => this.generateElementHtml(child, pdf)).join('')
           }
           html += `</${element.tag}>`
         },
         table: () => {
-          html = `<div
-        id="${element.id}"
-        class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50 w-fit"
-        draggable="true"
-        data-schema='${JSON.stringify(element)}'
-        data-id="${element.id}"
-        onclick="selectedElement(event)">
+          html = `${!pdf ? divDraggable : ''}
           <${element.tag}
           class="${element.data.class}"
           >`
@@ -105,23 +114,17 @@ export const templateStore = defineStore('template', {
       `).join('')}
     </tbody>`
           }
-          html += `</${element.tag}></div>`
+          html += `</${element.tag}>${!pdf ? '</div>' : ''}`
         },
         p: () => {
-          html = `<div
-        id="${element.id}"
-        class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50 w-fit"
-        draggable="true"
-        data-schema='${JSON.stringify(element)}'
-        data-id="${element.id}"
-        onclick="selectedElement(event)">
+          html = `${!pdf ? divDraggable : ''}
           <${element.tag}
           class="${element.data.class}"
           >`
           if (element.data.content) {
             html += element.data.content
           }
-          html += `</${element.tag}></div>`
+          html += `</${element.tag}>${!pdf ? '</div>' : ''}`
         }
       }
       gen[element.tag]()
@@ -130,6 +133,17 @@ export const templateStore = defineStore('template', {
     showPreview() {
       this.showPreviewMode = true
     },
+    async generateDocument() {
+      const res = await fetch('/api/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html: this.generateLayoutHtml(this.schema, true) }),
+      })
+      const url = URL.createObjectURL(await res.blob())
+      window.open(url, '_blank');
+      URL.revokeObjectURL(url)
+    },
+
     showScheme() {
       this.showPreviewMode = false
       this.updateSchemaDisplay()
