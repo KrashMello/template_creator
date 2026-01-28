@@ -1,6 +1,6 @@
 <template>
   <div
-    class="componente w-16 2xl:w-26 h-fit px-4 py-2 rounded-lg hover:border-blue-400 cursor-grab active:cursor-grabbing bg-gradient-to-r from-blue-50 to-indigo-50 transition-all draggable-component"
+    class="componente w-full h-fit px-4 py-2 rounded-lg hover:border-blue-400 cursor-grab active:cursor-grabbing bg-gradient-to-r from-blue-50 to-indigo-50 transition-all draggable-component"
     draggable="true" :data-tag="props.tag" :data-nombre="props.name" :data-data="JSON.stringify(props.data)"
     @dragstart="onDragStart">
     <div class="flex items-center flex-col">

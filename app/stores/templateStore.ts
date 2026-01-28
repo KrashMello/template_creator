@@ -5,7 +5,6 @@ export const templateStore = defineStore('template', {
   state: () => ({
     styleEl: null,
     selectedElement: null,
-    showPreviewMode: true,
     cssCode: '',
     schema: {
       type: 'container',
@@ -129,9 +128,6 @@ ${schema.children.map(child => this.generateElementHtml(child, pdf)).join('')}
       gen[element.tag]()
       return html
     },
-    showPreview() {
-      this.showPreviewMode = true
-    },
     async generateDocument() {
       const res = await fetch('/api/pdf', {
         method: 'POST',
@@ -141,11 +137,6 @@ ${schema.children.map(child => this.generateElementHtml(child, pdf)).join('')}
       const url = URL.createObjectURL(await res.blob())
       window.open(url, '_blank');
       URL.revokeObjectURL(url)
-    },
-
-    showScheme() {
-      this.showPreviewMode = false
-      this.updateSchemaDisplay()
     },
     deleteElement() {
       if (!this.selectedElement) return

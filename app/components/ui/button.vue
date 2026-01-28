@@ -1,9 +1,20 @@
 <template>
-  <button class="bg-slate-500 hover:bg-slate-700 text-white flex items-center justify-center font-bold p-2 rounded-lg"
+  <button type=""
+    :class="`${$attrs.class ? $attrs.class : 'bg-slate-500 hover:bg-slate-700 text-white flex items-center justify-center font-bold p-2 rounded-lg'}`"
     @click="props.click">
     <slot />
   </button>
 </template>
 <script setup>
-const props = defineProps(['click'])
+
+const props = defineProps({
+  click: {
+    type: Function,
+    default: () => { return }
+  },
+  type: {
+    type: String,
+    default: "button"
+  }
+})
 </script>

@@ -3,13 +3,12 @@
     <div class="flex flex-col gap-2 h-full">
       <h2 class="text-xl font-bold mb-4 text-slate-800">Componentes</h2>
       <div id="componentes" class="space-y-3 h-full">
-        <div class="flex flex-wrap gap-2 w-full overflow-auto h-[75%] 2xl:h-[90%]">
+        <div class="grid grid-cols-3 items-start gap-2 w-full overflow-auto h-fit max-h-[85dvh]">
           <ui-draggable-button v-for="comp in componentes" :key="`${comp.name}-dragable-comp`" :tag="comp.tag"
             :name="comp.name" :icon="comp.icon" :data="comp.data" />
         </div>
       </div>
     </div>
-
   </div>
 </template>
 <script setup lang="ts">
