@@ -1,13 +1,13 @@
 <template>
   <div
-    class="componente px-4 py-2 rounded-lg hover:border-blue-400 cursor-grab active:cursor-grabbing bg-gradient-to-r from-blue-50 to-indigo-50 transition-all draggable-component"
+    class="componente w-16 2xl:w-26 h-fit px-4 py-2 rounded-lg hover:border-blue-400 cursor-grab active:cursor-grabbing bg-gradient-to-r from-blue-50 to-indigo-50 transition-all draggable-component"
     draggable="true" :data-tag="props.tag" :data-nombre="props.name" :data-data="JSON.stringify(props.data)"
     @dragstart="onDragStart">
-    <div class="flex items-center space-x-3">
-      <component class="text-2xl text-slate-500" :is="props.icon" />
-      <div>
-        <div class="font-medium text-slate-500"> {{ props.name }}</div>
-        <div class="text-xs text-slate-400"> {{ props.tag }}
+    <div class="flex items-center flex-col">
+      <component class="size-6 2xl:size-12 text-slate-500" :is="props.icon" />
+      <div class="flex flex-col items-center text-xs 2xl:text-sm">
+        <div class="  font-medium text-slate-500"> {{ props.name }}</div>
+        <div class=" text-slate-400"> {{ props.tag }}
         </div>
       </div>
     </div>
