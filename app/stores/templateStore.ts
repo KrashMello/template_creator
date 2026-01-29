@@ -65,7 +65,7 @@ ${schema.children.map(child => this.generateElementHtml(child, pdf)).join('')}
       let html = ''
       const divDraggable = `<div 
       id="${element.id}"
-      class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50 w-fit h-fit"
+      class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50"
       draggable="true"
       data-schema='${JSON.stringify(element)}'
       data-id="${element.id}"
@@ -73,12 +73,16 @@ ${schema.children.map(child => this.generateElementHtml(child, pdf)).join('')}
 
       let gen = {
         img: () => {
-          html = `${!pdf ? divDraggable : ''}
-      <${element.tag}
-      src='${element.data.src}'
-      class="${element.data.class}"
+          html = `
+        <${element.tag}
+        src='${element.data.src}'
+          class="${!pdf ? 'draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab' : ''} ${element.data.class}"
+          draggable="true"
+          data-schema='${JSON.stringify(element)}'
+          data-id="${element.id}"
+          onclick="selectedElement(event)"
       />
-      ${!pdf ? '</div>' : ''}`
+      `
         },
         div: () => {
           html = `<${element.tag}
@@ -94,9 +98,13 @@ ${schema.children.map(child => this.generateElementHtml(child, pdf)).join('')}
           html += `</${element.tag}>`
         },
         table: () => {
-          html = `${!pdf ? divDraggable : ''}
-          <${element.tag}
-          class="${element.data.class}"
+          html = `          <${element.tag}
+          draggable="true"
+          id="${element.id}"
+          data-schema='${JSON.stringify(element)}'
+          data-id="${element.id}"
+          onclick="selectedElement(event)"
+          class="${!pdf ? 'draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing ' : ''} ${element.data.class}"
           >`
           if (element.data.table) {
             html += `<thead class="text-sm text-body bg-slate-300 border-b rounded-base border-default">
@@ -112,17 +120,22 @@ ${schema.children.map(child => this.generateElementHtml(child, pdf)).join('')}
       `).join('')}
     </tbody>`
           }
-          html += `</${element.tag}>${!pdf ? '</div>' : ''}`
+          html += `</${element.tag}>`
         },
         p: () => {
-          html = `${!pdf ? divDraggable : ''}
+          html = `
           <${element.tag}
-          class="${element.data.class}"
+class="${!pdf ? 'draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab' : ''} ${element.data.class}"
+          draggable="true"
+          data-schema='${JSON.stringify(element)}'
+          data-id="${element.id}"
+          onclick="selectedElement(event)"
+
           >`
           if (element.data.content) {
             html += element.data.content
           }
-          html += `</${element.tag}>${!pdf ? '</div>' : ''}`
+          html += `</${element.tag}>`
         }
       }
       gen[element.tag]()
@@ -350,9 +363,12 @@ ${schema.children.map(child => this.generateElementHtml(child, pdf)).join('')}
         data.content = this.options.content
       }
       if (this.options.src) {
-        if (this.options.src.type.includes('image/png')) {
-          data.src = await fileToBase64(this.options.src)
+        try {
+          if (this.options.src.type.includes('image/png')) {
+            data.src = await fileToBase64(this.options.src)
+          }
         }
+        catch (e) { }
       }
       const dataTransfer = {
         ...element_schema,
