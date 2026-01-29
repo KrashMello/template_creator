@@ -1,6 +1,6 @@
 <template>
   <div
-    class="col-span-6 gap-2 flex flex-col bg-slate-300 p-4 rounded-xl shadow-lg h-full overflow-auto border-4 border-dashed border-gray-300"
+    class="col-span-6 gap-2 flex flex-col bg-slate-300 p-4 shadow-lg h-full overflow-auto border-4 border-dashed border-gray-300"
     id="dropzone">
     <ol class="flex flex-row gap-2 items-center w-full">
       <li>

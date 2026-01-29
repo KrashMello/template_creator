@@ -1,5 +1,5 @@
 <template>
-  <div class="col-span-3 bg-slate-300 p-6 rounded-xl shadow-lg h-full overflow-auto">
+  <div class="col-span-3 bg-slate-300 border-l-2 border-slate-500 p-6 rounded-r-xl shadow-lg h-full overflow-auto">
     <div id="options" class=" flex flex-col gap-4 h-full">
       <h2 class="text-xl font-bold mb-4 text-slate-800">Options</h2>
       <div class="flex flex-row gap-2">
