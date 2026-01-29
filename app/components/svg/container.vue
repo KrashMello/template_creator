@@ -1,0 +1,8 @@
+<template>
+  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+    viewBox="0 0 16 16"><!-- Icon from Gitlab SVGs by GitLab B.V. - https://gitlab.com/gitlab-org/gitlab-svgs/-/blob/main/LICENSE -->
+    <path fill="currentColor" fill-rule="evenodd"
+      d="M8.38 1.103a.75.75 0 0 0-.76 0L.37 5.353a.75.75 0 0 0 0 1.294l7.25 4.25a.75.75 0 0 0 .76 0l7.25-4.25a.75.75 0 0 0 0-1.294zM8 9.381L2.233 6L8 2.62L13.767 6zm-6.87-.028a.75.75 0 0 0-.76 1.294l7.25 4.25a.75.75 0 0 0 .76 0l7.25-4.25a.75.75 0 0 0-.76-1.294L8 13.381z"
+      clip-rule="evenodd" />
+  </svg>
+</template>
