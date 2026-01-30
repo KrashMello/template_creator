@@ -4,6 +4,7 @@ import { ref, nextTick } from 'vue'
 export const templateStore = defineStore('template', {
   state: () => ({
     styleEl: null,
+    data: {},
     selectedElement: null,
     cssCode: '',
     schema: {

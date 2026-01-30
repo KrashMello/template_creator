@@ -18,6 +18,11 @@
           <svg-css class="size-4" />
         </ui-button>
       </li>
+      <li>
+        <ui-button @click="selectView(4)">
+          data
+        </ui-button>
+      </li>
       <li class="ml-auto">
         <ui-button @click="generateDocument">
           <span class="text-xs">
@@ -37,6 +42,7 @@
       </pre>
     </div>
     <ui-style-editor v-if="selectedView === 3" />
+    <ui-data-editor v-if="selectedView === 4" />
   </div>
 </template>
 <script setup>
