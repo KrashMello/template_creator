@@ -21,7 +21,9 @@ defineEmits(["select", "export"]);
       </ui-button>
     </li>
     <li>
-      <ui-button @click="$emit('select', 4)"> data </ui-button>
+      <ui-button @click="$emit('select', 4)">
+        <svg-data class="size-4" />
+      </ui-button>
     </li>
     <li class="ml-auto">
       <ui-button>
