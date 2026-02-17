@@ -1,17 +1,31 @@
 <template>
   <div
-    class="componente w-full h-fit px-4 py-2 rounded-lg hover:border-blue-400 cursor-grab active:cursor-grabbing bg-gradient-to-r from-blue-50 to-indigo-50 transition-all draggable-component"
+    class="group relative flex flex-col items-center justify-center gap-2 w-full h-auto px-4 py-4 rounded-xl border border-slate-200 bg-white transition-all duration-200 ease-in-out hover:border-slate-300 hover:bg-slate-50/50 hover:shadow-sm active:scale-[0.98] cursor-grab active:cursor-grabbing draggable-component"
     draggable="true"
     :data-tag="props.tag"
     :data-nombre="props.name"
     :data-data="JSON.stringify(props.data)"
     @dragstart="onDragStart"
   >
-    <div class="flex items-center flex-col">
-      <component class="size-6 2xl:size-12 text-slate-500" :is="props.icon" />
-      <div class="flex flex-col items-center text-xs 2xl:text-sm">
-        <div class="font-medium text-slate-500">{{ props.name }}</div>
-        <div class="text-slate-400">{{ props.tag }}</div>
+    <div
+      class="flex items-center justify-center p-2 rounded-lg bg-slate-50 group-hover:bg-white transition-colors duration-200"
+    >
+      <component
+        class="size-6 2xl:size-10 text-slate-600 group-hover:text-slate-900"
+        :is="props.icon"
+      />
+    </div>
+
+    <div class="space-y-0.5 text-center">
+      <div
+        class="text-xs 2xl:text-sm font-semibold tracking-tight text-slate-900"
+      >
+        {{ props.name }}
+      </div>
+      <div
+        class="text-[10px] 2xl:text-xs font-medium uppercase tracking-wider text-slate-400"
+      >
+        {{ props.tag }}
       </div>
     </div>
   </div>

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="col-span-3 bg-slate-300 border-r-2 border-slate-500 p-4 flex rounded-s-xl flex-col gap-2 shadow-lg h-full"
+    class="col-span-3 border-r-2 border-slate-100 p-4 flex rounded-s-xl flex-col gap-2 shadow-lg h-full"
   >
     <div class="flex flex-col gap-2 h-full">
       <h2 class="text-xl font-bold mb-4 text-slate-800">Componentes</h2>
