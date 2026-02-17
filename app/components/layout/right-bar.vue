@@ -1,9 +1,9 @@
 <template>
   <div
-    class="col-span-3 bg-slate-300 border-l-2 border-slate-500 p-6 rounded-r-xl shadow-lg h-full overflow-auto"
+    class="col-span-3 border-l-2 border-slate-100 p-6 rounded-r-xl shadow-lg h-full overflow-auto"
   >
     <div id="options" class="flex flex-col gap-4 h-full">
-      <h2 class="text-xl font-bold mb-4 text-slate-800">Options</h2>
+      <h2 class="text-xl font-bold mb-4 text-slate-800">Opciones</h2>
       <form
         @submit.prevent="saveDataOptions"
         v-if="selectedElement"
@@ -39,11 +39,11 @@
           title="rows"
           placeholder="rows"
         />
-        <ui-button type="submit">Save</ui-button>
+        <ui-button type="submit">Guardar</ui-button>
         <ui-button
           class="bg-red-500 hover:bg-red-700 text-white font-bold p-2 rounded-lg"
           @click="deleteElement"
-          >Delete</ui-button
+          >Eliminar</ui-button
         >
       </form>
     </div>
