@@ -129,14 +129,14 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         </thead>
         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
         ${element.data.rows
-          .map(
-            (row) => `
+                .map(
+                  (row) => `
               <tr class="transition-colors hover:bg-zinc-50/80 dark:hover:bg-zinc-900/50">
                 ${row.map((cell) => `<td class="p-4">${cell}</td>`).join("")}
               </tr>
           `,
-          )
-          .join("")}
+                )
+                .join("")}
         </tbody>`;
           }
           html += `</${element.tag}>`;
@@ -255,9 +255,6 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       let schemaData = transferData.schemaData || transferData;
 
       if (action === "move" && dropTarget && dropTarget.dataset.id === id) {
-        console.warn(
-          "Operación cancelada: No puedes soltar un elemento sobre sí mismo.",
-        );
         return;
       }
 
@@ -270,34 +267,32 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
           children: [],
         };
       } else {
-        const sourcePath = this.findPathById(this.schema, id);
-        if (!sourcePath) return;
-
         nuevoElemento = schemaData;
-        this.removeElementAtPath(this.schema, sourcePath);
       }
 
+      const sourcePath = this.findPathById(this.schema, id);
       if (dropTarget) {
         const targetId = dropTarget.dataset.id;
         const targetPath = this.findPathById(this.schema, targetId);
-
+        const targetSchema = this.getElementByPath(targetPath);
         const rect = dropTarget.getBoundingClientRect();
         const relativeY = event.clientY - rect.top;
         const isAfter = relativeY > rect.height / 2;
 
-        const targetSchema = this.getElementByPath(targetPath);
-
-        if (targetSchema && targetSchema.tag === "div") {
+        if (targetSchema?.tag === "div") {
           if (!targetSchema.children) targetSchema.children = [];
           targetSchema.children.push(nuevoElemento);
+          if (sourcePath) this.removeElementAtPath(this.schema, sourcePath);
         } else {
           const parentPath = targetPath.slice(0, -1);
           const indexInParent = targetPath[targetPath.length - 1];
           const finalIndex = isAfter ? indexInParent + 1 : indexInParent;
           this.insertElementAtPath(nuevoElemento, parentPath, finalIndex);
         }
+
       } else {
         this.schema.children.push(nuevoElemento);
+        if (sourcePath) this.removeElementAtPath(this.schema, sourcePath);
       }
 
       this.renderPreview();
@@ -401,7 +396,7 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
           if (this.options.src.type.includes("image/png")) {
             data.src = await fileToBase64(this.options.src);
           }
-        } catch (e) {}
+        } catch (e) { }
       }
       const dataTransfer = {
         ...element_schema,
