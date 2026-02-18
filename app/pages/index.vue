@@ -21,21 +21,7 @@ onMounted(() => {
     }
   })
 
-  document.addEventListener('drop', (e) => {
-    if (e.target.closest('#dropzone #preview')) {
-      e.preventDefault()
-      const data = JSON.parse(e.dataTransfer.getData('text/plain'))
-
-      if (data.action === 'move') {
-        schema.value.children = schema.value.children.map(child =>
-          child.id === data.id ? { ...data.schemaData } : child
-        )
-      }
-
-      renderPreview()
-      updateSchemaDisplay()
-    }
-  })
+  document.addEventListener('drop', templateStore().onDrop)
 
   window.selectedElement = selectedElementClick
 })
