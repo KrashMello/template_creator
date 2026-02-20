@@ -1,21 +1,11 @@
 <template>
-  <div
-    class="col-span-3 border-r-2 border-slate-100 p-4 flex rounded-s-xl flex-col gap-2 shadow-lg h-full"
-  >
+  <div class="col-span-3 border-r-2 border-slate-100 p-4 flex rounded-s-xl flex-col gap-2 shadow-lg h-full">
     <div class="flex flex-col gap-2 h-full">
       <h2 class="text-xl font-bold mb-4 text-slate-800">Componentes</h2>
       <div id="componentes" class="space-y-3 h-full">
-        <div
-          class="grid grid-cols-3 items-start gap-2 w-full overflow-auto h-fit max-h-[85dvh]"
-        >
-          <ui-draggable-button
-            v-for="comp in componentes"
-            :key="`${comp.name}-dragable-comp`"
-            :tag="comp.tag"
-            :name="comp.name"
-            :icon="comp.icon"
-            :data="comp.data"
-          />
+        <div class="grid grid-cols-3 items-start gap-2 w-full overflow-auto h-fit max-h-[85dvh]">
+          <ui-draggable-button v-for="comp in componentes" :key="`${comp.name}-dragable-comp`" :tag="comp.tag"
+            :name="comp.name" :icon="comp.icon" :data="comp.data" />
         </div>
       </div>
     </div>
@@ -45,8 +35,16 @@ const componentes = shallowRef([
     icon: table,
     data: {
       table: true,
-      columns: ["column 1", "column 2"],
-      rows: [["column-row-1", "column-row-2"]],
+      columns: `{{#each table.cols}}
+    <th class="p-4">{{this}}</th>
+  {{/each}}`,
+      rows: `{{#each table.rows}}
+              <tr class="transition-colors hover:bg-zinc-50/80 dark:hover:bg-zinc-900/50">
+{{#each this}}
+    <td class="p-4">{{this}}</td>
+  {{/each}}
+</tr>
+  {{/each}}`,
       class: "w-full text-sm text-left rtl:text-right text-body",
     },
   },

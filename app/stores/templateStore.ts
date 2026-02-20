@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, nextTick } from "vue";
+import handlebars from "handlebars";
 
 // para globalizar el estilado del css de los componentes
 const GLOBAL_COMPONENT_STYLE =
@@ -10,7 +11,16 @@ const GLOBAL_COMPONENT_STYLE =
 export const templateStore = defineStore("template", {
   state: () => ({
     styleEl: null,
-    data: {},
+    data: {
+      table: {
+        cols: ["Col 1", "Col 2", "Col 3", "Col 4"],
+        rows: [
+          ["Row 1", "Row 2", "Row 3", "Row 4"],
+          ["Row 1", "Row 2", "Row 3", "Row 4"],
+          ["Row 1", "Row 2", "Row 3", "Row 4"],
+        ],
+      }
+    },
     selectedElement: null,
     cssCode: "",
     schema: {
@@ -31,7 +41,8 @@ export const templateStore = defineStore("template", {
   actions: {
     renderPreview() {
       try {
-        const html = this.generateLayoutHtml(this.schema);
+        let html = this.generateLayoutHtml(this.schema);
+        html = handlebars.compile(html)(this.data);
         this.previewHtml = html;
 
         nextTick(() => {
@@ -124,19 +135,11 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
           if (element.data.table) {
             html += `<thead class="bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800">
               <tr class="text-zinc-500 font-medium dark:text-zinc-400">
-              ${element.data.columns.map((col) => `<th class="p-4">${col}</th>`).join("")}
+              ${element.data.columns ? element.data.columns : ""}
           </tr>
         </thead>
         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
-        ${element.data.rows
-                .map(
-                  (row) => `
-              <tr class="transition-colors hover:bg-zinc-50/80 dark:hover:bg-zinc-900/50">
-                ${row.map((cell) => `<td class="p-4">${cell}</td>`).join("")}
-              </tr>
-          `,
-                )
-                .join("")}
+              ${element.data.rows ? element.data.rows : ""}
         </tbody>`;
           }
           html += `</${element.tag}>`;
@@ -161,11 +164,12 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       return html;
     },
     async generateDocument() {
+      const html = this.generateLayoutHtml(this.schema, true)
       const res = await fetch("/api/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          html: this.generateLayoutHtml(this.schema, true),
+          html: handlebars.compile(html)(this.data),
         }),
       });
       const url = URL.createObjectURL(await res.blob());
@@ -203,6 +207,16 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
             return [i, ...path];
           }
         }
+      }
+      return null;
+    },
+    findDataById(current, id) {
+      const root = current;
+      if (root.id === id) return root.data;
+      if (!root.children) return null;
+      for (const child of root.children) {
+        const result = this.findDataById(child, id);
+        if (result !== null) return result;
       }
       return null;
     },
@@ -361,14 +375,13 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       this.selectedElement = component;
       this.selectedElement.classList.add("border-slate-600");
       this.selectedElement.classList.remove("border-slate-400");
-      const element_schema = JSON.parse(this.selectedElement.dataset.schema);
-
+      const element_schema = this.findDataById(this.schema, this.selectedElement.dataset.id);
       if (element_schema) {
-        this.options.class = element_schema.data.class || "";
-        this.options.content = element_schema.data.content || "";
-        this.options.columns = JSON.stringify(element_schema.data.columns);
-        this.options.rows = JSON.stringify(element_schema.data.rows);
-        this.options.src = element_schema.data.src;
+        this.options.class = element_schema.class || "";
+        this.options.content = element_schema.content || "";
+        this.options.columns = element_schema.columns;
+        this.options.rows = element_schema.rows;
+        this.options.src = element_schema.src;
       }
     },
     async saveDataOptions() {
@@ -383,17 +396,17 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         data.class = this.options.class;
       }
       if (this.options.columns) {
-        data.columns = JSON.parse(this.options.columns);
+        data.columns = this.options.columns;
       }
       if (this.options.rows) {
-        data.rows = JSON.parse(this.options.rows);
+        data.rows = this.options.rows;
       }
       if (this.options.content) {
         data.content = this.options.content;
       }
       if (this.options.src) {
         try {
-          if (this.options.src.type.includes("image/png")) {
+          if (this.options.src.type.includes("data:image")) {
             data.src = await fileToBase64(this.options.src);
           }
         } catch (e) { }
@@ -409,7 +422,7 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
     },
   },
   persist: {
-    pick: ["styleEl", "cssCode", "schema"],
+    pick: ["styleEl", "cssCode", "schema", "data"],
   },
 });
 
