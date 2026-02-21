@@ -5,10 +5,6 @@
   >
     <!-- Top navigation bar -->
     <div class="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200 bg-white flex-shrink-0">
-      <!-- Logo -->
-      <span class="text-base font-bold mr-2 hidden sm:block">
-        <span class="text-blue-600">Report</span><span class="text-slate-800">Builder</span>
-      </span>
 
       <!-- Mode toggle -->
       <div class="flex items-center bg-slate-100 rounded-lg p-0.5 gap-0.5">
@@ -68,8 +64,9 @@
         class="a4-page mx-auto bg-white rounded-sm shadow-xl overflow-hidden"
         @click.self="store.clearSelection()"
       >
-        <!-- Header zone -->
+        <!-- Header zone – only visible when content exists -->
         <div
+          v-if="store.schema.header"
           class="zone-header"
           @dragover.prevent
           @drop.stop="(e) => store.onDrop(e, null, 'header')"
@@ -79,11 +76,8 @@
             <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/><path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"/></svg>
             Global Page Header
           </div>
-          <div v-if="store.schema.header" class="p-3">
+          <div class="p-3">
             <LayoutCanvasNode :node="store.schema.header" />
-          </div>
-          <div v-else class="zone-empty-hint">
-            Drag a Page Header component here
           </div>
         </div>
 
@@ -114,14 +108,12 @@
             </div>
           </div>
 
-          <!-- Section breakdown label -->
-          <div class="section-breakdown-divider" v-if="store.schema.children.length > 0">
-            <span>Section Breakdown</span>
-          </div>
+
         </div>
 
-        <!-- Footer zone -->
+        <!-- Footer zone – only visible when content exists -->
         <div
+          v-if="store.schema.footer"
           class="zone-footer"
           @dragover.prevent
           @drop.stop="(e) => store.onDrop(e, null, 'footer')"
@@ -131,11 +123,8 @@
             <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5z"/><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/></svg>
             Page Footer
           </div>
-          <div v-if="store.schema.footer" class="p-3">
+          <div class="p-3">
             <LayoutCanvasNode :node="store.schema.footer" />
-          </div>
-          <div v-else class="zone-empty-hint">
-            Drag a Page Footer component here
           </div>
         </div>
       </div>

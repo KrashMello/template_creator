@@ -217,7 +217,12 @@ export const templateStore = defineStore("template", {
     },
 
     // ── Drop handler principal ────────────────────────────────────────────
-    onDrop(event: DragEvent, targetId: string | null = null, zone: "header" | "footer" | "body" = "body") {
+    onDrop(
+      event: DragEvent,
+      targetId: string | null = null,
+      zone: "header" | "footer" | "body" = "body",
+      insertPosition: "before" | "after" | "inside" | null = null,
+    ) {
       event.preventDefault();
       event.stopPropagation();
 
@@ -239,18 +244,30 @@ export const templateStore = defineStore("template", {
 
         if (targetId) {
           const targetNode = findNodeById(this.schema, targetId);
-          const rect = (event.target as HTMLElement).getBoundingClientRect();
-          const relY = event.clientY - rect.top;
-
           if (targetNode?.role === "col" || targetNode?.role === "row") {
             this.moveNode(sourceId, targetId, "inside");
+          } else if (insertPosition === "inside") {
+            this.moveNode(sourceId, targetId, "inside");
           } else {
-            const pos = relY > rect.height / 2 ? "after" : "before";
+            // Use the explicit position passed from drag-over handler
+            const pos = insertPosition ?? "after";
             this.moveNode(sourceId, targetId, pos);
           }
         } else {
           this.moveNode(sourceId, null, "inside");
         }
+        return;
+      }
+
+      // Auto-route page-header / page-footer regardless of drop zone
+      if (tag === "page-header") {
+        const newNode = createNodeFromTemplate({ tag, data, nombre });
+        this.setHeader(newNode);
+        return;
+      }
+      if (tag === "page-footer") {
+        const newNode = createNodeFromTemplate({ tag, data, nombre });
+        this.setFooter(newNode);
         return;
       }
 
@@ -268,12 +285,13 @@ export const templateStore = defineStore("template", {
 
       if (targetId) {
         const targetNode = findNodeById(this.schema, targetId);
-        if (targetNode?.role === "col" || targetNode?.role === "row" || targetNode?.tag === "div") {
+        if (insertPosition === "inside" || targetNode?.role === "col" || targetNode?.role === "row" || targetNode?.tag === "div") {
           this.addToNode(targetId, newNode);
         } else {
-          // Insert after target
+          // Use explicit position (before/after) from drag-over handler
+          const pos: "before" | "after" = (insertPosition === "before" ? "before" : "after");
           this.pushHistory();
-          insertNodeRelativeTo(this.schema, newNode, targetId, "after");
+          insertNodeRelativeTo(this.schema, newNode, targetId, pos);
         }
       } else {
         this.addToRoot(newNode);
