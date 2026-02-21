@@ -406,7 +406,7 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       }
       if (this.options.src) {
         try {
-          if (this.options.src.type.includes("data:image")) {
+          if (this.options.src.type.includes("image")) {
             data.src = await fileToBase64(this.options.src);
           }
         } catch (e) { }
