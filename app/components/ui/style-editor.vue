@@ -1,40 +1,54 @@
 <template>
-  <div
-    class="flex flex-col gap-2 h-[84dvh] p-2 rounded-lg shadow-sm border-2 border-dashed border-slate-100"
-  >
-    <h2 class="text-xl font-bold text-slate-800">Styles</h2>
-    <div class="h-full gap-2">
+  <ClientOnly>
+    <ui-code-editor
+      v-model="cssCode"
+      language="css"
+      :height="height"
+    />
+    <template #fallback>
       <textarea
         v-model="cssCode"
-        :class="`w-full h-full font-mono text-sm border-2 border-dashed border-slate-200 text-slate-700  rounded-md p-3 focus:outline-none focus:ring-0 resize-none`"
+        class="w-full h-full font-mono text-sm border border-slate-200 rounded-lg p-3 resize-none focus:outline-none"
         spellcheck="false"
       />
-    </div>
-  </div>
+    </template>
+  </ClientOnly>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { computed, watch } from "vue";
 import { templateStore } from "../../stores/templateStore";
-const setStyleElTexContent = templateStore().setStyleElTexContent;
-const setStyleEl = templateStore().setStyleEl;
+
+withDefaults(defineProps<{ height?: string }>(), { height: "400px" });
+
+const store = templateStore();
+
 const cssCode = computed({
-  get() {
-    return templateStore().cssCode;
-  },
+  get() { return store.cssCode; },
   set(val) {
-    templateStore().cssCode = val;
+    store.cssCode = val;
+    // inject styles into live page
+    if (process.client) {
+      let el = document.querySelector("style[data-dynamic-css]") as HTMLStyleElement | null;
+      if (!el) {
+        el = document.createElement("style");
+        el.setAttribute("data-dynamic-css", "true");
+        document.head.appendChild(el);
+      }
+      el.textContent = val;
+    }
   },
 });
+
+// Apply on mount
 if (process.client) {
-  const el = document.createElement("style");
-  el.setAttribute("data-dynamic-css", "true");
-  document.head.appendChild(el);
-  setStyleEl(el);
-
-  setStyleElTexContent(cssCode.value);
-
-  watch(cssCode, (val) => {
-    setStyleElTexContent(val);
-  });
+  watch(
+    () => store.cssCode,
+    (val) => {
+      const el = document.querySelector("style[data-dynamic-css]") as HTMLStyleElement | null;
+      if (el) el.textContent = val;
+    },
+    { immediate: true }
+  );
 }
 </script>

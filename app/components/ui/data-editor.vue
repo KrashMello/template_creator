@@ -1,26 +1,37 @@
 <template>
-  <div class="flex flex-col gap-2 h-[84dvh] p-2 rounded-lg shadow-sm border-2 border-dashed border-slate-100">
-    <h2 class="text-xl font-bold text-slate-800">Data</h2>
-    <div class="h-full gap-2">
-      <textarea v-model="data"
-        :class="`w-full h-full font-mono text-sm border-2 border-slate-200 border-dashed text-slate-700  rounded-md p-3 focus:outline-none focus:ring-0 resize-none`"
-        spellcheck="false" />
-    </div>
-  </div>
+  <ClientOnly>
+    <ui-code-editor
+      v-model="dataJson"
+      language="json"
+      :height="height"
+    />
+    <template #fallback>
+      <textarea
+        :value="dataJson"
+        @input="dataJson = ($event.target as HTMLTextAreaElement).value"
+        class="w-full h-full font-mono text-sm border border-slate-200 rounded-lg p-3 resize-none focus:outline-none"
+        spellcheck="false"
+      />
+    </template>
+  </ClientOnly>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { computed } from "vue";
 import { templateStore } from "../../stores/templateStore";
-const data = computed({
+
+withDefaults(defineProps<{ height?: string }>(), { height: "400px" });
+
+const store = templateStore();
+
+const dataJson = computed({
   get() {
-    return JSON.stringify(templateStore().data, null, 2);
+    return JSON.stringify(store.data, null, 2);
   },
-  set(newValue) {
+  set(val: string) {
     try {
-      templateStore().data = JSON.parse(newValue);
-      templateStore().renderPreview();
-    }
-    catch (e) { }
+      store.data = JSON.parse(val);
+    } catch {}
   },
 });
 </script>

@@ -1,442 +1,506 @@
 import { defineStore } from "pinia";
-import { ref, nextTick } from "vue";
+import { ref, computed } from "vue";
 import handlebars from "handlebars";
 
-// para globalizar el estilado del css de los componentes
-const GLOBAL_COMPONENT_STYLE =
-  "draggable-component p-3 border-2 border-dashed border-input bg-background rounded-xl " +
-  "hover:border-primary/50 hover:bg-accent/50 transition-all duration-200 " +
-  "cursor-grab active:cursor-grabbing select-none";
+// ────────────────────────────────────────────────
+//  Types
+// ────────────────────────────────────────────────
+export interface SchemaNode {
+  id: string;
+  tag: string;
+  role?: "row" | "col" | "header" | "footer" | "body" | "field" | "divider";
+  data: Record<string, any>;
+  children?: SchemaNode[];
+}
 
+export interface TemplateSchema {
+  type: "container";
+  header: SchemaNode | null;
+  footer: SchemaNode | null;
+  children: SchemaNode[]; // body children
+}
+
+// ────────────────────────────────────────────────
+//  Helpers
+// ────────────────────────────────────────────────
+function uid(): string {
+  return crypto.randomUUID().replace(/-/g, "");
+}
+
+/** Recursivamente extrae claves del objeto de datos en formato "a.b.c" */
+function extractKeys(obj: Record<string, any>, prefix = ""): string[] {
+  const keys: string[] = [];
+  for (const k in obj) {
+    const full = prefix ? `${prefix}.${k}` : k;
+    if (obj[k] !== null && typeof obj[k] === "object" && !Array.isArray(obj[k])) {
+      keys.push(...extractKeys(obj[k], full));
+    } else {
+      keys.push(full);
+    }
+  }
+  return keys;
+}
+
+function cloneSchema(schema: TemplateSchema): TemplateSchema {
+  return JSON.parse(JSON.stringify(schema));
+}
+
+// ────────────────────────────────────────────────
+//  Store
+// ────────────────────────────────────────────────
 export const templateStore = defineStore("template", {
   state: () => ({
-    styleEl: null,
     data: {
+      report_date: "2025-01-01",
+      customer: {
+        fullName: "John Doe",
+        email: "john@example.com",
+      },
       table: {
-        cols: ["Col 1", "Col 2", "Col 3", "Col 4"],
+        cols: ["Service", "Volume", "Revenue"],
         rows: [
-          ["Row 1", "Row 2", "Row 3", "Row 4"],
-          ["Row 1", "Row 2", "Row 3", "Row 4"],
-          ["Row 1", "Row 2", "Row 3", "Row 4"],
+          ["Infrastructure Support", "142 Units", "$12,400.00"],
+          ["Security Audit", "1 Item", "$2,500.00"],
         ],
-      }
-    },
-    selectedElement: null,
+      },
+    } as Record<string, any>,
+
     cssCode: "",
+
     schema: {
       type: "container",
+      header: null,
+      footer: null,
       children: [],
-    },
-    schemaJson: "",
-    previewHtml: "",
-    options: {
-      class: "",
-      content: "",
-      columns: "",
-      rows: "",
-      src: "",
-    },
-  }),
-  getters: {},
-  actions: {
-    renderPreview() {
-      try {
-        let html = this.generateLayoutHtml(this.schema);
-        html = handlebars.compile(html)(this.data);
-        this.previewHtml = html;
+    } as TemplateSchema,
 
-        nextTick(() => {
-          document
-            .querySelectorAll("#preview .draggable-component")
-            .forEach((el) => {
-              el.draggable = true;
-              el.addEventListener("dragstart", this.handlePreviewDragStart);
-              el.addEventListener("dragend", this.handlePreviewDragEnd);
-              el.addEventListener("dragenter", this.onDragEnter);
-              el.addEventListener("dragleave", this.onDragLeave);
-            });
-        });
-      } catch (e) {
-        console.error("Error renderizando preview:", e);
+    /** ID del componente actualmente seleccionado en el canvas */
+    selectedComponentId: null as string | null,
+
+    /** Tipo de componente seleccionado para el panel de propiedades */
+    selectedComponentType: null as string | null,
+
+    /** Modo activo del canvas: 'design' | 'data' */
+    canvasMode: "design" as "design" | "data",
+
+    /** Historial para undo/redo */
+    history: [] as string[],
+    redoStack: [] as string[],
+  }),
+
+  getters: {
+    /** Claves del objeto de datos para autocomplete */
+    dataKeys(state): string[] {
+      return extractKeys(state.data);
+    },
+
+    /** Schema JSON formateado para mostrar */
+    schemaJson(state): string {
+      return JSON.stringify({ style: state.cssCode, schema: state.schema }, null, 2);
+    },
+
+    /** Nodo actualmente seleccionado */
+    selectedNode(state): SchemaNode | null {
+      if (!state.selectedComponentId) return null;
+      return findNodeById(state.schema, state.selectedComponentId);
+    },
+  },
+
+  actions: {
+    // ── Historia ──────────────────────────────────────────────────────────
+    pushHistory() {
+      this.history.push(JSON.stringify(this.schema));
+      this.redoStack = [];
+      if (this.history.length > 50) this.history.shift();
+    },
+
+    undo() {
+      if (!this.history.length) return;
+      this.redoStack.push(JSON.stringify(this.schema));
+      this.schema = JSON.parse(this.history.pop()!);
+      if (this.selectedComponentId) {
+        const node = findNodeById(this.schema, this.selectedComponentId);
+        if (!node) this.clearSelection();
       }
     },
-    generateLayoutHtml(schema, pdf = false) {
-      if (!schema.children || schema.children.length === 0) return "";
-      const html = `
-<html>
-<head>
-<style>
-${this.cssCode}
-</style>
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-</head>
-<body>
-${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
-</body>
-</html>
-`;
-      return html;
-    },
-    updateSchemaDisplay() {
-      this.schemaJson = JSON.stringify(
-        { style: this.cssCode, schema: this.schema },
-        null,
-        2,
-      ).trim();
-    },
-    generateElementHtml(element, pdf = false) {
-      let html = "";
-      const divDraggable = `<div 
-      id="${element.id}"
-      class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50"
-      draggable="true"
-      data-schema='${JSON.stringify(element)}'
-      data-id="${element.id}"
-      onclick="selectedElement(event)">`;
 
-      let gen = {
-        img: () => {
-          html = `
-        <${element.tag}
-          src='${element.data.src}'
-          class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${element.data.class}"
-          draggable="true"
-          data-schema='${JSON.stringify(element)}'
-          data-id="${element.id}"
-          onclick="selectedElement(event)"
-      />
-      `;
-        },
-        div: () => {
-          html = `<${element.tag}
-          class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${element.data.class}"
-          draggable="true"
-          data-schema='${JSON.stringify(element)}'
-          data-id="${element.id}"
-          onclick="selectedElement(event)"
-        >`;
-          if (element.children && element.children.length > 0) {
-            html += element.children
-              .map((child) => this.generateElementHtml(child, pdf))
-              .join("");
-          }
-          html += `</${element.tag}>`;
-        },
-        table: () => {
-          html = `
-          <${element.tag}
-            draggable="true"
-            id="${element.id}"
-            data-schema='${JSON.stringify(element)}'
-            data-id="${element.id}"
-            onclick="selectedElement(event)"
-            class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${element.data.class}"
-            >`;
-          if (element.data.table) {
-            html += `<thead class="bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800">
-              <tr class="text-zinc-500 font-medium dark:text-zinc-400">
-              ${element.data.columns ? element.data.columns : ""}
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
-              ${element.data.rows ? element.data.rows : ""}
-        </tbody>`;
-          }
-          html += `</${element.tag}>`;
-        },
-        p: () => {
-          html = `
-          <${element.tag}
-          class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${element.data.class}"
-          draggable="true"
-          data-schema='${JSON.stringify(element)}'
-          data-id="${element.id}"
-          onclick="selectedElement(event)"
-          placeholder="type here..."
-          >`;
-          if (element.data.content) {
-            html += element.data.content;
-          }
-          html += `</${element.tag}>`;
-        },
-      };
-      gen[element.tag]();
-      return html;
+    redo() {
+      if (!this.redoStack.length) return;
+      this.history.push(JSON.stringify(this.schema));
+      this.schema = JSON.parse(this.redoStack.pop()!);
     },
+
+    // ── Selección ─────────────────────────────────────────────────────────
+    selectComponent(id: string | null) {
+      this.selectedComponentId = id;
+      if (id) {
+        const node = findNodeById(this.schema, id);
+        this.selectedComponentType = node?.tag ?? null;
+      } else {
+        this.selectedComponentType = null;
+      }
+    },
+
+    clearSelection() {
+      this.selectedComponentId = null;
+      this.selectedComponentType = null;
+    },
+
+    // ── Mutaciones CRUD ───────────────────────────────────────────────────
+    addToRoot(node: SchemaNode) {
+      this.pushHistory();
+      this.schema.children.push(node);
+    },
+
+    addToNode(parentId: string, node: SchemaNode) {
+      this.pushHistory();
+      const parent = findNodeById(this.schema, parentId);
+      if (parent) {
+        if (!parent.children) parent.children = [];
+        parent.children.push(node);
+      }
+    },
+
+    moveNode(nodeId: string, targetId: string | null, position: "before" | "after" | "inside") {
+      this.pushHistory();
+
+      // Extraer el nodo a mover
+      const node = findNodeById(this.schema, nodeId);
+      if (!node) return;
+      const nodeClone = JSON.parse(JSON.stringify(node));
+
+      // Eliminar de su posición original
+      removeNodeById(this.schema, nodeId);
+
+      if (!targetId || position === "inside") {
+        // Si no hay target, agregar al root body
+        if (!targetId) {
+          this.schema.children.push(nodeClone);
+          return;
+        }
+        // Si es "inside", agregar como hijo del target
+        const target = findNodeById(this.schema, targetId);
+        if (target) {
+          if (!target.children) target.children = [];
+          target.children.push(nodeClone);
+        }
+      } else {
+        // before/after respect parent position
+        insertNodeRelativeTo(this.schema, nodeClone, targetId, position);
+      }
+    },
+
+    updateNodeData(nodeId: string, newData: Record<string, any>) {
+      this.pushHistory();
+      const node = findNodeById(this.schema, nodeId);
+      if (node) {
+        node.data = { ...node.data, ...newData };
+      }
+    },
+
+    deleteNode(nodeId: string) {
+      this.pushHistory();
+      removeNodeById(this.schema, nodeId);
+      if (this.selectedComponentId === nodeId) {
+        this.clearSelection();
+      }
+    },
+
+    setHeader(node: SchemaNode | null) {
+      this.pushHistory();
+      this.schema.header = node;
+    },
+
+    setFooter(node: SchemaNode | null) {
+      this.pushHistory();
+      this.schema.footer = node;
+    },
+
+    // ── Drop handler principal ────────────────────────────────────────────
+    onDrop(event: DragEvent, targetId: string | null = null, zone: "header" | "footer" | "body" = "body") {
+      event.preventDefault();
+      event.stopPropagation();
+
+      let transferData: any;
+      try {
+        transferData = JSON.parse(event.dataTransfer!.getData("text/plain"));
+      } catch {
+        return;
+      }
+
+      const { action, id: sourceId, tag, data, nombre } = transferData;
+
+      if (action === "move") {
+        // Mover elemento existente
+        if (sourceId === targetId) return;
+
+        const sourceNode = findNodeById(this.schema, sourceId);
+        if (!sourceNode) return;
+
+        if (targetId) {
+          const targetNode = findNodeById(this.schema, targetId);
+          const rect = (event.target as HTMLElement).getBoundingClientRect();
+          const relY = event.clientY - rect.top;
+
+          if (targetNode?.role === "col" || targetNode?.role === "row") {
+            this.moveNode(sourceId, targetId, "inside");
+          } else {
+            const pos = relY > rect.height / 2 ? "after" : "before";
+            this.moveNode(sourceId, targetId, pos);
+          }
+        } else {
+          this.moveNode(sourceId, null, "inside");
+        }
+        return;
+      }
+
+      // Crear nuevo elemento
+      const newNode = createNodeFromTemplate({ tag, data, nombre });
+
+      if (zone === "header") {
+        this.setHeader(newNode);
+        return;
+      }
+      if (zone === "footer") {
+        this.setFooter(newNode);
+        return;
+      }
+
+      if (targetId) {
+        const targetNode = findNodeById(this.schema, targetId);
+        if (targetNode?.role === "col" || targetNode?.role === "row" || targetNode?.tag === "div") {
+          this.addToNode(targetId, newNode);
+        } else {
+          // Insert after target
+          this.pushHistory();
+          insertNodeRelativeTo(this.schema, newNode, targetId, "after");
+        }
+      } else {
+        this.addToRoot(newNode);
+      }
+    },
+
+    // ── PDF Export ────────────────────────────────────────────────────────
     async generateDocument() {
-      const html = this.generateLayoutHtml(this.schema, true)
+      const html = this.generateLayoutHtml(true);
       const res = await fetch("/api/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          html: handlebars.compile(html)(this.data),
-        }),
+        body: JSON.stringify({ html: handlebars.compile(html)(this.data) }),
       });
       const url = URL.createObjectURL(await res.blob());
       window.open(url, "_blank");
       URL.revokeObjectURL(url);
     },
-    deleteElement() {
-      if (!this.selectedElement) return;
-      const path = this.findPathById(
-        this.schema,
-        this.selectedElement.dataset.id,
-      );
-      this.removeElementAtPath(this.schema, path);
 
-      this.selectedElement = null;
-      this.renderPreview();
-      this.updateSchemaDisplay();
-    },
-    getElementByPath(path) {
-      let current = this.schema;
-      for (let index of path) {
-        current = current.children[index];
-      }
-      return current;
-    },
-    findPathById(current, id) {
-      const root = current;
-      if (root.id === id) return [];
+    generateLayoutHtml(pdf = false): string {
+      const bodyHtml = this.schema.children
+        .map((n) => generateElementHtml(n, pdf))
+        .join("");
+      const headerHtml = this.schema.header
+        ? generateElementHtml(this.schema.header, pdf)
+        : "";
+      const footerHtml = this.schema.footer
+        ? generateElementHtml(this.schema.footer, pdf)
+        : "";
 
-      if (root.children) {
-        for (let i = 0; i < root.children.length; i++) {
-          const child = root.children[i];
-          const path = this.findPathById(child, id);
-          if (path !== null) {
-            return [i, ...path];
-          }
-        }
-      }
-      return null;
-    },
-    findDataById(current, id) {
-      const root = current;
-      if (root.id === id) return root.data;
-      if (!root.children) return null;
-      for (const child of root.children) {
-        const result = this.findDataById(child, id);
-        if (result !== null) return result;
-      }
-      return null;
-    },
-    insertElementAtPath(root, element, path, index) {
-      let parent = root;
-      for (let i = 0; i < path.length; i++) {
-        parent = parent.children[path[i]];
-      }
-      if (!parent.children) parent.children = [];
-      parent.children.splice(index, 0, element);
-    },
-    removeElementAtPath(root, path) {
-      if (!path || path.length === 0) return;
-      let parent = root;
-      for (let i = 0; i < path.length - 1; i++) {
-        parent = parent.children[path[i]];
-      }
-      const lastIndex = path[path.length - 1];
-      parent.children.splice(lastIndex, 1);
-    },
-    setStyleEl(el) {
-      this.styleEl = el;
-    },
-    setStyleElTexContent(css) {
-      if (this.styleEl) this.styleEl.textContent = css;
-    },
-    onDrop(event) {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const dropTarget = event.target.closest(".draggable-component");
-      if (dropTarget) {
-        dropTarget.classList.remove(
-          "border-slate-400",
-          "bg-blue-50",
-          "border-solid",
-        );
-        dropTarget.classList.add("border-dashed", "border-slate-400");
-      }
-
-      let transferData;
-      try {
-        transferData = JSON.parse(event.dataTransfer.getData("text/plain"));
-      } catch (e) {
-        return;
-      }
-
-      let action = transferData.action || null;
-      let id = transferData.id || null;
-      let schemaData = transferData.schemaData || transferData;
-
-      if (action === "move" && dropTarget && dropTarget.dataset.id === id) {
-        return;
-      }
-
-      let nuevoElemento;
-      if (action === null) {
-        nuevoElemento = {
-          id: crypto.randomUUID().split("-").join(""),
-          tag: schemaData.tag,
-          data: { ...schemaData.data },
-          children: [],
-        };
-      } else {
-        nuevoElemento = schemaData;
-      }
-
-      const sourcePath = this.findPathById(this.schema, id);
-      if (dropTarget) {
-        const targetId = dropTarget.dataset.id;
-        const targetPath = this.findPathById(this.schema, targetId);
-        const targetSchema = this.getElementByPath(targetPath);
-        const rect = dropTarget.getBoundingClientRect();
-        const relativeY = event.clientY - rect.top;
-        const isAfter = relativeY > rect.height / 2;
-
-        if (targetSchema?.tag === "div") {
-          if (!targetSchema.children) targetSchema.children = [];
-          targetSchema.children.push(nuevoElemento);
-          if (sourcePath) this.removeElementAtPath(this.schema, sourcePath);
-        } else {
-          const parentPath = targetPath.slice(0, -1);
-          const indexInParent = targetPath[targetPath.length - 1];
-          const finalIndex = isAfter ? indexInParent + 1 : indexInParent;
-          this.insertElementAtPath(nuevoElemento, parentPath, finalIndex);
-        }
-
-      } else {
-        this.schema.children.push(nuevoElemento);
-        if (sourcePath) this.removeElementAtPath(this.schema, sourcePath);
-      }
-
-      this.renderPreview();
-      this.updateSchemaDisplay();
-    },
-    handlePreviewDragStart(event) {
-      const element = event.target.closest(".draggable-component");
-      const schemaData = JSON.parse(element.dataset.schema);
-      const id = element.dataset.id;
-      event.dataTransfer.setData(
-        "text/plain",
-        JSON.stringify({
-          action: "move",
-          id,
-          schemaData,
-        }),
-      );
-    },
-    handlePreviewDragEnd(event) {
-      this.renderPreview();
-    },
-    onDragEnter(event) {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const target = event.target.closest(".draggable-component");
-
-      if (target) {
-        target.classList.add("border-slate-600", "border-solid");
-        target.classList.remove("border-dashed", "border-slate-400");
-      }
-    },
-    onDragLeave(event) {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const target = event.target.closest(".draggable-component");
-
-      if (target) {
-        target.classList.remove("border-slate-600", "border-solid");
-        target.classList.add("border-dashed", "border-slate-400");
-      }
-    },
-    replace(root, element) {
-      return root.children.map((v) => {
-        if (v.id !== element.id) {
-          v.children = this.replace(v, element);
-          return v;
-        } else {
-          return element;
-        }
-      });
-    },
-    updateElementAtPath(element) {
-      this.schema.children = this.replace(this.schema, element);
-    },
-    selectedElementClick(event) {
-      event.stopPropagation();
-      const component = event.target.closest(".draggable-component");
-
-      if (!component) return;
-      if (this.selectedElement) {
-        this.selectedElement.classList.remove("border-slate-600");
-        this.selectedElement.classList.add("border-slate-400");
-      }
-      this.selectedElement = component;
-      this.selectedElement.classList.add("border-slate-600");
-      this.selectedElement.classList.remove("border-slate-400");
-      const element_schema = this.findDataById(this.schema, this.selectedElement.dataset.id);
-      if (element_schema) {
-        this.options.class = element_schema.class || "";
-        this.options.content = element_schema.content || "";
-        this.options.columns = element_schema.columns;
-        this.options.rows = element_schema.rows;
-        this.options.src = element_schema.src;
-      }
-    },
-    async saveDataOptions() {
-      if (!this.selectedElement) return;
-
-      const element_schema = JSON.parse(this.selectedElement.dataset.schema);
-      let data = {
-        ...element_schema.data,
-      };
-
-      if (this.options.class) {
-        data.class = this.options.class;
-      }
-      if (this.options.columns) {
-        data.columns = this.options.columns;
-      }
-      if (this.options.rows) {
-        data.rows = this.options.rows;
-      }
-      if (this.options.content) {
-        data.content = this.options.content;
-      }
-      if (this.options.src) {
-        try {
-          if (this.options.src.type.includes("data:image")) {
-            data.src = await fileToBase64(this.options.src);
-          }
-        } catch (e) { }
-      }
-      const dataTransfer = {
-        ...element_schema,
-        data,
-      };
-      this.updateElementAtPath(dataTransfer);
-      this.selectedElement = null;
-      this.renderPreview();
-      this.updateSchemaDisplay();
+      return `<html><head><style>${this.cssCode}</style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"><\/script>
+</head><body>
+${headerHtml}
+<div class="body-zone">${bodyHtml}</div>
+${footerHtml}
+</body></html>`;
     },
   },
+
   persist: {
-    pick: ["styleEl", "cssCode", "schema", "data"],
+    pick: ["cssCode", "schema", "data"],
   },
 });
 
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+// ────────────────────────────────────────────────
+//  Tree utilities (module-level, not in store)
+// ────────────────────────────────────────────────
 
-    reader.onload = () => {
-      const result = reader.result?.toString() || "";
-      resolve(result);
+export function findNodeById(root: TemplateSchema | SchemaNode, id: string): SchemaNode | null {
+  // Handle TemplateSchema root
+  const s = root as TemplateSchema;
+  if (s.type === "container") {
+    if (s.header) {
+      if (s.header.id === id) return s.header;
+      const found = findInNode(s.header, id);
+      if (found) return found;
+    }
+    if (s.footer) {
+      if (s.footer.id === id) return s.footer;
+      const found = findInNode(s.footer, id);
+      if (found) return found;
+    }
+    for (const child of s.children) {
+      if (child.id === id) return child;
+      const found = findInNode(child, id);
+      if (found) return found;
+    }
+    return null;
+  }
+  // Handle SchemaNode
+  return findInNode(root as SchemaNode, id);
+}
+
+function findInNode(node: SchemaNode, id: string): SchemaNode | null {
+  if (node.id === id) return node;
+  if (node.children) {
+    for (const child of node.children) {
+      const found = findInNode(child, id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+export function removeNodeById(root: TemplateSchema, id: string): boolean {
+  if (root.header?.id === id) { root.header = null; return true; }
+  if (root.footer?.id === id) { root.footer = null; return true; }
+  return removeFromChildren(root.children, id);
+}
+
+function removeFromChildren(children: SchemaNode[], id: string): boolean {
+  const idx = children.findIndex((c) => c.id === id);
+  if (idx !== -1) {
+    children.splice(idx, 1);
+    return true;
+  }
+  for (const child of children) {
+    if (child.children && removeFromChildren(child.children, id)) return true;
+  }
+  return false;
+}
+
+function insertNodeRelativeTo(
+  root: TemplateSchema,
+  newNode: SchemaNode,
+  targetId: string,
+  position: "before" | "after"
+): boolean {
+  return insertInChildren(root.children, newNode, targetId, position);
+}
+
+function insertInChildren(
+  children: SchemaNode[],
+  newNode: SchemaNode,
+  targetId: string,
+  position: "before" | "after"
+): boolean {
+  const idx = children.findIndex((c) => c.id === targetId);
+  if (idx !== -1) {
+    const insertAt = position === "after" ? idx + 1 : idx;
+    children.splice(insertAt, 0, newNode);
+    return true;
+  }
+  for (const child of children) {
+    if (child.children && insertInChildren(child.children, newNode, targetId, position)) return true;
+  }
+  return false;
+}
+
+export function createNodeFromTemplate(template: { tag: string; data: any; nombre?: string }): SchemaNode {
+  const { tag, data } = template;
+
+  // Columnas: crear row con 2 cols internas
+  if (tag === "columns") {
+    const colCount = data?.cols ?? 2;
+    const cols: SchemaNode[] = Array.from({ length: colCount }, () => ({
+      id: uid(),
+      tag: "div",
+      role: "col" as const,
+      data: { class: "flex-1 min-h-16 min-w-0" },
+      children: [],
+    }));
+    return {
+      id: uid(),
+      tag: "div",
+      role: "row" as const,
+      data: { class: "flex flex-row gap-4 w-full", cols: colCount },
+      children: cols,
     };
+  }
 
-    reader.onerror = (error) => reject(error);
+  // Header fijo
+  if (tag === "page-header") {
+    return {
+      id: uid(),
+      tag: "div",
+      role: "header" as const,
+      data: { class: "flex items-center gap-4 p-4 border-b border-slate-200", content: "Enterprise Report Header" },
+      children: [],
+    };
+  }
 
-    reader.readAsDataURL(file);
-  });
-};
+  // Footer fijo
+  if (tag === "page-footer") {
+    return {
+      id: uid(),
+      tag: "div",
+      role: "footer" as const,
+      data: { class: "flex items-center justify-between p-4 border-t border-slate-200", content: "Page Footer" },
+      children: [],
+    };
+  }
+
+  // Data Field
+  if (tag === "data-field") {
+    return {
+      id: uid(),
+      tag: "div",
+      role: "field" as const,
+      data: { binding: "", format: "default", class: "" },
+      children: [],
+    };
+  }
+
+  // Divisor
+  if (tag === "hr") {
+    return {
+      id: uid(),
+      tag: "hr",
+      role: "divider" as const,
+      data: { class: "border-slate-200 my-2" },
+      children: [],
+    };
+  }
+
+  return {
+    id: uid(),
+    tag,
+    data: { ...data },
+    children: tag === "div" ? [] : undefined,
+  };
+}
+
+// ────────────────────────────────────────────────
+//  HTML generation (for PDF export only)
+// ────────────────────────────────────────────────
+function generateElementHtml(node: SchemaNode, pdf = false): string {
+  const { tag, data, children, role } = node;
+
+  if (tag === "hr") return `<hr class="${data.class ?? ""}" />`;
+  if (tag === "img") return `<img src="${data.src ?? ""}" class="${data.class ?? ""}" alt="" />`;
+
+  if (tag === "p") {
+    return `<p class="${data.class ?? ""}">${data.content ?? ""}</p>`;
+  }
+
+  if (tag === "table") {
+    const thead = `<thead><tr>${data.columns ?? ""}</tr></thead>`;
+    const tbody = `<tbody>${data.rows ?? ""}</tbody>`;
+    return `<table class="${data.class ?? ""}">${thead}${tbody}</table>`;
+  }
+
+  if (tag === "div") {
+    const inner = (children ?? []).map((c) => generateElementHtml(c, pdf)).join("");
+    return `<div class="${data.class ?? ""}">${data.content ?? ""}${inner}</div>`;
+  }
+
+  return "";
+}

@@ -1,28 +1,14 @@
 <template>
-  <layout-left-bar />
-  <layout-center-container />
-  <layout-right-bar />
+  <div class="flex h-screen w-screen overflow-hidden bg-slate-100">
+    <layout-left-bar />
+    <layout-center-container class="flex-1 min-w-0" />
+    <layout-right-bar />
+  </div>
 </template>
 
-<script setup>
-import { ref, onMounted, nextTick } from 'vue'
+<script setup lang="ts">
 import { templateStore } from '../stores/templateStore'
-const schema = templateStore().schema
-const renderPreview = templateStore().renderPreview
-const updateSchemaDisplay = templateStore().updateSchemaDisplay
-const selectedElementClick = templateStore().selectedElementClick
-onMounted(() => {
-  renderPreview()
-  updateSchemaDisplay()
 
-  document.addEventListener('dragover', (e) => {
-    if (e.target.closest('#dropzone')) {
-      e.preventDefault()
-    }
-  })
-
-  document.addEventListener('drop', templateStore().onDrop)
-
-  window.selectedElement = selectedElementClick
-})
+// No onMounted DOM hacks needed — everything is reactive
+const store = templateStore()
 </script>
