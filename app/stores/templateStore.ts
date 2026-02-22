@@ -4,8 +4,8 @@ import handlebars from "handlebars";
 
 // para globalizar el estilado del css de los componentes
 const GLOBAL_COMPONENT_STYLE =
-  "draggable-component p-3 border-2 border-dashed border-input bg-background rounded-xl " +
-  "hover:border-primary/50 hover:bg-accent/50 transition-all duration-200 " +
+  "draggable-component p-3 border-3 border-dashed border-black/50 bg-background rounded-xl " +
+  "hover:bg-accent/50 transition-all duration-200 " +
   "cursor-grab active:cursor-grabbing select-none";
 
 export const templateStore = defineStore("template", {
@@ -84,83 +84,76 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         2,
       ).trim();
     },
-    generateElementHtml(element, pdf = false) {
+    generateElementHtml(elementDataSet, pdf = false) {
       let html = "";
       const divDraggable = `<div 
-      id="${element.id}"
+      id="${elementDataSet.id}"
       class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50"
       draggable="true"
-      data-schema='${JSON.stringify(element)}'
-      data-id="${element.id}"
       onclick="selectedElement(event)">`;
 
-      let gen = {
+      let elements = {
         img: () => {
           html = `
-        <${element.tag}
-          src='${element.data.src}'
-          class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${element.data.class}"
+        <${elementDataSet.tag}
+          id="${elementDataSet.id}"
+          src='${elementDataSet.data.src}'
+          class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${elementDataSet.data.class}"
           draggable="true"
-          data-schema='${JSON.stringify(element)}'
-          data-id="${element.id}"
           onclick="selectedElement(event)"
       />
       `;
         },
         div: () => {
-          html = `<${element.tag}
-          class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${element.data.class}"
+          html = `<${elementDataSet.tag}
+          class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${elementDataSet.data.class}"
+          id="${elementDataSet.id}"
           draggable="true"
-          data-schema='${JSON.stringify(element)}'
-          data-id="${element.id}"
           onclick="selectedElement(event)"
         >`;
-          if (element.children && element.children.length > 0) {
-            html += element.children
+          if (elementDataSet.children && elementDataSet.children.length > 0) {
+            html += elementDataSet.children
               .map((child) => this.generateElementHtml(child, pdf))
               .join("");
           }
-          html += `</${element.tag}>`;
+          html += `</${elementDataSet.tag}>`;
         },
         table: () => {
           html = `
-          <${element.tag}
+          <${elementDataSet.tag}
             draggable="true"
-            id="${element.id}"
-            data-schema='${JSON.stringify(element)}'
-            data-id="${element.id}"
+            id="${elementDataSet.id}"
             onclick="selectedElement(event)"
-            class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${element.data.class}"
+            class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${elementDataSet.data.class}"
             >`;
-          if (element.data.table) {
-            html += `<thead class="bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800">
-              <tr class="text-zinc-500 font-medium dark:text-zinc-400">
-              ${element.data.columns ? element.data.columns : ""}
+          if (elementDataSet.data.table) {
+            html += `<thead class="dark:bg-zinc-50 bg-zinc-900 border-b dark:border-zinc-200 border-zinc-800">
+              <tr class="dark:text-zinc-500 font-medium text-zinc-400">
+              ${elementDataSet.data.columns ? elementDataSet.data.columns : ""}
           </tr>
         </thead>
         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
-              ${element.data.rows ? element.data.rows : ""}
+              ${elementDataSet.data.rows ? elementDataSet.data.rows : ""}
         </tbody>`;
           }
-          html += `</${element.tag}>`;
+          html += `</${elementDataSet.tag}>`;
         },
         p: () => {
           html = `
-          <${element.tag}
-          class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${element.data.class}"
-          draggable="true"
-          data-schema='${JSON.stringify(element)}'
-          data-id="${element.id}"
-          onclick="selectedElement(event)"
-          placeholder="type here..."
+          <${elementDataSet.tag}
+            id="${elementDataSet.id}"
+            class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${elementDataSet.data.class}"
+            draggable="true"
+            onclick="selectedElement(event)"
+            placeholder="type here..."
           >`;
-          if (element.data.content) {
-            html += element.data.content;
+          if (elementDataSet.data.content) {
+            html += elementDataSet.data.content;
           }
-          html += `</${element.tag}>`;
+          html += `</${elementDataSet.tag}>`;
         },
       };
-      gen[element.tag]();
+      elements[elementDataSet.tag]();
       return html;
     },
     async generateDocument() {
@@ -212,7 +205,7 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
     },
     findDataById(current, id) {
       const root = current;
-      if (root.id === id) return root.data;
+      if (root.id === id) return root;
       if (!root.children) return null;
       for (const child of root.children) {
         const result = this.findDataById(child, id);
@@ -250,11 +243,10 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       const dropTarget = event.target.closest(".draggable-component");
       if (dropTarget) {
         dropTarget.classList.remove(
-          "border-slate-400",
-          "bg-blue-50",
+          "border-black",
           "border-solid",
         );
-        dropTarget.classList.add("border-dashed", "border-slate-400");
+        dropTarget.classList.add("border-dashed", "border-black/50");
       }
 
       let transferData;
@@ -268,7 +260,7 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       let id = transferData.id || null;
       let schemaData = transferData.schemaData || transferData;
 
-      if (action === "move" && dropTarget && dropTarget.dataset.id === id) {
+      if (action === "move" && dropTarget && dropTarget.id === id) {
         return;
       }
 
@@ -286,7 +278,7 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
 
       const sourcePath = this.findPathById(this.schema, id);
       if (dropTarget) {
-        const targetId = dropTarget.dataset.id;
+        const targetId = dropTarget.id;
         const targetPath = this.findPathById(this.schema, targetId);
         const targetSchema = this.getElementByPath(targetPath);
         const rect = dropTarget.getBoundingClientRect();
@@ -314,8 +306,8 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
     },
     handlePreviewDragStart(event) {
       const element = event.target.closest(".draggable-component");
-      const schemaData = JSON.parse(element.dataset.schema);
-      const id = element.dataset.id;
+      const schemaData = this.findDataById(this.schema,element.id);
+      const id = element.id;
       event.dataTransfer.setData(
         "text/plain",
         JSON.stringify({
@@ -335,8 +327,8 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       const target = event.target.closest(".draggable-component");
 
       if (target) {
-        target.classList.add("border-slate-600", "border-solid");
-        target.classList.remove("border-dashed", "border-slate-400");
+        target.classList.add("border-black", "border-solid");
+        target.classList.remove("border-dashed", "border-black/50");
       }
     },
     onDragLeave(event) {
@@ -346,8 +338,8 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       const target = event.target.closest(".draggable-component");
 
       if (target) {
-        target.classList.remove("border-slate-600", "border-solid");
-        target.classList.add("border-dashed", "border-slate-400");
+        target.classList.remove("border-black", "border-solid");
+        target.classList.add("border-dashed", "border-black/50");
       }
     },
     replace(root, element) {
@@ -369,25 +361,26 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
 
       if (!component) return;
       if (this.selectedElement) {
-        this.selectedElement.classList.remove("border-slate-600");
-        this.selectedElement.classList.add("border-slate-400");
+        this.selectedElement.classList.remove("border-black","border-solid");
+        this.selectedElement.classList.add("border-black/50","border-dashed");
       }
       this.selectedElement = component;
-      this.selectedElement.classList.add("border-slate-600");
-      this.selectedElement.classList.remove("border-slate-400");
-      const element_schema = this.findDataById(this.schema, this.selectedElement.dataset.id);
+      this.selectedElement.classList.add("border-black", 'border-solid');
+      this.selectedElement.classList.remove("border-black/50","border-dashed");
+      const element_schema = this.findDataById(this.schema, this.selectedElement.id);
+
       if (element_schema) {
-        this.options.class = element_schema.class || "";
-        this.options.content = element_schema.content || "";
-        this.options.columns = element_schema.columns;
-        this.options.rows = element_schema.rows;
-        this.options.src = element_schema.src;
+        this.options.class = element_schema.data.class || "";
+        this.options.content = element_schema.data.content || "";
+        this.options.columns = element_schema.data.columns;
+        this.options.rows = element_schema.data.rows;
+        this.options.src = element_schema.data.src;
       }
     },
     async saveDataOptions() {
       if (!this.selectedElement) return;
 
-      const element_schema = JSON.parse(this.selectedElement.dataset.schema);
+      const element_schema = this.findDataById(this.schema, this.selectedElement.id);
       let data = {
         ...element_schema.data,
       };
@@ -415,6 +408,8 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         ...element_schema,
         data,
       };
+      this.selectedElement.classList.remove("border-black", 'border-solid');
+      this.selectedElement.classList.add("border-black/50","border-dashed");
       this.updateElementAtPath(dataTransfer);
       this.selectedElement = null;
       this.renderPreview();
