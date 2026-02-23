@@ -33,17 +33,17 @@
       <form @submit.prevent="saveDataOptions" class="h-full flex flex-col gap-2">
         <div class="flex-1 px-5">
           <ui-input v-if="selectedNode.data.content" v-model="options.content" type="textarea" title="texto"
-            placeholder="content" />
+            @blur="saveContent" placeholder="content" />
           <ui-input v-if="selectedNode.data.columns" v-model="options.columns" type="textarea" title="columns"
             placeholder="columns" />
-          <ui-input v-if="selectedNode.data.src" @change="options.src = $event.target.files[0]" title="file"
-            placeholder="src" type="file" acepted="image/*" />
+          <ui-input v-if="selectedNode.data.src" @change="onImageFile" title="file" placeholder="src" type="file"
+            acepted="image/*" />
           <ui-input v-if="selectedNode.data.rows" v-model="options.rows" type="textarea" title="rows"
             placeholder="rows" />
           <section>
-            <SectionTitle>Style &amp; Layout</SectionTitle>
-            <div v-if="selectedNode.tag === 'p'" class="space-y-3">
-              <ui-input v-model="options.class" title="CSS classes" placeholder="classes" />
+            <span>Style &amp; Layout</span>
+            <ui-input v-model="options.class" title="CSS classes" placeholder="classes" />
+            <div v-if="selectedNode.tag === 'p'" class="space-y-3 pt-2">
               <div>
                 <label class=" block text-xs font-medium text-slate-600 mb-1">Font Weight</label>
                 <div class="flex gap-1">
@@ -68,16 +68,11 @@
                   ]" @click.prevent="localColor = color.class; saveColor()" :title="color.label" />
                   <input type="color"
                     class="w-6 h-6 rounded-full border border-slate-200 cursor-pointer bg-transparent p-0"
-                    title="Custom color" />
+                    title="Custom color" @change="(e) => console.log(e.target.value)" />
                 </div>
               </div>
             </div>
           </section>
-        </div>
-        <div class="border-slate-100 border-t pt-3 flex flex-shrink-0 gap-2">
-          <ui-button class="flex-1" type="submit">Guardar</ui-button>
-          <ui-button class="flex-1 bg-red-500 hover:bg-red-700 text-white font-bold p-2 rounded-lg"
-            @click="deleteElement">cancel</ui-button>
         </div>
       </form>
     </div>
@@ -86,14 +81,15 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, computed } from "vue";
-
-const selectedElement = computed(() => templateStore().selectedElement);
-const selectedNode = computed(() => templateStore().selectedNode);
-const options = computed(() => templateStore().options);
-const saveDataOptions = templateStore().saveDataOptions;
-const deleteElement = templateStore().deleteElement;
+const store = templateStore();
+const selectedElement = computed(() => store.selectedElement);
+const selectedNode = computed(() => store.selectedNode);
+const options = computed(() => store.options);
+const saveDataOptions = store.saveDataOptions;
+const deleteElement = store.deleteElement;
 const localFontWeight = ref("");
 const localColor = ref("");
+
 
 function removeWeightClasses(cls: string): string {
   return cls.replace(/font-(light|normal|semibold|bold|extrabold)/g, "").trim();
@@ -102,19 +98,29 @@ function removeWeightClasses(cls: string): string {
 function removeColorClasses(cls: string): string {
   return cls.replace(/text-[a-z]+-\d+/g, "").trim();
 }
+function saveContent() {
+  if (!selectedNode.value) return;
+  store.saveDataOptions()
+}
 function saveColor() {
   if (!selectedNode.value) return;
   let cls = removeColorClasses(options.value.class);
   if (localColor.value) cls = `${cls} ${localColor.value}`.trim();
-  console.log(cls);
   options.value.class = cls;
+  store.saveDataOptions();
 }
 function saveFontWeight() {
   if (!selectedNode.value) return;
   let cls = removeWeightClasses(options.value.class);
   if (localFontWeight.value) cls = `${cls} ${localFontWeight.value}`.trim();
-  console.log(cls);
   options.value.class = cls;
+  store.saveDataOptions();
+}
+async function onImageFile(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file || !selectedNode.value) return;
+  options.value.src = file;
+  store.saveDataOptions();
 }
 
 const formats = [
@@ -134,6 +140,10 @@ const presetColors = [
   { class: "text-slate-900", bg: "bg-slate-900", label: "Black" },
   { class: "text-blue-600", bg: "bg-blue-600", label: "Blue" },
   { class: "text-indigo-600", bg: "bg-indigo-600", label: "Indigo" },
+  { class: "text-green-600", bg: "bg-green-600", label: "Green" },
+  { class: "text-yellow-600", bg: "bg-yellow-600", label: "Yellow" },
+  { class: "text-red-600", bg: "bg-red-600", label: "Red" },
+
 ];
 
 const handleKeyDown = (event) => {

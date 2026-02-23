@@ -467,7 +467,7 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       this.selectedElement.classList.remove("border-black", 'border-solid');
       this.selectedElement.classList.add("border-black/50", "border-dashed");
       this.updateElementAtPath(dataTransfer);
-      this.selectedElement = null;
+      // this.selectedElement = null;
       this.renderPreview();
       this.updateSchemaDisplay();
     },

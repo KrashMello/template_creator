@@ -4,9 +4,7 @@
     <div v-if="props.type === 'textarea'" class="relative">
       <!-- <textarea :id="props.id" v-model="proxyValue" :class="CLASS" :placeholder="props.placeholder"></textarea> -->
       <textarea ref="inputRef" v-bind="$attrs" :value="props.modelValue" @input="onInput" @keydown="onKeyDown"
-        @blur="onBlur"
-        class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-colors"
-        :class="$attrs.class" />
+        @blur="onBlur" :class="`${CLASS} ${$attrs.class}`" />
       <Teleport to="body">
         <div v-if="showDropdown && filteredKeys.length" :style="dropdownStyle"
           class="fixed z-[9999] bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden w-56">
@@ -36,11 +34,7 @@
 <script setup lang="ts">
 import { templateStore } from "../../stores/templateStore";
 const CLASS =
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm " +
-  "transition-all file:border-0 file:bg-transparent file:text-sm file:font-medium " +
-  "placeholder:text-muted-foreground " +
-  "focus-visible:outline-none" +
-  "disabled:cursor-not-allowed disabled:opacity-50";
+  "w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-colors"
 
 const emit = defineEmits(["update:modelValue"]);
 const activeIndex = ref(0);
