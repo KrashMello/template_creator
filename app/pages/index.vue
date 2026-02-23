@@ -7,11 +7,12 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { templateStore } from '../stores/templateStore'
-const schema = templateStore().schema
-const renderPreview = templateStore().renderPreview
-const updateSchemaDisplay = templateStore().updateSchemaDisplay
-const selectedElementClick = templateStore().selectedElementClick
-const deleteElementById = templateStore().deleteElementById
+const store = templateStore()
+const schema = store.schema
+const renderPreview = store.renderPreview
+const updateSchemaDisplay = store.updateSchemaDisplay
+const selectedElementClick = store.selectedElementClick
+const deleteElementById = store.deleteElementById
 onMounted(() => {
   renderPreview()
   updateSchemaDisplay()
@@ -22,8 +23,11 @@ onMounted(() => {
     }
   })
 
-  document.addEventListener('drop', templateStore().onDrop)
-
+  document.addEventListener('drop', store.onDrop)
+  document.addEventListener('keydown', (e) => {
+    if (store.selectedElement && e.key === "Escape")
+      store.clearSelectedElemen()
+  })
   window.selectedElement = selectedElementClick
   window.deleteElementById = deleteElementById
 })

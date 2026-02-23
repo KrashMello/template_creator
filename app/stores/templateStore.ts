@@ -102,7 +102,7 @@ export const templateStore = defineStore("template", {
       }
     },
     generateLayoutHtml(schema, pdf = false) {
-      if (!schema.children || schema.children.length === 0) return "";
+      if (!schema.children || schema.children.length === 0) return `<div class="flex flex-1 gap-3 flex-col justify-center items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="text-slate-400"><!-- Icon from Iconoir by Luca Burgio - https://github.com/iconoir-icons/iconoir/blob/main/LICENSE --><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="m5.212 15.111l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848L6.06 15.111a.6.6 0 0 1-.848 0Zm6.364 6.365l-2.687-2.687a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.688a.6.6 0 0 1-.848 0Zm0-12.729L8.889 6.06a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .849l-2.687 2.687a.6.6 0 0 1-.848 0Zm6.364 6.364l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.687a.6.6 0 0 1-.848 0Z"/></svg><span class="text-sm text-slate-400">drag a component and drop it to the canvas</span></div>`;
       const html = `
 <html>
 <head>
@@ -112,7 +112,7 @@ ${this.cssCode}
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
-<div class="flex flex-col gap-2 pb-2">
+<div class="flex-1 flex flex-col gap-2 pb-2">
 ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
 </div>
 </body>
@@ -133,11 +133,11 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       id="${elementDataSet.id}"
       class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""}"
       draggable="true"
-      onclick="selectedElement(event)">
+      onclick="event.stopImmediatePropagation(); selectedElement(event)">
       <div class="flex group items-center font-bold text-sm gap-4">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-3"><!-- Icon from Iconoir by Luca Burgio - https://github.com/iconoir-icons/iconoir/blob/main/LICENSE --><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="m5.212 15.111l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848L6.06 15.111a.6.6 0 0 1-.848 0Zm6.364 6.365l-2.687-2.687a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.688a.6.6 0 0 1-.848 0Zm0-12.729L8.889 6.06a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .849l-2.687 2.687a.6.6 0 0 1-.848 0Zm6.364 6.364l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.687a.6.6 0 0 1-.848 0Z"/></svg>
         <span class="flex-1">${elementDataSet.name ?? elementDataSet.tag}</span>
-        <button class="hidden group-hover:flex items-center justify-center size-5 rounded-sm bg-red-100 text-red-500 text-sm font-bold leading-none border-none cursor-pointer [transition:all_0.15s]" onclick="deleteElementById(${elementDataSet.id})">×</button>
+        <button class="hidden group-hover:flex items-center justify-center size-5 rounded-sm bg-red-100 text-red-500 text-sm font-bold leading-none border-none cursor-pointer [transition:all_0.15s]" onclick="event.stopImmediatePropagation(); deleteElementById(${elementDataSet.id})">×</button>
       </div>`;
       html += !pdf ? divDraggable : ""
       let elements = {
@@ -146,7 +146,6 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         <${elementDataSet.tag}
           src='${elementDataSet.data.src}'
           class=" ${elementDataSet.data.class}"
-          onclick="selectedElement(event)"
       />
       `;
         },
@@ -154,8 +153,6 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
           html += `<${elementDataSet.tag}
           class="${elementDataSet.data.class}"
           id="${elementDataSet.id}"
-          draggable="true"
-          onclick="selectedElement(event)"
         >`;
           if (elementDataSet.children && elementDataSet.children.length > 0) {
             html += elementDataSet.children
@@ -168,7 +165,6 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
           html += `
           <${elementDataSet.tag}
             id="${elementDataSet.id}"
-            onclick="selectedElement(event)"
             class=" ${elementDataSet.data.class}"
             >`;
           if (elementDataSet.data.table) {
@@ -188,8 +184,6 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
           <${elementDataSet.tag}
             id="${elementDataSet.id}"
             class="${elementDataSet.data.class}"
-            draggable="true"
-            onclick="selectedElement(event)"
           >`;
           if (elementDataSet.data.content) {
             html += elementDataSet.data.content;
@@ -226,10 +220,10 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       this.renderPreview();
       this.updateSchemaDisplay();
     },
-    deleteElementById(id) {
+    deleteElementById(element) {
       const path = this.findPathById(
         this.schema,
-        id,
+        element.id,
       );
       this.removeElementAtPath(this.schema, path);
       this.selectedElement = null;
@@ -412,8 +406,13 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
     updateElementAtPath(element) {
       this.schema.children = this.replace(this.schema, element);
     },
+    clearSelectedElemen() {
+      this.selectedElement = null;
+      this.selectedNode = null;
+    },
     selectedElementClick(event) {
-      // event.stopPropagation();
+      event.preventDefault();
+      event.stopPropagation();
       const component = event.target.closest(".draggable-component");
 
       if (!component) return;
