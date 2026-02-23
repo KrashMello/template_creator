@@ -11,7 +11,8 @@
           </svg>
           Dynamic Content Area
         </div>
-        <div id="preview" v-html="previewHtml" @dragenter="onDragEnter" @dragleave="onDragLeave" @drop="onDrop">
+        <div id="preview" class="flex flex-1 h-full" v-html="previewHtml" @dragenter="onDragEnter"
+          @dragleave="onDragLeave" @drop="onDrop">
         </div>
       </div>
     </div>
