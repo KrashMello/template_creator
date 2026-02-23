@@ -4,24 +4,40 @@ import handlebars from "handlebars";
 
 // para globalizar el estilado del css de los componentes
 const GLOBAL_COMPONENT_STYLE =
-  "draggable-component p-3 border-3 border-dashed border-black/50 bg-background rounded-xl " +
+  "draggable-component p-3 border-2 border-dashed border-black/50 bg-background rounded-xl " +
   "hover:bg-accent/50 transition-all duration-200 " +
-  "cursor-grab active:cursor-grabbing select-none";
-
+  "cursor-grab active:cursor-grabbing select-none " +
+  "flex flex-col gap-1.5 min-h-12 w-full"
+  ;
+function extractKeys(obj: Record<string, any>, prefix = ""): string[] {
+  const keys: string[] = [];
+  for (const k in obj) {
+    const full = prefix ? `${prefix}.${k}` : k;
+    if (obj[k] !== null && typeof obj[k] === "object" && !Array.isArray(obj[k])) {
+      keys.push(...extractKeys(obj[k], full));
+    } else {
+      keys.push(full);
+    }
+  }
+  return keys;
+}
 export const templateStore = defineStore("template", {
   state: () => ({
     styleEl: null,
     data: {
+      name: "krashmello",
+      create_date: '02-02-2026',
       table: {
-        cols: ["Col 1", "Col 2", "Col 3", "Col 4"],
+        cols: ["Service", "Volume", "Revenue"],
         rows: [
-          ["Row 1", "Row 2", "Row 3", "Row 4"],
-          ["Row 1", "Row 2", "Row 3", "Row 4"],
-          ["Row 1", "Row 2", "Row 3", "Row 4"],
+          ["Infrastructure Support", "142 Units", "$12,400.00"],
+          ["Security Audit", "1 Item", "$2,500.00"],
+          ["Networking", "10 Units", "$10,000.00"],
         ],
       }
     },
     selectedElement: null,
+    selectedNode: null,
     cssCode: "",
     schema: {
       type: "container",
@@ -36,9 +52,34 @@ export const templateStore = defineStore("template", {
       rows: "",
       src: "",
     },
+    history: [] as string[],
+    redoStack: [] as string[],
   }),
-  getters: {},
+  getters: {
+    dataKeys(state): string[] {
+      return extractKeys(state.data);
+    },
+  },
   actions: {
+    pushHistory() {
+      this.history.push(JSON.stringify(this.schema));
+      this.redoStack = [];
+      if (this.history.length > 50) this.history.shift();
+    },
+    undo() {
+      if (!this.history.length) return;
+      this.redoStack.push(this.history.pop()!);
+      this.schema = JSON.parse(this.history[this.history.length - 1]);
+      this.renderPreview();
+      this.updateSchemaDisplay();
+    },
+    redo() {
+      if (!this.redoStack.length) return;
+      this.history.push(this.redoStack.pop()!);
+      this.schema = JSON.parse(this.history[this.history.length - 1]);
+      this.renderPreview();
+      this.updateSchemaDisplay();
+    },
     renderPreview() {
       try {
         let html = this.generateLayoutHtml(this.schema);
@@ -71,7 +112,9 @@ ${this.cssCode}
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
+<div class="flex flex-col gap-2 pb-2">
 ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
+</div>
 </body>
 </html>
 `;
@@ -88,25 +131,28 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       let html = "";
       const divDraggable = `<div 
       id="${elementDataSet.id}"
-      class="draggable-component p-2 border-2 border-dashed border-slate-400 rounded-lg cursor-grab active:cursor-grabbing bg-slate-50"
+      class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""}"
       draggable="true"
-      onclick="selectedElement(event)">`;
-
+      onclick="selectedElement(event)">
+      <div class="flex group items-center font-bold text-sm gap-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-3"><!-- Icon from Iconoir by Luca Burgio - https://github.com/iconoir-icons/iconoir/blob/main/LICENSE --><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="m5.212 15.111l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848L6.06 15.111a.6.6 0 0 1-.848 0Zm6.364 6.365l-2.687-2.687a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.688a.6.6 0 0 1-.848 0Zm0-12.729L8.889 6.06a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .849l-2.687 2.687a.6.6 0 0 1-.848 0Zm6.364 6.364l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.687a.6.6 0 0 1-.848 0Z"/></svg>
+        <span class="flex-1">${elementDataSet.name ?? elementDataSet.tag}</span>
+        <button class="hidden group-hover:flex items-center justify-center size-5 rounded-sm bg-red-100 text-red-500 text-sm font-bold leading-none border-none cursor-pointer [transition:all_0.15s]" onclick="deleteElementById(${elementDataSet.id})">×</button>
+      </div>`;
+      html += !pdf ? divDraggable : ""
       let elements = {
         img: () => {
-          html = `
+          html += `
         <${elementDataSet.tag}
-          id="${elementDataSet.id}"
           src='${elementDataSet.data.src}'
-          class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${elementDataSet.data.class}"
-          draggable="true"
+          class=" ${elementDataSet.data.class}"
           onclick="selectedElement(event)"
       />
       `;
         },
         div: () => {
-          html = `<${elementDataSet.tag}
-          class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${elementDataSet.data.class}"
+          html += `<${elementDataSet.tag}
+          class="${elementDataSet.data.class}"
           id="${elementDataSet.id}"
           draggable="true"
           onclick="selectedElement(event)"
@@ -119,12 +165,11 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
           html += `</${elementDataSet.tag}>`;
         },
         table: () => {
-          html = `
+          html += `
           <${elementDataSet.tag}
-            draggable="true"
             id="${elementDataSet.id}"
             onclick="selectedElement(event)"
-            class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${elementDataSet.data.class}"
+            class=" ${elementDataSet.data.class}"
             >`;
           if (elementDataSet.data.table) {
             html += `<thead class="dark:bg-zinc-50 bg-zinc-900 border-b dark:border-zinc-200 border-zinc-800">
@@ -139,13 +184,12 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
           html += `</${elementDataSet.tag}>`;
         },
         p: () => {
-          html = `
+          html += `
           <${elementDataSet.tag}
             id="${elementDataSet.id}"
-            class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""} ${elementDataSet.data.class}"
+            class="${elementDataSet.data.class}"
             draggable="true"
             onclick="selectedElement(event)"
-            placeholder="type here..."
           >`;
           if (elementDataSet.data.content) {
             html += elementDataSet.data.content;
@@ -154,6 +198,7 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         },
       };
       elements[elementDataSet.tag]();
+      html += !pdf ? "</div>" : ""
       return html;
     },
     async generateDocument() {
@@ -173,11 +218,22 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       if (!this.selectedElement) return;
       const path = this.findPathById(
         this.schema,
-        this.selectedElement.dataset.id,
+        this.selectedElement.id,
       );
       this.removeElementAtPath(this.schema, path);
-
       this.selectedElement = null;
+      this.pushHistory();
+      this.renderPreview();
+      this.updateSchemaDisplay();
+    },
+    deleteElementById(id) {
+      const path = this.findPathById(
+        this.schema,
+        id,
+      );
+      this.removeElementAtPath(this.schema, path);
+      this.selectedElement = null;
+      this.pushHistory();
       this.renderPreview();
       this.updateSchemaDisplay();
     },
@@ -191,7 +247,6 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
     findPathById(current, id) {
       const root = current;
       if (root.id === id) return [];
-
       if (root.children) {
         for (let i = 0; i < root.children.length; i++) {
           const child = root.children[i];
@@ -269,6 +324,7 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         nuevoElemento = {
           id: crypto.randomUUID().split("-").join(""),
           tag: schemaData.tag,
+          name: schemaData.nombre,
           data: { ...schemaData.data },
           children: [],
         };
@@ -300,13 +356,13 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         this.schema.children.push(nuevoElemento);
         if (sourcePath) this.removeElementAtPath(this.schema, sourcePath);
       }
-
+      this.pushHistory();
       this.renderPreview();
       this.updateSchemaDisplay();
     },
     handlePreviewDragStart(event) {
       const element = event.target.closest(".draggable-component");
-      const schemaData = this.findDataById(this.schema,element.id);
+      const schemaData = this.findDataById(this.schema, element.id);
       const id = element.id;
       event.dataTransfer.setData(
         "text/plain",
@@ -343,6 +399,7 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       }
     },
     replace(root, element) {
+      if (!root.children) return;
       return root.children.map((v) => {
         if (v.id !== element.id) {
           v.children = this.replace(v, element);
@@ -356,31 +413,29 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       this.schema.children = this.replace(this.schema, element);
     },
     selectedElementClick(event) {
-      event.stopPropagation();
+      // event.stopPropagation();
       const component = event.target.closest(".draggable-component");
 
       if (!component) return;
       if (this.selectedElement) {
-        this.selectedElement.classList.remove("border-black","border-solid");
-        this.selectedElement.classList.add("border-black/50","border-dashed");
+        this.selectedElement.classList.remove("border-black", "border-solid");
+        this.selectedElement.classList.add("border-black/50", "border-dashed");
       }
       this.selectedElement = component;
       this.selectedElement.classList.add("border-black", 'border-solid');
-      this.selectedElement.classList.remove("border-black/50","border-dashed");
-      const element_schema = this.findDataById(this.schema, this.selectedElement.id);
+      this.selectedElement.classList.remove("border-black/50", "border-dashed");
+      this.selectedNode = this.findDataById(this.schema, this.selectedElement.id);
 
-      if (element_schema) {
-        this.options.class = element_schema.data.class || "";
-        this.options.content = element_schema.data.content || "";
-        this.options.columns = element_schema.data.columns;
-        this.options.rows = element_schema.data.rows;
-        this.options.src = element_schema.data.src;
-      }
+      this.options.class = this.selectedNode.data.class || "";
+      this.options.content = this.selectedNode.data.content || "";
+      this.options.columns = this.selectedNode.data.columns;
+      this.options.rows = this.selectedNode.data.rows;
+      this.options.src = this.selectedNode.data.src;
     },
     async saveDataOptions() {
       if (!this.selectedElement) return;
 
-      const element_schema = this.findDataById(this.schema, this.selectedElement.id);
+      const element_schema = this.selectedNode
       let data = {
         ...element_schema.data,
       };
@@ -408,8 +463,9 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         ...element_schema,
         data,
       };
+      this.selectedNode = dataTransfer;
       this.selectedElement.classList.remove("border-black", 'border-solid');
-      this.selectedElement.classList.add("border-black/50","border-dashed");
+      this.selectedElement.classList.add("border-black/50", "border-dashed");
       this.updateElementAtPath(dataTransfer);
       this.selectedElement = null;
       this.renderPreview();
@@ -417,7 +473,7 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
     },
   },
   persist: {
-    pick: ["styleEl", "cssCode", "schema", "data"],
+    pick: ["styleEl", "cssCode", "schema", "data", "history", "redoStack"],
   },
 });
 
