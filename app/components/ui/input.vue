@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-2">
-    <label :for="props.id">{{ props.title }}</label>
+    <label class=" block text-xs font-medium text-slate-600 mb-1" :for="props.id">{{ props.title }}</label>
     <div v-if="props.type === 'textarea'" class="relative">
       <!-- <textarea :id="props.id" v-model="proxyValue" :class="CLASS" :placeholder="props.placeholder"></textarea> -->
       <textarea ref="inputRef" v-bind="$attrs" :value="props.modelValue" @input="onInput" @keydown="onKeyDown"

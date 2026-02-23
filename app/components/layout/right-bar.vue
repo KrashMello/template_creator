@@ -32,7 +32,6 @@
     <div id="options" v-else class="flex-1">
       <form @submit.prevent="saveDataOptions" class="h-full flex flex-col gap-2">
         <div class="flex-1 px-5">
-          <ui-input v-model="options.class" title="CSS classes" placeholder="classes" />
           <ui-input v-if="selectedNode.data.content" v-model="options.content" type="textarea" title="texto"
             placeholder="content" />
           <ui-input v-if="selectedNode.data.columns" v-model="options.columns" type="textarea" title="columns"
@@ -41,6 +40,39 @@
             placeholder="src" type="file" acepted="image/*" />
           <ui-input v-if="selectedNode.data.rows" v-model="options.rows" type="textarea" title="rows"
             placeholder="rows" />
+          <section>
+            <SectionTitle>Style &amp; Layout</SectionTitle>
+            <div v-if="selectedNode.tag === 'p'" class="space-y-3">
+              <ui-input v-model="options.class" title="CSS classes" placeholder="classes" />
+              <div>
+                <label class=" block text-xs font-medium text-slate-600 mb-1">Font Weight</label>
+                <div class="flex gap-1">
+                  <button v-for="fw in fontWeights" :key="fw.value" :class="[
+                    'flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors',
+                    localFontWeight === fw.value
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
+                  ]" @click.prevent="localFontWeight = fw.value; saveFontWeight()">
+                    {{ fw.label }}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Text Color</label>
+                <div class="flex gap-2 items-center flex-wrap">
+                  <button v-for="color in presetColors" :key="color.class" :class="[
+                    'w-6 h-6 rounded-full border-2 transition-all',
+                    localColor === color.class ? 'border-blue-500 scale-110' : 'border-transparent',
+                    color.bg,
+                  ]" @click.prevent="localColor = color.class; saveColor()" :title="color.label" />
+                  <input type="color"
+                    class="w-6 h-6 rounded-full border border-slate-200 cursor-pointer bg-transparent p-0"
+                    title="Custom color" />
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
         <div class="border-slate-100 border-t pt-3 flex flex-shrink-0 gap-2">
           <ui-button class="flex-1" type="submit">Guardar</ui-button>
@@ -52,7 +84,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, onUnmounted, computed } from "vue";
 
 const selectedElement = computed(() => templateStore().selectedElement);
@@ -60,6 +92,49 @@ const selectedNode = computed(() => templateStore().selectedNode);
 const options = computed(() => templateStore().options);
 const saveDataOptions = templateStore().saveDataOptions;
 const deleteElement = templateStore().deleteElement;
+const localFontWeight = ref("");
+const localColor = ref("");
+
+function removeWeightClasses(cls: string): string {
+  return cls.replace(/font-(light|normal|semibold|bold|extrabold)/g, "").trim();
+}
+
+function removeColorClasses(cls: string): string {
+  return cls.replace(/text-[a-z]+-\d+/g, "").trim();
+}
+function saveColor() {
+  if (!selectedNode.value) return;
+  let cls = removeColorClasses(options.value.class);
+  if (localColor.value) cls = `${cls} ${localColor.value}`.trim();
+  console.log(cls);
+  options.value.class = cls;
+}
+function saveFontWeight() {
+  if (!selectedNode.value) return;
+  let cls = removeWeightClasses(options.value.class);
+  if (localFontWeight.value) cls = `${cls} ${localFontWeight.value}`.trim();
+  console.log(cls);
+  options.value.class = cls;
+}
+
+const formats = [
+  { value: "default", label: "Default" },
+  { value: "uppercase", label: "Uppercase" },
+  { value: "currency", label: "Currency" },
+  { value: "short-date", label: "Short Date" },
+];
+
+const fontWeights = [
+  { value: "font-light", label: "L" },
+  { value: "font-normal", label: "N" },
+  { value: "font-bold", label: "B" },
+];
+
+const presetColors = [
+  { class: "text-slate-900", bg: "bg-slate-900", label: "Black" },
+  { class: "text-blue-600", bg: "bg-blue-600", label: "Blue" },
+  { class: "text-indigo-600", bg: "bg-indigo-600", label: "Indigo" },
+];
 
 const handleKeyDown = (event) => {
   if (selectedElement.value && event.key === "Backspace") {
