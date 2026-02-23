@@ -1,14 +1,9 @@
 import { defineStore } from "pinia";
 import { ref, nextTick } from "vue";
 import handlebars from "handlebars";
-
+import { generateLayoutHtml, insertNodeRelativeTo } from "./template";
+import type { ElementDataSet } from "./template";
 // para globalizar el estilado del css de los componentes
-const GLOBAL_COMPONENT_STYLE =
-  "draggable-component p-3 border-2 border-dashed border-black/50 bg-background rounded-xl " +
-  "hover:bg-accent/50 transition-all duration-200 " +
-  "cursor-grab active:cursor-grabbing select-none " +
-  "flex flex-col gap-1.5 min-h-12 w-full"
-  ;
 function extractKeys(obj: Record<string, any>, prefix = ""): string[] {
   const keys: string[] = [];
   for (const k in obj) {
@@ -45,6 +40,7 @@ export const templateStore = defineStore("template", {
     },
     schemaJson: "",
     previewHtml: "",
+    position: "before",
     options: {
       class: "",
       content: "",
@@ -82,7 +78,7 @@ export const templateStore = defineStore("template", {
     },
     renderPreview() {
       try {
-        let html = this.generateLayoutHtml(this.schema);
+        let html = generateLayoutHtml({ schema: this.schema as ElementDataSet, cssCode: this.cssCode });
         html = handlebars.compile(html)(this.data);
         this.previewHtml = html;
 
@@ -95,30 +91,12 @@ export const templateStore = defineStore("template", {
               el.addEventListener("dragend", this.handlePreviewDragEnd);
               el.addEventListener("dragenter", this.onDragEnter);
               el.addEventListener("dragleave", this.onDragLeave);
+              el.addEventListener("dragover", this.onDragOver);
             });
         });
       } catch (e) {
         console.error("Error renderizando preview:", e);
       }
-    },
-    generateLayoutHtml(schema, pdf = false) {
-      if (!schema.children || schema.children.length === 0) return `<div class="flex flex-1 gap-3 flex-col justify-center items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="text-slate-400"><!-- Icon from Iconoir by Luca Burgio - https://github.com/iconoir-icons/iconoir/blob/main/LICENSE --><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="m5.212 15.111l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848L6.06 15.111a.6.6 0 0 1-.848 0Zm6.364 6.365l-2.687-2.687a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.688a.6.6 0 0 1-.848 0Zm0-12.729L8.889 6.06a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .849l-2.687 2.687a.6.6 0 0 1-.848 0Zm6.364 6.364l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.687a.6.6 0 0 1-.848 0Z"/></svg><span class="text-sm text-slate-400">drag a component and drop it to the canvas</span></div>`;
-      const html = `
-<html>
-<head>
-<style>
-${this.cssCode}
-</style>
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-</head>
-<body>
-<div class="flex-1 flex flex-col gap-2 pb-2">
-${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
-</div>
-</body>
-</html>
-`;
-      return html;
     },
     updateSchemaDisplay() {
       this.schemaJson = JSON.stringify(
@@ -127,76 +105,8 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         2,
       ).trim();
     },
-    generateElementHtml(elementDataSet, pdf = false) {
-      let html = "";
-      const divDraggable = `<div 
-      id="${elementDataSet.id}"
-      class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""}"
-      draggable="true"
-      onclick="event.stopImmediatePropagation(); selectedElement(event)">
-      <div class="flex group items-center font-bold text-sm gap-4">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-3"><!-- Icon from Iconoir by Luca Burgio - https://github.com/iconoir-icons/iconoir/blob/main/LICENSE --><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="m5.212 15.111l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848L6.06 15.111a.6.6 0 0 1-.848 0Zm6.364 6.365l-2.687-2.687a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.688a.6.6 0 0 1-.848 0Zm0-12.729L8.889 6.06a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .849l-2.687 2.687a.6.6 0 0 1-.848 0Zm6.364 6.364l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.687a.6.6 0 0 1-.848 0Z"/></svg>
-        <span class="flex-1">${elementDataSet.name ?? elementDataSet.tag}</span>
-        <button class="hidden group-hover:flex items-center justify-center size-5 rounded-sm bg-red-100 text-red-500 text-sm font-bold leading-none border-none cursor-pointer [transition:all_0.15s]" onclick="event.stopImmediatePropagation(); deleteElementById(${elementDataSet.id})">×</button>
-      </div>`;
-      html += !pdf ? divDraggable : ""
-      let elements = {
-        img: () => {
-          html += `
-        <${elementDataSet.tag}
-          src='${elementDataSet.data.src}'
-          class=" ${elementDataSet.data.class}"
-      />
-      `;
-        },
-        div: () => {
-          html += `<${elementDataSet.tag}
-          class="${elementDataSet.data.class}"
-          id="${elementDataSet.id}"
-        >`;
-          if (elementDataSet.children && elementDataSet.children.length > 0) {
-            html += elementDataSet.children
-              .map((child) => this.generateElementHtml(child, pdf))
-              .join("");
-          }
-          html += `</${elementDataSet.tag}>`;
-        },
-        table: () => {
-          html += `
-          <${elementDataSet.tag}
-            id="${elementDataSet.id}"
-            class=" ${elementDataSet.data.class}"
-            >`;
-          if (elementDataSet.data.table) {
-            html += `<thead class="dark:bg-zinc-50 bg-zinc-900 border-b dark:border-zinc-200 border-zinc-800">
-              <tr class="dark:text-zinc-500 font-medium text-zinc-400">
-              ${elementDataSet.data.columns ? elementDataSet.data.columns : ""}
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
-              ${elementDataSet.data.rows ? elementDataSet.data.rows : ""}
-        </tbody>`;
-          }
-          html += `</${elementDataSet.tag}>`;
-        },
-        p: () => {
-          html += `
-          <${elementDataSet.tag}
-            id="${elementDataSet.id}"
-            class="${elementDataSet.data.class}"
-          >`;
-          if (elementDataSet.data.content) {
-            html += elementDataSet.data.content;
-          }
-          html += `</${elementDataSet.tag}>`;
-        },
-      };
-      elements[elementDataSet.tag]();
-      html += !pdf ? "</div>" : ""
-      return html;
-    },
     async generateDocument() {
-      const html = this.generateLayoutHtml(this.schema, true)
+      const html = generateLayoutHtml({ schema: this.schema as ElementDataSet, cssCode: this.cssCode, pdf: true })
       const res = await fetch("/api/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -331,19 +241,11 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         const targetId = dropTarget.id;
         const targetPath = this.findPathById(this.schema, targetId);
         const targetSchema = this.getElementByPath(targetPath);
-        const rect = dropTarget.getBoundingClientRect();
-        const relativeY = event.clientY - rect.top;
-        const isAfter = relativeY > rect.height / 2;
-
+        console.log(targetId)
         if (targetSchema?.tag === "div") {
           if (!targetSchema.children) targetSchema.children = [];
-          targetSchema.children.push(nuevoElemento);
+          insertNodeRelativeTo(this.schema, nuevoElemento, targetId, this.position);
           if (sourcePath) this.removeElementAtPath(this.schema, sourcePath);
-        } else {
-          const parentPath = targetPath.slice(0, -1);
-          const indexInParent = targetPath[targetPath.length - 1];
-          const finalIndex = isAfter ? indexInParent + 1 : indexInParent;
-          this.insertElementAtPath(nuevoElemento, parentPath, finalIndex);
         }
 
       } else {
@@ -392,6 +294,11 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         target.classList.add("border-dashed", "border-black/50");
       }
     },
+    onDragOver(e: DragEvent) {
+      const el = e.currentTarget as HTMLElement;
+      const rect = el.getBoundingClientRect();
+      this.position = (e.clientY - rect.top) < rect.height / 2 ? "before" : "after";
+    },
     replace(root, element) {
       if (!root.children) return;
       return root.children.map((v) => {
@@ -407,6 +314,8 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
       this.schema.children = this.replace(this.schema, element);
     },
     clearSelectedElemen() {
+      this.selectedElement.classList.remove("border-black", 'border-solid');
+      this.selectedElement.classList.add("border-black/50", "border-dashed");
       this.selectedElement = null;
       this.selectedNode = null;
     },
@@ -463,8 +372,6 @@ ${schema.children.map((child) => this.generateElementHtml(child, pdf)).join("")}
         data,
       };
       this.selectedNode = dataTransfer;
-      this.selectedElement.classList.remove("border-black", 'border-solid');
-      this.selectedElement.classList.add("border-black/50", "border-dashed");
       this.updateElementAtPath(dataTransfer);
       // this.selectedElement = null;
       this.renderPreview();
