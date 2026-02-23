@@ -1,5 +1,5 @@
 <template>
-  <ol class="flex flex-row gap-2 items-center w-full shadow-sm rounded-sm p-2">
+  <ol class="flex flex-row gap-2 items-center w-full bg-white shadow-sm rounded-sm p-2">
     <li>
       <ui-button @click="$emit('select', 1)">
         <svg-eye-open />
@@ -43,14 +43,8 @@
       </button>
     </li>
     <li class="ml-auto">
-      <ui-button>
-        <span class="text-xs"> Config </span>
-        <svg-config class="size-5" />
-      </ui-button>
-    </li>
-    <li>
       <ui-button @click="$emit('export')">
-        <span class="text-xs"> Descargar PDF </span>
+        <span class="text-xs"> Exportar PDF </span>
         <svg-download class="size-5" />
       </ui-button>
     </li>
