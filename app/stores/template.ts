@@ -19,11 +19,11 @@ export const generateElementHtml = (elementDataSet: ElementDataSet, pdf = false)
       id="${elementDataSet.id}"
       class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""}"
       draggable="true"
-      onclick="event.stopImmediatePropagation(); selectedElement(event)">
+      >
       <div class="flex group items-center font-bold text-sm gap-4">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-3"><!-- Icon from Iconoir by Luca Burgio - https://github.com/iconoir-icons/iconoir/blob/main/LICENSE --><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="m5.212 15.111l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848L6.06 15.111a.6.6 0 0 1-.848 0Zm6.364 6.365l-2.687-2.687a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.688a.6.6 0 0 1-.848 0Zm0-12.729L8.889 6.06a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .849l-2.687 2.687a.6.6 0 0 1-.848 0Zm6.364 6.364l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.687a.6.6 0 0 1-.848 0Z"/></svg>
         <span class="flex-1">${elementDataSet.name ?? elementDataSet.tag}</span>
-        <button class="hidden group-hover:flex items-center justify-center size-5 rounded-sm bg-red-100 text-red-500 text-sm font-bold leading-none border-none cursor-pointer [transition:all_0.15s]" onclick="event.stopImmediatePropagation(); deleteElementById(${elementDataSet.id})">×</button>
+        <button class="hidden group-hover:flex items-center justify-center size-5 rounded-sm bg-red-100 text-red-500 text-sm font-bold leading-none border-none cursor-pointer [transition:all_0.15s] z-50" data-id="${elementDataSet.id}" data-function="delete">×</button>
       </div>`;
   html += !pdf ? divDraggable : ""
   let elements = {
@@ -129,11 +129,66 @@ const insertInChildren = (
   return false;
 }
 
-const insertElementAtPath = (root: ElementDataSet, element: ElementDataSet, path, index) => {
+export const insertElementAtPath = (opt: { root: ElementDataSet, element: ElementDataSet, path: Array<number>, index: number }) => {
+  const { root, element, path, index } = opt;
   let parent = root;
   for (let i = 0; i < path.length; i++) {
     parent = parent.children[path[i]];
   }
   if (!parent.children) parent.children = [];
   parent.children.splice(index, 0, element);
+}
+export const removeElementAtPath = (opt: { root: ElementDataSet, path: Array<number> }) => {
+  const { root, path } = opt;
+  if (!path || path.length === 0) return;
+  let parent = root;
+  for (let i = 0; i < path.length - 1; i++) {
+    parent = parent.children[path[i]];
+  }
+  const lastIndex = path[path.length - 1];
+  parent.children.splice(lastIndex, 1);
+}
+
+export const findPathById = (opt: { root: ElementDataSet, id: string }) => {
+  const { root, id } = opt;
+  if (root.id === id) return [];
+  for (let i = 0; i < root.children.length; i++) {
+    const child = root.children[i];
+    const path = findPathById({ root: child, id });
+    if (path !== null) {
+      return [i, ...path];
+    }
+  }
+  return null;
+}
+
+export const getElementByPath = (opt: { root: ElementDataSet, path: Array<number> }) => {
+  const { root, path } = opt;
+  let current = root;
+  for (let index of path) {
+    current = current.children[index];
+  }
+  return current;
+}
+export const findDataById = (opt: { root: ElementDataSet, id: string }) => {
+  const { root, id } = opt;
+  if (root.id === id) return root;
+  if (!root.children) return null;
+  for (const child of root.children) {
+    const result = findDataById({ root: child, id });
+    if (result !== null) return result;
+  }
+  return null;
+}
+
+export const replace = (opt: { root: ElementDataSet, element: ElementDataSet }) => {
+  const { root, element } = opt;
+  return root.children.map((v) => {
+    if (v.id !== element.id) {
+      v.children = replace({ root: v, element });
+      return v;
+    } else {
+      return element;
+    }
+  });
 }

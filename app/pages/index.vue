@@ -28,7 +28,5 @@ onMounted(() => {
     if (store.selectedElement && e.key === "Escape")
       store.clearSelectedElemen()
   })
-  window.selectedElement = selectedElementClick
-  window.deleteElementById = deleteElementById
 })
 </script>

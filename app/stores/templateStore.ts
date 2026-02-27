@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, nextTick } from "vue";
 import handlebars from "handlebars";
-import { generateLayoutHtml, insertNodeRelativeTo } from "./template";
+import { findDataById, findPathById, generateLayoutHtml, getElementByPath, insertElementAtPath, insertNodeRelativeTo, removeElementAtPath, replace } from "./template";
 import type { ElementDataSet } from "./template";
 // para globalizar el estilado del css de los componentes
 function extractKeys(obj: Record<string, any>, prefix = ""): string[] {
@@ -91,8 +91,17 @@ export const templateStore = defineStore("template", {
               el.addEventListener("dragend", this.handlePreviewDragEnd);
               el.addEventListener("dragenter", this.onDragEnter);
               el.addEventListener("dragleave", this.onDragLeave);
-              el.addEventListener("dragover", this.onDragOver);
+              el.addEventListener("click", (e) => {
+                this.selectedElementClick(e)
+              })
             });
+          document.querySelectorAll('[data-function="delete"]').forEach((el) => {
+            el.addEventListener('click', (e) => {
+              e.stopPropagation()
+              const id = el.dataset.id
+              this.deleteElementById(id)
+            })
+          })
         });
       } catch (e) {
         console.error("Error renderizando preview:", e);
@@ -120,74 +129,30 @@ export const templateStore = defineStore("template", {
     },
     deleteElement() {
       if (!this.selectedElement) return;
-      const path = this.findPathById(
-        this.schema,
-        this.selectedElement.id,
-      );
-      this.removeElementAtPath(this.schema, path);
-      this.selectedElement = null;
-      this.pushHistory();
-      this.renderPreview();
-      this.updateSchemaDisplay();
-    },
-    deleteElementById(element) {
-      const path = this.findPathById(
-        this.schema,
-        element.id,
-      );
-      this.removeElementAtPath(this.schema, path);
-      this.selectedElement = null;
-      this.pushHistory();
-      this.renderPreview();
-      this.updateSchemaDisplay();
-    },
-    getElementByPath(path) {
-      let current = this.schema;
-      for (let index of path) {
-        current = current.children[index];
-      }
-      return current;
-    },
-    findPathById(current, id) {
-      const root = current;
-      if (root.id === id) return [];
-      if (root.children) {
-        for (let i = 0; i < root.children.length; i++) {
-          const child = root.children[i];
-          const path = this.findPathById(child, id);
-          if (path !== null) {
-            return [i, ...path];
-          }
+      const path = findPathById(
+        {
+          root: this.schema,
+          id: this.selectedElement.id,
         }
-      }
-      return null;
+      );
+      removeElementAtPath({ root: this.schema, path });
+      this.selectedElement = null;
+      this.pushHistory();
+      this.renderPreview();
+      this.updateSchemaDisplay();
     },
-    findDataById(current, id) {
-      const root = current;
-      if (root.id === id) return root;
-      if (!root.children) return null;
-      for (const child of root.children) {
-        const result = this.findDataById(child, id);
-        if (result !== null) return result;
-      }
-      return null;
-    },
-    insertElementAtPath(root, element, path, index) {
-      let parent = root;
-      for (let i = 0; i < path.length; i++) {
-        parent = parent.children[path[i]];
-      }
-      if (!parent.children) parent.children = [];
-      parent.children.splice(index, 0, element);
-    },
-    removeElementAtPath(root, path) {
-      if (!path || path.length === 0) return;
-      let parent = root;
-      for (let i = 0; i < path.length - 1; i++) {
-        parent = parent.children[path[i]];
-      }
-      const lastIndex = path[path.length - 1];
-      parent.children.splice(lastIndex, 1);
+    deleteElementById(id: string) {
+      const path = findPathById(
+        {
+          root: this.schema,
+          id,
+        }
+      );
+      removeElementAtPath({ root: this.schema, path });
+      this.selectedElement = null;
+      this.pushHistory();
+      this.renderPreview();
+      this.updateSchemaDisplay();
     },
     setStyleEl(el) {
       this.styleEl = el;
@@ -236,21 +201,28 @@ export const templateStore = defineStore("template", {
         nuevoElemento = schemaData;
       }
 
-      const sourcePath = this.findPathById(this.schema, id);
+      const sourcePath = findPathById({ root: this.schema, id });
       if (dropTarget) {
         const targetId = dropTarget.id;
-        const targetPath = this.findPathById(this.schema, targetId);
-        const targetSchema = this.getElementByPath(targetPath);
-        console.log(targetId)
+        const targetPath = findPathById({ root: this.schema, id: targetId });
+        const targetSchema = getElementByPath({ root: this.schema, path: targetPath });
+        const rect = dropTarget.getBoundingClientRect();
+        const relativeY = event.clientY - rect.top;
+        const isAfter = relativeY > rect.height / 2;
+
         if (targetSchema?.tag === "div") {
           if (!targetSchema.children) targetSchema.children = [];
-          insertNodeRelativeTo(this.schema, nuevoElemento, targetId, this.position);
-          if (sourcePath) this.removeElementAtPath(this.schema, sourcePath);
+          targetSchema.children.push(nuevoElemento);
+          if (sourcePath) removeElementAtPath({ root: this.schema, path: sourcePath });
+        } else {
+          const parentPath = targetPath.slice(0, -1);
+          const indexInParent = targetPath[targetPath.length - 1];
+          const finalIndex = isAfter ? indexInParent + 1 : indexInParent;
+          insertElementAtPath({ root: this.schema, element: nuevoElemento, path: parentPath, index: finalIndex });
         }
-
       } else {
         this.schema.children.push(nuevoElemento);
-        if (sourcePath) this.removeElementAtPath(this.schema, sourcePath);
+        if (sourcePath) removeElementAtPath({ root: this.schema, path: sourcePath });
       }
       this.pushHistory();
       this.renderPreview();
@@ -258,7 +230,7 @@ export const templateStore = defineStore("template", {
     },
     handlePreviewDragStart(event) {
       const element = event.target.closest(".draggable-component");
-      const schemaData = this.findDataById(this.schema, element.id);
+      const schemaData = findDataById({ root: this.schema, id: element.id });
       const id = element.id;
       event.dataTransfer.setData(
         "text/plain",
@@ -294,24 +266,8 @@ export const templateStore = defineStore("template", {
         target.classList.add("border-dashed", "border-black/50");
       }
     },
-    onDragOver(e: DragEvent) {
-      const el = e.currentTarget as HTMLElement;
-      const rect = el.getBoundingClientRect();
-      this.position = (e.clientY - rect.top) < rect.height / 2 ? "before" : "after";
-    },
-    replace(root, element) {
-      if (!root.children) return;
-      return root.children.map((v) => {
-        if (v.id !== element.id) {
-          v.children = this.replace(v, element);
-          return v;
-        } else {
-          return element;
-        }
-      });
-    },
-    updateElementAtPath(element) {
-      this.schema.children = this.replace(this.schema, element);
+    updateElementAtPath(element: ElementDataSet) {
+      this.schema.children = replace({ root: this.schema, element });
     },
     clearSelectedElemen() {
       this.selectedElement.classList.remove("border-black", 'border-solid');
@@ -332,7 +288,7 @@ export const templateStore = defineStore("template", {
       this.selectedElement = component;
       this.selectedElement.classList.add("border-black", 'border-solid');
       this.selectedElement.classList.remove("border-black/50", "border-dashed");
-      this.selectedNode = this.findDataById(this.schema, this.selectedElement.id);
+      this.selectedNode = findDataById({ root: this.schema, id: this.selectedElement.id });
 
       this.options.class = this.selectedNode.data.class || "";
       this.options.content = this.selectedNode.data.content || "";
