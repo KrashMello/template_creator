@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, nextTick } from "vue";
 import handlebars from "handlebars";
-import { findDataById, findPathById, generateLayoutHtml, getElementByPath, insertElementAtPath, insertNodeRelativeTo, removeElementAtPath, replace } from "./template";
+import { findDataById, findIndexElement, findPathById, generateLayoutHtml, getElementByPath, insertElementAtPath, insertNodeRelativeTo, removeElementAtPath, replace, sleep } from "./template";
 import type { ElementDataSet } from "./template";
 // para globalizar el estilado del css de los componentes
 function extractKeys(obj: Record<string, any>, prefix = ""): string[] {
@@ -31,6 +31,7 @@ export const templateStore = defineStore("template", {
         ],
       }
     },
+    position: -1,
     selectedElement: null,
     selectedNode: null,
     cssCode: "",
@@ -40,7 +41,6 @@ export const templateStore = defineStore("template", {
     },
     schemaJson: "",
     previewHtml: "",
-    position: "before",
     options: {
       class: "",
       content: "",
@@ -91,6 +91,7 @@ export const templateStore = defineStore("template", {
               el.addEventListener("dragend", this.handlePreviewDragEnd);
               el.addEventListener("dragenter", this.onDragEnter);
               el.addEventListener("dragleave", this.onDragLeave);
+              el.addEventListener("dragover", this.onDragOver);
               el.addEventListener("click", (e) => {
                 this.selectedElementClick(e)
               })
@@ -160,26 +161,50 @@ export const templateStore = defineStore("template", {
     setStyleElTexContent(css) {
       if (this.styleEl) this.styleEl.textContent = css;
     },
-    onDrop(event) {
+    onDragOver(event) {
       event.preventDefault();
       event.stopPropagation();
 
-      const dropTarget = event.target.closest(".draggable-component");
+      const target = event.target.closest(".draggable-component");
+      if (!target) return;
+
+      const rect = target.getBoundingClientRect();
+      const relativeY = event.clientY - rect.top;
+      const isTop = relativeY < rect.height / 2;
+      this.position = findIndexElement({ root: this.schema.children, id: target.id, position: isTop ? 'before' : 'after' })
+      target.classList.remove("border-dashed", "border-black/50");
+      // target.classList.add("border-black", "border-solid");
+
+      if (isTop) {
+        target.classList.add("border-t-4", "border-blue-500");
+        target.classList.remove("border-b-4");
+      } else {
+        target.classList.add("border-b-4", "border-blue-500");
+        target.classList.remove("border-t-4");
+      }
+    },
+    async onDrop(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      let dropTarget = null;
+      if (event.target.closest(".draggable-component"))
+        dropTarget = event.target.closest(".draggable-component").parentElement.parentElement;
       if (dropTarget) {
         dropTarget.classList.remove(
           "border-black",
           "border-solid",
+          "border-t-4",
+          "border-b-4",
+          "border-blue-500"
         );
         dropTarget.classList.add("border-dashed", "border-black/50");
       }
-
       let transferData;
       try {
         transferData = JSON.parse(event.dataTransfer.getData("text/plain"));
       } catch (e) {
         return;
       }
-
       let action = transferData.action || null;
       let id = transferData.id || null;
       let schemaData = transferData.schemaData || transferData;
@@ -202,27 +227,16 @@ export const templateStore = defineStore("template", {
       }
 
       const sourcePath = findPathById({ root: this.schema, id });
+      if (sourcePath) removeElementAtPath({ root: this.schema, path: sourcePath });
       if (dropTarget) {
         const targetId = dropTarget.id;
         const targetPath = findPathById({ root: this.schema, id: targetId });
         const targetSchema = getElementByPath({ root: this.schema, path: targetPath });
-        const rect = dropTarget.getBoundingClientRect();
-        const relativeY = event.clientY - rect.top;
-        const isAfter = relativeY > rect.height / 2;
-
         if (targetSchema?.tag === "div") {
-          if (!targetSchema.children) targetSchema.children = [];
-          targetSchema.children.push(nuevoElemento);
-          if (sourcePath) removeElementAtPath({ root: this.schema, path: sourcePath });
-        } else {
-          const parentPath = targetPath.slice(0, -1);
-          const indexInParent = targetPath[targetPath.length - 1];
-          const finalIndex = isAfter ? indexInParent + 1 : indexInParent;
-          insertElementAtPath({ root: this.schema, element: nuevoElemento, path: parentPath, index: finalIndex });
+          insertElementAtPath({ root: this.schema, element: nuevoElemento, path: targetPath, index: this.position });
         }
       } else {
         this.schema.children.push(nuevoElemento);
-        if (sourcePath) removeElementAtPath({ root: this.schema, path: sourcePath });
       }
       this.pushHistory();
       this.renderPreview();
@@ -251,7 +265,7 @@ export const templateStore = defineStore("template", {
       const target = event.target.closest(".draggable-component");
 
       if (target) {
-        target.classList.add("border-black", "border-solid");
+        // target.classList.add("border-black", "border-solid");
         target.classList.remove("border-dashed", "border-black/50");
       }
     },
@@ -262,7 +276,13 @@ export const templateStore = defineStore("template", {
       const target = event.target.closest(".draggable-component");
 
       if (target) {
-        target.classList.remove("border-black", "border-solid");
+        target.classList.remove(
+          "border-black",
+          "border-solid",
+          "border-t-4",
+          "border-b-4",
+          "border-blue-500"
+        );
         target.classList.add("border-dashed", "border-black/50");
       }
     },

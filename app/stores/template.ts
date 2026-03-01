@@ -128,14 +128,30 @@ const insertInChildren = (
   }
   return false;
 }
+export const findIndexElement = (opt: {
+  root: ElementDataSet[],
+  id: string,
+  position: "before" | "after"
+}): number => {
+  const { root, id, position } = opt;
+  const idx = root.findIndex((c) => c.id === id);
+  if (idx !== -1) {
+    return position === "after" ? idx + 1 : idx;
+  }
 
+  for (const child of root) {
+    const indexElement = findIndexElement({ root: child.children, id, position });
+    if (indexElement !== -1) return indexElement;
+  }
+
+  return -1;
+}
 export const insertElementAtPath = (opt: { root: ElementDataSet, element: ElementDataSet, path: Array<number>, index: number }) => {
   const { root, element, path, index } = opt;
   let parent = root;
   for (let i = 0; i < path.length; i++) {
     parent = parent.children[path[i]];
   }
-  if (!parent.children) parent.children = [];
   parent.children.splice(index, 0, element);
 }
 export const removeElementAtPath = (opt: { root: ElementDataSet, path: Array<number> }) => {
@@ -192,3 +208,4 @@ export const replace = (opt: { root: ElementDataSet, element: ElementDataSet }) 
     }
   });
 }
+export const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
