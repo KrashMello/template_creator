@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, nextTick } from "vue";
 import handlebars from "handlebars";
-import { findDataById, findIndexElement, findPathById, generateLayoutHtml, getElementByPath, insertElementAtPath, insertNodeRelativeTo, removeElementAtPath, replace, sleep } from "./template";
+import { applyBorderStyles, clearBorderStyles, findDataById, findIndexElement, findPathById, generateLayoutHtml, getDropTarget, getElementByPath, getInsertType, insertElementAtPath, insertNodeRelativeTo, removeElementAtPath, replace, sleep } from "./template";
 import type { ElementDataSet } from "./template";
 // para globalizar el estilado del css de los componentes
 function extractKeys(obj: Record<string, any>, prefix = ""): string[] {
@@ -37,6 +37,8 @@ export const templateStore = defineStore("template", {
     cssCode: "",
     schema: {
       type: "container",
+      id: "preview",
+      tag: 'div',
       children: [],
     },
     schemaJson: "",
@@ -170,36 +172,9 @@ export const templateStore = defineStore("template", {
       const targetNode = findDataById({ root: this.schema, id: target.id });
       if (!targetNode) return;
 
-      const rect = target.getBoundingClientRect();
-      const relativeY = event.clientY - rect.top;
-      const height = rect.height;
-      target.classList.remove("border-dashed", "border-black/50");
-
-      let insertType = 'after';
-      if (targetNode.tag === 'div') {
-        const threshold = Math.min(height * 0.25, 15); // 15px threshold
-
-        if (relativeY < threshold) {
-          insertType = 'before';
-        } else if (relativeY > height - threshold) {
-          insertType = 'after';
-        } else {
-          insertType = 'inside';
-        }
-      } else {
-        // Non-container: only Before/After
-        insertType = relativeY < height / 2 ? 'before' : 'after';
-        const isTop = relativeY < rect.height / 2;
-        this.position = findIndexElement({ root: this.schema.children, id: target.id, position: isTop ? 'before' : 'after' })
-      }
-      if (insertType === 'before') {
-        target.classList.add("border-t-4", "border-black");
-      } else if (insertType === 'after') {
-        target.classList.add("border-b-4", "border-black");
-      } else {
-        // Inside
-        target.classList.add("border-2", "border-black", "border-solid");
-      }
+      let pos = getInsertType({ event, node: targetNode, schema: this.schema, targetId: target.id })
+      this.position = pos
+      applyBorderStyles(target, pos.insertType)
     },
     async onDrop(event) {
       event.preventDefault();
@@ -211,66 +186,46 @@ export const templateStore = defineStore("template", {
       } catch (e) {
         return;
       }
-      let action = transferData.action || null;
-      let id = transferData.id || null;
-      let schemaData = transferData.schemaData || transferData;
+      let { action = null, id, schemaData } = transferData
+      schemaData = schemaData || transferData
+      let dropTarget = getDropTarget(event, this.position.insertType === 'inside' ? true : false);
+      if (dropTarget) clearBorderStyles(dropTarget)
 
-      let dropTarget = null;
-      if (event.target.closest(".draggable-component").parentElement.parentElement.id != "preview" && event.target.closest(".draggable-component").parentElement.parentElement != null)
-        dropTarget = event.target.closest(".draggable-component").parentElement.parentElement;
-      else
-        dropTarget = event.target.closest(".draggable-component");
-      if (dropTarget) {
-        dropTarget.classList.remove(
-          "border-black",
-          "border-solid",
-          "border-t-4",
-          "border-b-4",
-        );
-        dropTarget.classList.add("border-dashed", "border-black/50");
-      }
       if (action === "move" && dropTarget && dropTarget.id === id) {
         return;
       }
-
-      let nuevoElemento;
-      if (action === null) {
-        nuevoElemento = {
-          id: crypto.randomUUID().split("-").join(""),
+      const nuevoElemento: ElementDataSet = action === null
+        ? {
+          id: crypto.randomUUID().replace(/-/g, ''),
           tag: schemaData.tag,
           name: schemaData.nombre,
           data: { ...schemaData.data },
-          children: [],
-        };
-      } else {
-        nuevoElemento = schemaData;
-      }
+          children: []
+        }
+        : schemaData
+
 
       const sourcePath = findPathById({ root: this.schema, id });
       if (sourcePath) removeElementAtPath({ root: this.schema, path: sourcePath });
-      if (dropTarget) {
-        const targetId = dropTarget.id;
-        const targetPath = findPathById({ root: this.schema, id: targetId });
-        const targetNode = getElementByPath({ root: this.schema, path: targetPath });
-        const rect = dropTarget.getBoundingClientRect();
-        const relativeY = event.clientY - rect.top;
-        const height = rect.height;
-        let insertType = 'after';
-        if (targetNode?.tag === "div") {
-          const threshold = Math.min(height * 0.25, 15);
-          if (relativeY < threshold) insertType = 'before';
-          else if (relativeY > height - threshold) insertType = 'after';
-          else insertType = 'inside';
-        } else {
-          insertType = relativeY < height / 2 ? 'before' : 'after';
-        }
-        if (insertType === 'inside') {
-          targetNode.children.push(nuevoElemento);
-        } else {
-          insertElementAtPath({ root: this.schema, element: nuevoElemento, path: targetPath, index: this.position });
+      if (dropTarget && this.position) {
+        const { elementId, insertType, index } = this.position
+        const targetPath = findPathById({ root: this.schema, id: dropTarget.id })
+        const targetNode = getElementByPath({ root: this.schema, path: targetPath })
+        clearBorderStyles(document.getElementById(elementId))
+        if (targetNode?.tag === 'div') {
+          if (insertType === 'inside') {
+            console.log(targetNode)
+            if (targetNode) targetNode.children.push(nuevoElemento)
+          } else {
+            if (dropTarget.id === 'preview') insertElementAtPath({ root: this.schema, element: nuevoElemento, path: [], index })
+            else
+              insertElementAtPath({ root: this.schema, element: nuevoElemento, path: targetPath, index })
+          }
         }
       } else {
-        this.schema.children.push(nuevoElemento);
+        const { elementId, index } = this.position
+        clearBorderStyles(document.getElementById(elementId))
+        insertElementAtPath({ root: this.schema, element: nuevoElemento, path: [], index })
       }
       this.pushHistory();
       this.renderPreview();
