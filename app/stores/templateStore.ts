@@ -167,38 +167,44 @@ export const templateStore = defineStore("template", {
 
       const target = event.target.closest(".draggable-component");
       if (!target) return;
+      const targetNode = findDataById({ root: this.schema, id: target.id });
+      if (!targetNode) return;
 
       const rect = target.getBoundingClientRect();
       const relativeY = event.clientY - rect.top;
-      const isTop = relativeY < rect.height / 2;
-      this.position = findIndexElement({ root: this.schema.children, id: target.id, position: isTop ? 'before' : 'after' })
+      const height = rect.height;
       target.classList.remove("border-dashed", "border-black/50");
-      // target.classList.add("border-black", "border-solid");
 
-      if (isTop) {
-        target.classList.add("border-t-4", "border-blue-500");
-        target.classList.remove("border-b-4");
+      let insertType = 'after';
+      if (targetNode.tag === 'div') {
+        const threshold = Math.min(height * 0.25, 15); // 15px threshold
+
+        if (relativeY < threshold) {
+          insertType = 'before';
+        } else if (relativeY > height - threshold) {
+          insertType = 'after';
+        } else {
+          insertType = 'inside';
+        }
       } else {
-        target.classList.add("border-b-4", "border-blue-500");
-        target.classList.remove("border-t-4");
+        // Non-container: only Before/After
+        insertType = relativeY < height / 2 ? 'before' : 'after';
+        const isTop = relativeY < rect.height / 2;
+        this.position = findIndexElement({ root: this.schema.children, id: target.id, position: isTop ? 'before' : 'after' })
+      }
+      if (insertType === 'before') {
+        target.classList.add("border-t-4", "border-black");
+      } else if (insertType === 'after') {
+        target.classList.add("border-b-4", "border-black");
+      } else {
+        // Inside
+        target.classList.add("border-2", "border-black", "border-solid");
       }
     },
     async onDrop(event) {
       event.preventDefault();
       event.stopPropagation();
-      let dropTarget = null;
-      if (event.target.closest(".draggable-component"))
-        dropTarget = event.target.closest(".draggable-component").parentElement.parentElement;
-      if (dropTarget) {
-        dropTarget.classList.remove(
-          "border-black",
-          "border-solid",
-          "border-t-4",
-          "border-b-4",
-          "border-blue-500"
-        );
-        dropTarget.classList.add("border-dashed", "border-black/50");
-      }
+
       let transferData;
       try {
         transferData = JSON.parse(event.dataTransfer.getData("text/plain"));
@@ -209,6 +215,20 @@ export const templateStore = defineStore("template", {
       let id = transferData.id || null;
       let schemaData = transferData.schemaData || transferData;
 
+      let dropTarget = null;
+      if (event.target.closest(".draggable-component").parentElement.parentElement.id != "preview" && event.target.closest(".draggable-component").parentElement.parentElement != null)
+        dropTarget = event.target.closest(".draggable-component").parentElement.parentElement;
+      else
+        dropTarget = event.target.closest(".draggable-component");
+      if (dropTarget) {
+        dropTarget.classList.remove(
+          "border-black",
+          "border-solid",
+          "border-t-4",
+          "border-b-4",
+        );
+        dropTarget.classList.add("border-dashed", "border-black/50");
+      }
       if (action === "move" && dropTarget && dropTarget.id === id) {
         return;
       }
@@ -231,8 +251,22 @@ export const templateStore = defineStore("template", {
       if (dropTarget) {
         const targetId = dropTarget.id;
         const targetPath = findPathById({ root: this.schema, id: targetId });
-        const targetSchema = getElementByPath({ root: this.schema, path: targetPath });
-        if (targetSchema?.tag === "div") {
+        const targetNode = getElementByPath({ root: this.schema, path: targetPath });
+        const rect = dropTarget.getBoundingClientRect();
+        const relativeY = event.clientY - rect.top;
+        const height = rect.height;
+        let insertType = 'after';
+        if (targetNode?.tag === "div") {
+          const threshold = Math.min(height * 0.25, 15);
+          if (relativeY < threshold) insertType = 'before';
+          else if (relativeY > height - threshold) insertType = 'after';
+          else insertType = 'inside';
+        } else {
+          insertType = relativeY < height / 2 ? 'before' : 'after';
+        }
+        if (insertType === 'inside') {
+          targetNode.children.push(nuevoElemento);
+        } else {
           insertElementAtPath({ root: this.schema, element: nuevoElemento, path: targetPath, index: this.position });
         }
       } else {
