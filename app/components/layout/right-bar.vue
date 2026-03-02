@@ -34,6 +34,10 @@
         <div class="flex-1 px-5">
           <ui-input v-if="selectedNode.data.content" v-model="options.content" type="textarea" title="texto"
             @blur="saveContent" placeholder="content" />
+          <ui-input v-if="selectedNode.data.name" v-model="options.name" type="text" title="name" placeholder="name"
+            :onInputt="saveContent" />
+          <ui-input v-if="selectedNode.data.value != null" v-model="options.checkValue" type="checkbox" title="value"
+            :onChange="saveContent" />
           <ui-input v-if="selectedNode.data.columns" v-model="options.columns" type="textarea" title="columns"
             placeholder="columns" />
           <ui-input v-if="selectedNode.data.src" @change="onImageFile" title="file" placeholder="src" type="file"
@@ -98,6 +102,7 @@ function removeWeightClasses(cls: string): string {
 function removeColorClasses(cls: string): string {
   return cls.replace(/text-[a-z]+-\d+/g, "").trim();
 }
+
 function saveContent() {
   if (!selectedNode.value) return;
   store.saveDataOptions()

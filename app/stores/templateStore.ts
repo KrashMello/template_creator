@@ -214,7 +214,6 @@ export const templateStore = defineStore("template", {
         clearBorderStyles(document.getElementById(elementId))
         if (targetNode?.tag === 'div') {
           if (insertType === 'inside') {
-            console.log(targetNode)
             if (targetNode) targetNode.children.push(nuevoElemento)
           } else {
             if (dropTarget.id === 'preview') insertElementAtPath({ root: this.schema, element: nuevoElemento, path: [], index })
@@ -224,7 +223,7 @@ export const templateStore = defineStore("template", {
         }
       } else {
         const { elementId, index } = this.position
-        clearBorderStyles(document.getElementById(elementId))
+        if (dropTarget) clearBorderStyles(document.getElementById(elementId))
         insertElementAtPath({ root: this.schema, element: nuevoElemento, path: [], index })
       }
       this.pushHistory();
@@ -304,6 +303,8 @@ export const templateStore = defineStore("template", {
       this.options.columns = this.selectedNode.data.columns;
       this.options.rows = this.selectedNode.data.rows;
       this.options.src = this.selectedNode.data.src;
+      this.options.name = this.selectedNode.data.name;
+      this.options.checkValue = this.selectedNode.data.value.toString();
     },
     async saveDataOptions() {
       if (!this.selectedElement) return;
@@ -331,6 +332,12 @@ export const templateStore = defineStore("template", {
             data.src = await fileToBase64(this.options.src);
           }
         } catch (e) { }
+      }
+      if (this.options.name) {
+        data.name = this.options.name;
+      }
+      if (this.options.checkValue != null) {
+        data.value = this.options.checkValue == 'true' ? true : false;
       }
       const dataTransfer = {
         ...element_schema,
