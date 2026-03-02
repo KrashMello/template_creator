@@ -68,6 +68,24 @@ export const generateElementHtml = (elementDataSet: ElementDataSet, pdf = false)
       }
       html += `</${elementDataSet.tag}>`;
     },
+    checkbox: () => {
+      html += `
+          <${elementDataSet.tag}
+            class="${elementDataSet.data.class}"
+          >`;
+      if (elementDataSet.data.value) {
+        html += ` <div>
+    <input type="checkbox" id="${elementDataSet.id}-checkbox" checked/>
+    <label for="${elementDataSet.id}-checkbox">${elementDataSet.data.name}</label>
+  </div>`
+      } else {
+        html += `<div>
+    <input type="checkbox" id="${elementDataSet.id}-checkbox" />
+    <label for="${elementDataSet.id}-checkbox">${elementDataSet.data.name}</label>
+  </div>`
+      }
+      html += `</${elementDataSet.tag}>`;
+    },
     p: () => {
       html += `
           <${elementDataSet.tag}
