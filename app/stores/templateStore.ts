@@ -34,6 +34,7 @@ export const templateStore = defineStore("template", {
     position: -1,
     selectedElement: null,
     selectedNode: null,
+    selectedType: 'body',
     cssCode: "",
     schema: {
       type: "container",
@@ -41,8 +42,22 @@ export const templateStore = defineStore("template", {
       tag: 'div',
       children: [],
     },
+    footer: {
+      type: "container",
+      id: "footer",
+      tag: 'div',
+      children: [],
+    },
+    header: {
+      type: "container",
+      id: "header",
+      tag: 'div',
+      children: [],
+    },
     schemaJson: "",
     previewHtml: "",
+    previewHtmlFooter: "",
+    previewHtmlHeader: "",
     options: {
       class: "",
       content: "",
@@ -83,7 +98,12 @@ export const templateStore = defineStore("template", {
         let html = generateLayoutHtml({ schema: this.schema as ElementDataSet, cssCode: this.cssCode });
         html = handlebars.compile(html)(this.data);
         this.previewHtml = html;
-
+        html = generateLayoutHtml({ schema: this.footer as ElementDataSet, cssCode: this.cssCode });
+        html = handlebars.compile(html)(this.data);
+        this.previewHtmlFooter = html;
+        html = generateLayoutHtml({ schema: this.header as ElementDataSet, cssCode: this.cssCode });
+        html = handlebars.compile(html)(this.data);
+        this.previewHtmlHeader = html;
         nextTick(() => {
           document
             .querySelectorAll("#preview .draggable-component")
@@ -98,7 +118,47 @@ export const templateStore = defineStore("template", {
                 this.selectedElementClick(e)
               })
             });
-          document.querySelectorAll('[data-function="delete"]').forEach((el) => {
+          document
+            .querySelectorAll("#footer .draggable-component")
+            .forEach((el) => {
+              el.draggable = true;
+              el.addEventListener("dragstart", (event) => this.handlePreviewDragStart(event, "footer"));
+              el.addEventListener("dragend", this.handlePreviewDragEnd);
+              el.addEventListener("dragenter", this.onDragEnter);
+              el.addEventListener("dragleave", this.onDragLeave);
+              el.addEventListener("dragover", (event) => this.onDragOver(event, "footer"));
+              el.addEventListener("click", (e) => {
+                this.selectedElementClick(e, "footer")
+              })
+            });
+          document
+            .querySelectorAll("#header .draggable-component")
+            .forEach((el) => {
+              el.draggable = true;
+              el.addEventListener("dragstart", (event) => this.handlePreviewDragStart(event, "header"));
+              el.addEventListener("dragend", this.handlePreviewDragEnd);
+              el.addEventListener("dragenter", this.onDragEnter);
+              el.addEventListener("dragleave", this.onDragLeave);
+              el.addEventListener("dragover", (event) => this.onDragOver(event, "header"));
+              el.addEventListener("click", (e) => {
+                this.selectedElementClick(e, "header")
+              })
+            });
+          document.querySelectorAll('#footer [data-function="delete"]').forEach((el) => {
+            el.addEventListener('click', (e) => {
+              e.stopPropagation()
+              const id = el.dataset.id
+              this.deleteElementById(id, 'footer')
+            })
+          })
+          document.querySelectorAll('#header [data-function="delete"]').forEach((el) => {
+            el.addEventListener('click', (e) => {
+              e.stopPropagation()
+              const id = el.dataset.id
+              this.deleteElementById(id, 'header')
+            })
+          })
+          document.querySelectorAll('#preview [data-function="delete"]').forEach((el) => {
             el.addEventListener('click', (e) => {
               e.stopPropagation()
               const id = el.dataset.id
@@ -130,28 +190,15 @@ export const templateStore = defineStore("template", {
       window.open(url, "_blank");
       URL.revokeObjectURL(url);
     },
-    deleteElement() {
-      if (!this.selectedElement) return;
+    deleteElementById(id: string, type: "body" | "footer" | "header" = "body") {
+      const root = type === "body" ? this.schema : type === 'footer' ? this.footer : this.header
       const path = findPathById(
         {
-          root: this.schema,
-          id: this.selectedElement.id,
-        }
-      );
-      removeElementAtPath({ root: this.schema, path });
-      this.selectedElement = null;
-      this.pushHistory();
-      this.renderPreview();
-      this.updateSchemaDisplay();
-    },
-    deleteElementById(id: string) {
-      const path = findPathById(
-        {
-          root: this.schema,
+          root,
           id,
         }
       );
-      removeElementAtPath({ root: this.schema, path });
+      removeElementAtPath({ root, path });
       this.selectedElement = null;
       this.pushHistory();
       this.renderPreview();
@@ -163,20 +210,20 @@ export const templateStore = defineStore("template", {
     setStyleElTexContent(css) {
       if (this.styleEl) this.styleEl.textContent = css;
     },
-    onDragOver(event) {
+    onDragOver(event, type: "body" | "footer" | "header" = "body") {
       event.preventDefault();
       event.stopPropagation();
-
+      const root = type === "body" ? this.schema : type === 'footer' ? this.footer : this.header
       const target = event.target.closest(".draggable-component");
       if (!target) return;
-      const targetNode = findDataById({ root: this.schema, id: target.id });
+      const targetNode = findDataById({ root, id: target.id });
       if (!targetNode) return;
 
-      let pos = getInsertType({ event, node: targetNode, schema: this.schema, targetId: target.id })
+      let pos = getInsertType({ event, node: targetNode, schema: root, targetId: target.id })
       this.position = pos
       applyBorderStyles(target, pos.insertType)
     },
-    async onDrop(event) {
+    onDrop(event, type: "headers" | "footer" | "body" = "body") {
       event.preventDefault();
       event.stopPropagation();
 
@@ -205,34 +252,38 @@ export const templateStore = defineStore("template", {
         : schemaData
 
 
-      const sourcePath = findPathById({ root: this.schema, id });
-      if (sourcePath) removeElementAtPath({ root: this.schema, path: sourcePath });
+      const root = type === "body" ? this.schema : type === 'footer' ? this.footer : this.header
+      const sourcePath = findPathById({ root, id });
+      if (sourcePath) removeElementAtPath({ root, path: sourcePath });
       if (dropTarget && this.position) {
         const { elementId, insertType, index } = this.position
-        const targetPath = findPathById({ root: this.schema, id: dropTarget.id })
-        const targetNode = getElementByPath({ root: this.schema, path: targetPath })
+        const targetPath = findPathById({ root, id: dropTarget.id })
+        const targetNode = getElementByPath({ root, path: targetPath })
         clearBorderStyles(document.getElementById(elementId))
         if (targetNode?.tag === 'div') {
           if (insertType === 'inside') {
             if (targetNode) targetNode.children.push(nuevoElemento)
           } else {
-            if (dropTarget.id === 'preview') insertElementAtPath({ root: this.schema, element: nuevoElemento, path: [], index })
+            if (dropTarget.id === 'preview') insertElementAtPath({ root, element: nuevoElemento, path: [], index })
             else
-              insertElementAtPath({ root: this.schema, element: nuevoElemento, path: targetPath, index })
+              insertElementAtPath({ root, element: nuevoElemento, path: targetPath, index })
           }
         }
       } else {
         const { elementId, index } = this.position
         if (dropTarget) clearBorderStyles(document.getElementById(elementId))
-        insertElementAtPath({ root: this.schema, element: nuevoElemento, path: [], index })
+        insertElementAtPath({ root, element: nuevoElemento, path: [], index })
       }
       this.pushHistory();
       this.renderPreview();
       this.updateSchemaDisplay();
     },
-    handlePreviewDragStart(event) {
+    handlePreviewDragStart(event, type: "body" | "footer" | "header" = "body") {
       const element = event.target.closest(".draggable-component");
-      const schemaData = findDataById({ root: this.schema, id: element.id });
+      const root = type === "body" ? this.schema : type === 'footer' ? this.footer : this.header
+      const schemaData = findDataById({ root, id: element.id });
+      console.log(schemaData, element)
+      if (!schemaData) return
       const id = element.id;
       event.dataTransfer.setData(
         "text/plain",
@@ -274,20 +325,23 @@ export const templateStore = defineStore("template", {
         target.classList.add("border-dashed", "border-black/50");
       }
     },
-    updateElementAtPath(element: ElementDataSet) {
-      this.schema.children = replace({ root: this.schema, element });
+    updateElementAtPath(element: ElementDataSet, type: "body" | "footer" | "header" = "body") {
+      const root = type === "body" ? this.schema : type === 'footer' ? this.footer : this.header
+      root.children = replace({ root, element });
     },
     clearSelectedElemen() {
       this.selectedElement.classList.remove("border-black", 'border-solid');
       this.selectedElement.classList.add("border-black/50", "border-dashed");
       this.selectedElement = null;
       this.selectedNode = null;
+      this.selectedType = 'body'
     },
-    selectedElementClick(event) {
+    selectedElementClick(event: Event, type: "body" | "footer" | "header" = "body") {
       event.preventDefault();
       event.stopPropagation();
+      this.selectedType = type
       const component = event.target.closest(".draggable-component");
-
+      const root = type === "body" ? this.schema : type === 'footer' ? this.footer : this.header
       if (!component) return;
       if (this.selectedElement) {
         this.selectedElement.classList.remove("border-black", "border-solid");
@@ -296,7 +350,7 @@ export const templateStore = defineStore("template", {
       this.selectedElement = component;
       this.selectedElement.classList.add("border-black", 'border-solid');
       this.selectedElement.classList.remove("border-black/50", "border-dashed");
-      this.selectedNode = findDataById({ root: this.schema, id: this.selectedElement.id });
+      this.selectedNode = findDataById({ root, id: this.selectedElement.id });
 
       this.options.class = this.selectedNode.data.class || "";
       this.options.content = this.selectedNode.data.content || "";
@@ -344,14 +398,14 @@ export const templateStore = defineStore("template", {
         data,
       };
       this.selectedNode = dataTransfer;
-      this.updateElementAtPath(dataTransfer);
+      this.updateElementAtPath(dataTransfer, this.selectedType);
       // this.selectedElement = null;
       this.renderPreview();
       this.updateSchemaDisplay();
     },
   },
   persist: {
-    pick: ["styleEl", "cssCode", "schema", "data", "history", "redoStack"],
+    pick: ["styleEl", "cssCode", "schema", "data", "history", "redoStack", "footer", "header"],
   },
 });
 

@@ -3,16 +3,51 @@
     <layout-content-header @select="selectView" @export="generateDocument" />
     <div class="flex-1 overflow-auto canvas-bg py-8 px-4" v-if="selectedView === 1">
       <div class="a4-page mx-auto bg-white rounded-sm shadow-xl overflow-hidden gap-2">
-        <div class="zone-label zone-label--body">
-          <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <path d="M9 9h6M9 12h6M9 15h4" />
-          </svg>
-          Dynamic Content Area
+
+        <div class="zone-header flex flex-col">
+          <div>
+            <div class="zone-label zone-label--header">
+              <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z" />
+                <path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4" />
+              </svg>
+              Global Page Header
+            </div>
+          </div>
+          <div id="header" class="flex flex-1 h-full" v-html="previewHtmlHeader" @dragenter="onDragEnter"
+            @dragleave="onDragLeave" @drop="(event) => onDrop(event, 'header')">
+          </div>
         </div>
-        <div id="preview" class="flex flex-1 h-full" v-html="previewHtml" @dragenter="onDragEnter"
-          @dragleave="onDragLeave" @drop="onDrop">
+        <div class="zone-body flex flex-col">
+          <div>
+            <div class="zone-label zone-label--body">
+              <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M9 9h6M9 12h6M9 15h4" />
+              </svg>
+              Dynamic Content Area
+            </div>
+          </div>
+          <div id="preview" class="flex flex-1 h-full" v-html="previewHtml" @dragenter="onDragEnter"
+            @dragleave="onDragLeave" @drop="onDrop">
+          </div>
+        </div>
+        <div class="zone-footer flex flex-col">
+          <div>
+            <div class="zone-label zone-label--footer">
+              <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path d="M3 5h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5z" />
+                <path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4" />
+              </svg>
+              Page Footer
+            </div>
+          </div>
+          <div id="footer" class="flex flex-1 h-full" v-html="previewHtmlFooter" @dragenter="onDragEnter"
+            @dragleave="onDragLeave" @drop="(event) => onDrop(event, 'footer')">
+          </div>
         </div>
       </div>
     </div>
@@ -23,8 +58,11 @@
 </template>
 <script setup>
 import { templateStore } from "../../stores/templateStore";
+const store = templateStore();
 const previewHtml = computed(() => templateStore().previewHtml);
-const schemaJson = computed(() => templateStore().schemaJson);
+const previewHtmlFooter = computed(() => store.previewHtmlFooter);
+const previewHtmlHeader = computed(() => store.previewHtmlHeader);
+const schemaJson = computed(() => store.schemaJson);
 const selectedView = ref(1);
 const selectView = (opt) => {
   selectedView.value = opt;
@@ -32,12 +70,12 @@ const selectView = (opt) => {
 
 const data = computed({
   get() {
-    return JSON.stringify(templateStore().data, null, 2);
+    return JSON.stringify(store.data, null, 2);
   },
   set(newValue) {
     try {
-      templateStore().data = JSON.parse(newValue);
-      templateStore().renderPreview();
+      store.data = JSON.parse(newValue);
+      store.renderPreview();
     }
     catch (e) { }
   },
@@ -64,7 +102,7 @@ const onDragLeave = (event) => {
     target.classList.add("border-dashed", "border-slate-400");
   }
 };
-const onDrop = templateStore().onDrop;
+const onDrop = store.onDrop;
 const generateDocument = templateStore().generateDocument;
 </script>
 <style scoped>
