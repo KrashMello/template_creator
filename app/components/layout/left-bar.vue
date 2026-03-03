@@ -32,6 +32,7 @@ import row from "../svg/row.vue";
 import col from "../svg/col.vue";
 import image from "../svg/image.vue";
 import container from "../svg/container.vue";
+import checkbox from "../svg/checkbox.vue";
 
 const componentes = shallowRef([
   {
@@ -86,6 +87,16 @@ const componentes = shallowRef([
       class: "size-24 object-cover",
       src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5Y2FjYmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB4PSIzIiB5PSIzIiB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHJ4PSIyIiByeT0iMiIvPjxjaXJjbGUgY3g9IjguNSIgY3k9IjguNSIgcj0iMS41Ii8+PHBhdGggZD0iTTIxIDE1bC01LTUtNCA0LTQtNC01IDUiLz48L3N2Zz4=",
     },
+  },
+  {
+    tag: "checkbox",
+    name: "Checkbox",
+    accent: "pink",
+    icon: checkbox,
+    data: {
+      value: false,
+      name: "checkbox"
+    }
   },
   {
     tag: "div",

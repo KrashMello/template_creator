@@ -23,7 +23,6 @@ onMounted(() => {
     }
   })
 
-  document.addEventListener('drop', store.onDrop)
   document.addEventListener('keydown', (e) => {
     if (store.selectedElement && e.key === "Escape")
       store.clearSelectedElemen()

@@ -6,6 +6,11 @@ interface ElementDataSet {
   children: ElementDataSet[];
 };
 
+interface DropPosition {
+  elementId: string
+  insertType: 'before' | 'after' | 'inside'
+  index: number
+}
 const GLOBAL_COMPONENT_STYLE =
   "draggable-component p-3 border-2 border-dashed border-black/50 bg-background rounded-xl " +
   "hover:bg-accent/50 transition-all duration-200 " +
@@ -38,7 +43,6 @@ export const generateElementHtml = (elementDataSet: ElementDataSet, pdf = false)
     div: () => {
       html += `<${elementDataSet.tag}
           class="${elementDataSet.data.class}"
-          id="${elementDataSet.id}"
         >`;
       if (elementDataSet.children && elementDataSet.children.length > 0) {
         html += elementDataSet.children
@@ -50,7 +54,6 @@ export const generateElementHtml = (elementDataSet: ElementDataSet, pdf = false)
     table: () => {
       html += `
           <${elementDataSet.tag}
-            id="${elementDataSet.id}"
             class=" ${elementDataSet.data.class}"
             >`;
       if (elementDataSet.data.table) {
@@ -65,10 +68,27 @@ export const generateElementHtml = (elementDataSet: ElementDataSet, pdf = false)
       }
       html += `</${elementDataSet.tag}>`;
     },
+    checkbox: () => {
+      html += `
+          <${elementDataSet.tag}
+            class="${elementDataSet.data.class}"
+          >`;
+      if (elementDataSet.data.value) {
+        html += ` <div>
+    <input type="checkbox" id="${elementDataSet.id}-checkbox" checked/>
+    <label for="${elementDataSet.id}-checkbox">${elementDataSet.data.name}</label>
+  </div>`
+      } else {
+        html += `<div>
+    <input type="checkbox" id="${elementDataSet.id}-checkbox" />
+    <label for="${elementDataSet.id}-checkbox">${elementDataSet.data.name}</label>
+  </div>`
+      }
+      html += `</${elementDataSet.tag}>`;
+    },
     p: () => {
       html += `
           <${elementDataSet.tag}
-            id="${elementDataSet.id}"
             class="${elementDataSet.data.class}"
           >`;
       if (elementDataSet.data.content) {
@@ -128,15 +148,35 @@ const insertInChildren = (
   }
   return false;
 }
+export const findIndexElement = (opt: {
+  root: ElementDataSet[],
+  id: string,
+  position: "before" | "after" | "inside"
+}): number => {
+  const { root, id, position } = opt;
+  const idx = root.findIndex((c) => c.id === id);
+  if (idx !== -1) {
+    return position === "after" ? idx + 1 : idx;
+  }
 
+  for (const child of root) {
+    const indexElement = findIndexElement({ root: child.children, id, position });
+    if (indexElement !== -1) return indexElement;
+  }
+
+  return -1;
+}
 export const insertElementAtPath = (opt: { root: ElementDataSet, element: ElementDataSet, path: Array<number>, index: number }) => {
   const { root, element, path, index } = opt;
   let parent = root;
-  for (let i = 0; i < path.length; i++) {
-    parent = parent.children[path[i]];
+  if (path.length === 0) {
+    parent.children.splice(index, 0, element);
+  } else {
+    for (let i = 0; i < path.length; i++) {
+      parent = parent.children[path[i]];
+    }
+    parent.children.splice(index, 0, element);
   }
-  if (!parent.children) parent.children = [];
-  parent.children.splice(index, 0, element);
 }
 export const removeElementAtPath = (opt: { root: ElementDataSet, path: Array<number> }) => {
   const { root, path } = opt;
@@ -152,6 +192,7 @@ export const removeElementAtPath = (opt: { root: ElementDataSet, path: Array<num
 export const findPathById = (opt: { root: ElementDataSet, id: string }) => {
   const { root, id } = opt;
   if (root.id === id) return [];
+  if (id === 'preview') return []
   for (let i = 0; i < root.children.length; i++) {
     const child = root.children[i];
     const path = findPathById({ root: child, id });
@@ -191,4 +232,54 @@ export const replace = (opt: { root: ElementDataSet, element: ElementDataSet }) 
       return element;
     }
   });
+}
+export const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const getParent = (event, id: string) => {
+  console.log(event, id)
+  if (event.parentElement.id === id) return event.parentElement
+  else getParent(event.parentElement, id)
+}
+export const getDropTarget = (event: DragEvent, isInside: boolean): HTMLElement | null => {
+  const target = event.target as HTMLElement
+  const draggable = target.closest('.draggable-component')
+  if (!draggable) return null
+
+  const parent = draggable.parentElement?.parentElement
+  return parent && !isInside ? parent : draggable
+}
+export const getInsertType = (opt: { event: DragEvent, node: ElementDataSet, schema: ElementDataSet, targetId: string }): DropPosition => {
+  const { event, node, schema, targetId } = opt
+  const target = event.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  const relativeY = event.clientY - rect.top
+  const height = rect.height
+
+  let insertType: 'before' | 'after' | 'inside' = 'after'
+  if (node.tag === 'div') {
+    const threshold = Math.min(height * 0.25, 15)
+    if (relativeY < threshold) insertType = 'before'
+    else if (relativeY > height - threshold) insertType = 'after'
+    else insertType = 'inside'
+  } else {
+    insertType = relativeY < height / 2 ? 'before' : 'after'
+  }
+
+  const index = findIndexElement({ root: schema.children, id: targetId, position: insertType }) || 0
+  return { elementId: target.id, insertType, index }
+}
+
+export const applyBorderStyles = (target: HTMLElement, insertType: DropPosition['insertType']) => {
+  target.classList.remove('border-black/50', 'border-t-4', 'border-b-4', 'border-solid')
+  if (insertType === 'before') {
+    target.classList.add('border-t-4', 'border-black', 'border-solid')
+  } else if (insertType === 'after') {
+    target.classList.add('border-b-4', 'border-black', 'border-solid')
+  } else {
+    target.classList.add('border-2', 'border-black', 'border-solid')
+  }
+}
+
+export const clearBorderStyles = (target: HTMLElement) => {
+  target.classList.remove('border-t-4', 'border-b-4', 'border-2', 'border-black', 'border-solid', 'border-dashed', 'border-black/50')
+  target.classList.add('border-dashed', 'border-black/50')
 }

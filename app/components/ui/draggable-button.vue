@@ -39,6 +39,7 @@ const accentMap: Record<string, { border: string; bg: string; iconBg: string; ic
   emerald: { border: "border-emerald-100 hover:border-emerald-200", bg: "bg-emerald-50/50 hover:bg-emerald-50", iconBg: "bg-emerald-100", icon: "text-emerald-600" },
   purple: { border: "border-purple-100 hover:border-purple-200", bg: "bg-purple-50/50 hover:bg-purple-50", iconBg: "bg-purple-100", icon: "text-purple-600" },
   amber: { border: "border-amber-100 hover:border-amber-200", bg: "bg-amber-50/50 hover:bg-amber-50", iconBg: "bg-amber-100", icon: "text-amber-600" },
+  pink: { border: "border-pink-100 hover:border-pink-200", bg: "bg-pink-50/50 hover:bg-pink-50", iconBg: "bg-pink-100", icon: "text-pink-600" },
 };
 
 const accentClasses = computed(() => accentMap[props.accent] ?? accentMap.slate);

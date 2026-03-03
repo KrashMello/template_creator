@@ -25,7 +25,7 @@
       </Teleport>
     </div>
     <input v-else-if="props.type !== 'file'" :type="props.type" :id="props.id" v-model="proxyValue" :class="CLASS"
-      :placeholder="props.placeholder" />
+      @change="props.onChange" @blur="props.onBlur" @input="props.onInputt" :placeholder="props.placeholder" />
     <input v-else :type="props.type" :acepted="props.acepted" :id="props.id" @change="props.onChange" :class="CLASS"
       :placeholder="props.placeholder" />
   </div>
@@ -48,6 +48,8 @@ const proxyValue = computed({
     return props.modelValue;
   },
   set(newValue) {
+    if (props.type === 'checkbox')
+      newValue = newValue ? 'true' : 'false'
     emit("update:modelValue", newValue);
   },
 });
@@ -83,6 +85,13 @@ const props = defineProps({
       return;
     },
   },
+  onBluur: {
+    type: Function,
+    default: () => {
+      return;
+    },
+  },
+  onInputt: { type: Function, default: () => { return; } },
 });
 
 function updateDropdownPosition() {
