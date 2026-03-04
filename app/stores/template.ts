@@ -17,90 +17,64 @@ const GLOBAL_COMPONENT_STYLE =
   "cursor-grab active:cursor-grabbing select-none " +
   "flex flex-col gap-1.5 min-h-12 w-full"
   ;
+const ICONS = {
+  drag: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-3"><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="m5.212 15.111l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848L6.06 15.111a.6.6 0 0 1-.848 0Zm6.364 6.365l-2.687-2.687a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.688a.6.6 0 0 1-.848 0Zm0-12.729L8.889 6.06a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .849l-2.687 2.687a.6.6 0 0 1-.848 0Zm6.364 6.364l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.687a.6.6 0 0 1-.848 0Z"/></svg>`,
+  empty: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="text-slate-400"><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="m5.212 15.111l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848L6.06 15.111a.6.6 0 0 1-.848 0Zm6.364 6.365l-2.687-2.687a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.688a.6.6 0 0 1-.848 0Zm0-12.729L8.889 6.06a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .849l-2.687 2.687a.6.6 0 0 1-.848 0Zm6.364 6.364l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.687a.6.6 0 0 1-.848 0Z"/></svg>`
+};
 
 export const generateElementHtml = (elementDataSet: ElementDataSet, pdf = false): string => {
-  let html = "";
-  const divDraggable = `<div 
-      id="${elementDataSet.id}"
-      class="${!pdf ? GLOBAL_COMPONENT_STYLE : ""}"
-      draggable="true"
-      >
+  const { id, tag, name, data, children } = elementDataSet;
+  const childHtml = children?.length ? children.map(c => generateElementHtml(c, pdf)).join("") : "";
+  const className = data.class || "";
+
+  let innerContent = "";
+
+  switch (tag) {
+    case 'img':
+      innerContent = `<${tag} src='${data.src}' class="${className}" />`;
+      break;
+    case 'div':
+      innerContent = `<${tag} class="${className}">${childHtml}</${tag}>`;
+      break;
+    case 'table':
+      innerContent = `
+        <${tag} class="${className}">
+          ${data.table ? `
+            <thead class="dark:bg-zinc-50 bg-zinc-900 border-b dark:border-zinc-200 border-zinc-800">
+              <tr class="dark:text-zinc-500 font-medium text-zinc-400">${data.columns || ""}</tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">${data.rows || ""}</tbody>
+          ` : ""}
+        </${tag}>`;
+      break;
+    case 'checkbox':
+      innerContent = `
+        <${tag} class="${className}">
+          <div>
+            <input type="checkbox" id="${id}-checkbox" ${data.value ? 'checked' : ''}/>
+            <label for="${id}-checkbox">${data.name || name}</label>
+          </div>
+        </${tag}>`;
+      break;
+    case 'p':
+      innerContent = `<${tag} class="${className}">${data.content || ""}</${tag}>`;
+      break;
+    default:
+      innerContent = `<${tag} class="${className}">${childHtml}</${tag}>`;
+  }
+
+  if (pdf) return innerContent;
+
+  return `
+    <div id="${id}" class="${GLOBAL_COMPONENT_STYLE}" draggable="true">
       <div class="flex group items-center font-bold text-sm gap-4">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-3"><!-- Icon from Iconoir by Luca Burgio - https://github.com/iconoir-icons/iconoir/blob/main/LICENSE --><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="m5.212 15.111l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848L6.06 15.111a.6.6 0 0 1-.848 0Zm6.364 6.365l-2.687-2.687a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.688a.6.6 0 0 1-.848 0Zm0-12.729L8.889 6.06a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .849l-2.687 2.687a.6.6 0 0 1-.848 0Zm6.364 6.364l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.687a.6.6 0 0 1-.848 0Z"/></svg>
-        <span class="flex-1">${elementDataSet.name ?? elementDataSet.tag}</span>
-        <button class="hidden group-hover:flex items-center justify-center size-5 rounded-sm bg-red-100 text-red-500 text-sm font-bold leading-none border-none cursor-pointer [transition:all_0.15s] z-50" data-id="${elementDataSet.id}" data-function="delete">×</button>
-      </div>`;
-  html += !pdf ? divDraggable : ""
-  let elements = {
-    img: () => {
-      html += `
-        <${elementDataSet.tag}
-          src='${elementDataSet.data.src}'
-          class=" ${elementDataSet.data.class}"
-      />
-      `;
-    },
-    div: () => {
-      html += `<${elementDataSet.tag}
-          class="${elementDataSet.data.class}"
-        >`;
-      if (elementDataSet.children && elementDataSet.children.length > 0) {
-        html += elementDataSet.children
-          .map((child) => generateElementHtml(child, pdf))
-          .join("");
-      }
-      html += `</${elementDataSet.tag}>`;
-    },
-    table: () => {
-      html += `
-          <${elementDataSet.tag}
-            class=" ${elementDataSet.data.class}"
-            >`;
-      if (elementDataSet.data.table) {
-        html += `<thead class="dark:bg-zinc-50 bg-zinc-900 border-b dark:border-zinc-200 border-zinc-800">
-              <tr class="dark:text-zinc-500 font-medium text-zinc-400">
-              ${elementDataSet.data.columns ? elementDataSet.data.columns : ""}
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
-              ${elementDataSet.data.rows ? elementDataSet.data.rows : ""}
-        </tbody>`;
-      }
-      html += `</${elementDataSet.tag}>`;
-    },
-    checkbox: () => {
-      html += `
-          <${elementDataSet.tag}
-            class="${elementDataSet.data.class}"
-          >`;
-      if (elementDataSet.data.value) {
-        html += ` <div>
-    <input type="checkbox" id="${elementDataSet.id}-checkbox" checked/>
-    <label for="${elementDataSet.id}-checkbox">${elementDataSet.data.name}</label>
-  </div>`
-      } else {
-        html += `<div>
-    <input type="checkbox" id="${elementDataSet.id}-checkbox" />
-    <label for="${elementDataSet.id}-checkbox">${elementDataSet.data.name}</label>
-  </div>`
-      }
-      html += `</${elementDataSet.tag}>`;
-    },
-    p: () => {
-      html += `
-          <${elementDataSet.tag}
-            class="${elementDataSet.data.class}"
-          >`;
-      if (elementDataSet.data.content) {
-        html += elementDataSet.data.content;
-      }
-      html += `</${elementDataSet.tag}>`;
-    },
-  };
-  elements[elementDataSet.tag]();
-  html += !pdf ? "</div>" : ""
-  return html;
-}
+        ${ICONS.drag}
+        <span class="flex-1">${name ?? tag}</span>
+        <button class="hidden group-hover:flex items-center justify-center size-5 rounded-sm bg-red-100 text-red-500 text-sm font-bold leading-none border-none cursor-pointer [transition:all_0.15s] z-50" data-id="${id}" data-function="delete">×</button>
+      </div>
+      ${innerContent}
+    </div>`;
+};
 export const generateLayoutHtml = (opt: { schema: ElementDataSet, cssCode?: string, pdf: boolean }): string => {
   let { schema, pdf, cssCode } = opt;
   pdf = pdf || false;
@@ -122,31 +96,14 @@ ${schema.children.map((child) => generateElementHtml(child, pdf)).join("")}
 `;
   return html;
 }
-export const insertNodeRelativeTo = (
-  root: ElementDataSet,
-  newNode: ElementDataSet,
-  targetId: string,
-  position: "before" | "after"
-): boolean => {
-  return insertInChildren(root.children, newNode, targetId, position);
-}
-
-const insertInChildren = (
-  children: ElementDataSet[],
-  newNode: ElementDataSet,
-  targetId: string,
-  position: "before" | "after"
-): boolean => {
-  const idx = children.findIndex((c) => c.id === targetId);
-  if (idx === -1) {
-    const insertAt = position === "after" ? idx + 1 : idx;
-    children.splice(insertAt, 0, newNode);
-    return true;
-  }
-  for (const child of children) {
-    if (child.children && insertInChildren(child.children, newNode, targetId, position)) return true;
-  }
-  return false;
+export const generateLayoutHeaderFooterHtml = (opt: { schema: ElementDataSet, cssCode?: string, pdf: boolean }): string => {
+  let { schema, pdf, cssCode } = opt;
+  pdf = pdf || false;
+  if (!schema.children || schema.children.length === 0) return `<div class="flex flex-1 gap-3 flex-col justify-center items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="text-slate-400"><!-- Icon from Iconoir by Luca Burgio - https://github.com/iconoir-icons/iconoir/blob/main/LICENSE --><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="m5.212 15.111l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848L6.06 15.111a.6.6 0 0 1-.848 0Zm6.364 6.365l-2.687-2.687a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.688a.6.6 0 0 1-.848 0Zm0-12.729L8.889 6.06a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .849l-2.687 2.687a.6.6 0 0 1-.848 0Zm6.364 6.364l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.687a.6.6 0 0 1-.848 0Z"/></svg><span class="text-sm text-slate-400">drag a component and drop it to the canvas</span></div>`;
+  const html = `
+${schema.children.map((child) => generateElementHtml(child, pdf)).join("")}
+`;
+  return html;
 }
 export const findIndexElement = (opt: {
   root: ElementDataSet[],
@@ -233,12 +190,8 @@ export const replace = (opt: { root: ElementDataSet, element: ElementDataSet }) 
     }
   });
 }
-export const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-const getParent = (event, id: string) => {
-  console.log(event, id)
-  if (event.parentElement.id === id) return event.parentElement
-  else getParent(event.parentElement, id)
-}
+export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const getDropTarget = (event: DragEvent, isInside: boolean): HTMLElement | null => {
   const target = event.target as HTMLElement
   const draggable = target.closest('.draggable-component')

@@ -1,9 +1,10 @@
 import { defineStore } from "pinia";
 import { ref, nextTick } from "vue";
 import handlebars from "handlebars";
-import { applyBorderStyles, clearBorderStyles, findDataById, findIndexElement, findPathById, generateLayoutHtml, getDropTarget, getElementByPath, getInsertType, insertElementAtPath, insertNodeRelativeTo, removeElementAtPath, replace, sleep } from "./template";
+import { applyBorderStyles, clearBorderStyles, findDataById, findIndexElement, findPathById, generateLayoutHeaderFooterHtml, generateLayoutHtml, getDropTarget, getElementByPath, getInsertType, insertElementAtPath, insertNodeRelativeTo, removeElementAtPath, replace, sleep } from "./template";
 import type { ElementDataSet } from "./template";
-// para globalizar el estilado del css de los componentes
+
+export type SectionType = "body" | "footer" | "header";
 function extractKeys(obj: Record<string, any>, prefix = ""): string[] {
   const keys: string[] = [];
   for (const k in obj) {
@@ -93,78 +94,42 @@ export const templateStore = defineStore("template", {
       this.renderPreview();
       this.updateSchemaDisplay();
     },
+    _bindEventsToContainer(selector: string, type: SectionType) {
+      document.querySelectorAll(`${selector} .draggable-component`).forEach((el) => {
+        const element = el as HTMLElement;
+        element.draggable = true;
+        element.ondragstart = (e) => this.handlePreviewDragStart(e as DragEvent, type);
+        element.ondragend = () => this.handlePreviewDragEnd();
+        element.ondragenter = this.onDragEnter;
+        element.ondragleave = this.onDragLeave;
+        element.ondragover = (e) => this.onDragOver(e as DragEvent, type);
+        element.onclick = (e) => this.selectedElementClick(e, type);
+      });
+
+      document.querySelectorAll(`${selector} [data-function="delete"]`).forEach((el) => {
+        (el as HTMLElement).onclick = (e) => {
+          e.stopPropagation();
+          const id = (el as HTMLElement).dataset.id;
+          if (id) this.deleteElementById(id, type);
+        };
+      });
+    },
+    _getRoot(type: SectionType): ElementDataSet {
+      return type === 'footer' ? this.footer : type === 'header' ? this.header : this.schema;
+    },
+    buildHtml(schemaData: ElementDataSet) {
+      let html = generateLayoutHtml({ schema: schemaData, cssCode: this.cssCode });
+      return handlebars.compile(html)(this.data);
+    },
     renderPreview() {
       try {
-        let html = generateLayoutHtml({ schema: this.schema as ElementDataSet, cssCode: this.cssCode });
-        html = handlebars.compile(html)(this.data);
-        this.previewHtml = html;
-        html = generateLayoutHtml({ schema: this.footer as ElementDataSet, cssCode: this.cssCode });
-        html = handlebars.compile(html)(this.data);
-        this.previewHtmlFooter = html;
-        html = generateLayoutHtml({ schema: this.header as ElementDataSet, cssCode: this.cssCode });
-        html = handlebars.compile(html)(this.data);
-        this.previewHtmlHeader = html;
+        this.previewHtml = this.buildHtml(this.schema);
+        this.previewHtmlFooter = this.buildHtml(this.footer);
+        this.previewHtmlHeader = this.buildHtml(this.header);
         nextTick(() => {
-          document
-            .querySelectorAll("#preview .draggable-component")
-            .forEach((el) => {
-              el.draggable = true;
-              el.addEventListener("dragstart", this.handlePreviewDragStart);
-              el.addEventListener("dragend", this.handlePreviewDragEnd);
-              el.addEventListener("dragenter", this.onDragEnter);
-              el.addEventListener("dragleave", this.onDragLeave);
-              el.addEventListener("dragover", this.onDragOver);
-              el.addEventListener("click", (e) => {
-                this.selectedElementClick(e)
-              })
-            });
-          document
-            .querySelectorAll("#footer .draggable-component")
-            .forEach((el) => {
-              el.draggable = true;
-              el.addEventListener("dragstart", (event) => this.handlePreviewDragStart(event, "footer"));
-              el.addEventListener("dragend", this.handlePreviewDragEnd);
-              el.addEventListener("dragenter", this.onDragEnter);
-              el.addEventListener("dragleave", this.onDragLeave);
-              el.addEventListener("dragover", (event) => this.onDragOver(event, "footer"));
-              el.addEventListener("click", (e) => {
-                this.selectedElementClick(e, "footer")
-              })
-            });
-          document
-            .querySelectorAll("#header .draggable-component")
-            .forEach((el) => {
-              el.draggable = true;
-              el.addEventListener("dragstart", (event) => this.handlePreviewDragStart(event, "header"));
-              el.addEventListener("dragend", this.handlePreviewDragEnd);
-              el.addEventListener("dragenter", this.onDragEnter);
-              el.addEventListener("dragleave", this.onDragLeave);
-              el.addEventListener("dragover", (event) => this.onDragOver(event, "header"));
-              el.addEventListener("click", (e) => {
-                this.selectedElementClick(e, "header")
-              })
-            });
-          document.querySelectorAll('#footer [data-function="delete"]').forEach((el) => {
-            el.addEventListener('click', (e) => {
-              e.stopPropagation()
-              const id = el.dataset.id
-              this.deleteElementById(id, 'footer')
-            })
-          })
-          document.querySelectorAll('#header [data-function="delete"]').forEach((el) => {
-            el.addEventListener('click', (e) => {
-              e.stopPropagation()
-              const id = el.dataset.id
-              this.deleteElementById(id, 'header')
-            })
-          })
-          document.querySelectorAll('#preview [data-function="delete"]').forEach((el) => {
-            el.addEventListener('click', (e) => {
-              e.stopPropagation()
-              const id = el.dataset.id
-              this.deleteElementById(id)
-            })
-          })
+          this._bindEventsToContainer("#preview", "body");
+          this._bindEventsToContainer("#footer", "footer");
+          this._bindEventsToContainer("#header", "header");
         });
       } catch (e) {
         console.error("Error renderizando preview:", e);
@@ -172,18 +137,22 @@ export const templateStore = defineStore("template", {
     },
     updateSchemaDisplay() {
       this.schemaJson = JSON.stringify(
-        { style: this.cssCode, schema: this.schema },
+        { style: this.cssCode, schema: this.schema, header: this.header, footer: this.footer },
         null,
         2,
       ).trim();
     },
     async generateDocument() {
       const html = generateLayoutHtml({ schema: this.schema as ElementDataSet, cssCode: this.cssCode, pdf: true })
+      const header = generateLayoutHeaderFooterHtml({ schema: this.header as ElementDataSet, cssCode: this.cssCode, pdf: true })
+      const footer = generateLayoutHeaderFooterHtml({ schema: this.footer as ElementDataSet, cssCode: this.cssCode, pdf: true })
       const res = await fetch("/api/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           html: handlebars.compile(html)(this.data),
+          header: handlebars.compile(header)(this.data),
+          footer: handlebars.compile(footer)(this.data),
         }),
       });
       const url = URL.createObjectURL(await res.blob());
@@ -191,18 +160,20 @@ export const templateStore = defineStore("template", {
       URL.revokeObjectURL(url);
     },
     deleteElementById(id: string, type: "body" | "footer" | "header" = "body") {
-      const root = type === "body" ? this.schema : type === 'footer' ? this.footer : this.header
+      const root = this._getRoot(type);
       const path = findPathById(
         {
           root,
           id,
         }
       );
-      removeElementAtPath({ root, path });
-      this.selectedElement = null;
-      this.pushHistory();
-      this.renderPreview();
-      this.updateSchemaDisplay();
+      if (path) {
+        removeElementAtPath({ root, path });
+        this.selectedElement = null;
+        this.pushHistory();
+        this.renderPreview();
+        this.updateSchemaDisplay();
+      }
     },
     setStyleEl(el) {
       this.styleEl = el;
@@ -213,9 +184,11 @@ export const templateStore = defineStore("template", {
     onDragOver(event, type: "body" | "footer" | "header" = "body") {
       event.preventDefault();
       event.stopPropagation();
-      const root = type === "body" ? this.schema : type === 'footer' ? this.footer : this.header
       const target = event.target.closest(".draggable-component");
       if (!target) return;
+
+      const root = this._getRoot(type);
+
       const targetNode = findDataById({ root, id: target.id });
       if (!targetNode) return;
 
@@ -223,7 +196,7 @@ export const templateStore = defineStore("template", {
       this.position = pos
       applyBorderStyles(target, pos.insertType)
     },
-    onDrop(event, type: "headers" | "footer" | "body" = "body") {
+    onDrop(event: DragEvent, type: SectionType = "body") {
       event.preventDefault();
       event.stopPropagation();
 
@@ -233,14 +206,15 @@ export const templateStore = defineStore("template", {
       } catch (e) {
         return;
       }
+
       let { action = null, id, schemaData } = transferData
       schemaData = schemaData || transferData
-      let dropTarget = getDropTarget(event, this.position.insertType === 'inside' ? true : false);
-      if (dropTarget) clearBorderStyles(dropTarget)
 
-      if (action === "move" && dropTarget && dropTarget.id === id) {
-        return;
-      }
+      let dropTarget = getDropTarget(event, this.position.insertType === 'inside' ? true : false);
+
+      if (dropTarget) clearBorderStyles(dropTarget)
+      if (action === "move" && dropTarget && dropTarget.id === id) return;
+
       const nuevoElemento: ElementDataSet = action === null
         ? {
           id: crypto.randomUUID().replace(/-/g, ''),
@@ -252,7 +226,7 @@ export const templateStore = defineStore("template", {
         : schemaData
 
 
-      const root = type === "body" ? this.schema : type === 'footer' ? this.footer : this.header
+      const root = this._getRoot(type);
       const sourcePath = findPathById({ root, id });
       if (sourcePath) removeElementAtPath({ root, path: sourcePath });
       if (dropTarget && this.position) {
@@ -278,11 +252,10 @@ export const templateStore = defineStore("template", {
       this.renderPreview();
       this.updateSchemaDisplay();
     },
-    handlePreviewDragStart(event, type: "body" | "footer" | "header" = "body") {
-      const element = event.target.closest(".draggable-component");
-      const root = type === "body" ? this.schema : type === 'footer' ? this.footer : this.header
+    handlePreviewDragStart(event: DragEvent, type: SectionType = "body") {
+      const element = (event.target as HTMLElement).closest(".draggable-component");
+      const root = this._getRoot(type);
       const schemaData = findDataById({ root, id: element.id });
-      console.log(schemaData, element)
       if (!schemaData) return
       const id = element.id;
       event.dataTransfer.setData(
@@ -297,22 +270,18 @@ export const templateStore = defineStore("template", {
     handlePreviewDragEnd(event) {
       this.renderPreview();
     },
-    onDragEnter(event) {
+    onDragEnter(event: Event) {
       event.preventDefault();
       event.stopPropagation();
 
-      const target = event.target.closest(".draggable-component");
-
-      if (target) {
-        // target.classList.add("border-black", "border-solid");
-        target.classList.remove("border-dashed", "border-black/50");
-      }
+      const target = (event.target as HTMLElement).closest(".draggable-component");
+      if (target) target.classList.remove("border-dashed", "border-black/50");
     },
-    onDragLeave(event) {
+    onDragLeave(event: Event) {
       event.preventDefault();
       event.stopPropagation();
 
-      const target = event.target.closest(".draggable-component");
+      const target = (event.target as HTMLElement).closest(".draggable-component");
 
       if (target) {
         target.classList.remove(
@@ -320,48 +289,55 @@ export const templateStore = defineStore("template", {
           "border-solid",
           "border-t-4",
           "border-b-4",
-          "border-blue-500"
         );
         target.classList.add("border-dashed", "border-black/50");
       }
     },
-    updateElementAtPath(element: ElementDataSet, type: "body" | "footer" | "header" = "body") {
-      const root = type === "body" ? this.schema : type === 'footer' ? this.footer : this.header
+    updateElementAtPath(element: ElementDataSet, type: SectionType = "body") {
+      const root = this._getRoot(type);
       root.children = replace({ root, element });
     },
     clearSelectedElemen() {
-      this.selectedElement.classList.remove("border-black", 'border-solid');
-      this.selectedElement.classList.add("border-black/50", "border-dashed");
+      if (this.selectedElement) {
+        this.selectedElement.classList.remove("border-black", 'border-solid');
+        this.selectedElement.classList.add("border-black/50", "border-dashed");
+      }
       this.selectedElement = null;
       this.selectedNode = null;
       this.selectedType = 'body'
     },
-    selectedElementClick(event: Event, type: "body" | "footer" | "header" = "body") {
+    selectedElementClick(event: Event, type: SectionType = "body") {
       event.preventDefault();
       event.stopPropagation();
       this.selectedType = type
-      const component = event.target.closest(".draggable-component");
-      const root = type === "body" ? this.schema : type === 'footer' ? this.footer : this.header
+      const component = (event.target as HTMLElement).closest(".draggable-component");
+
       if (!component) return;
+
       if (this.selectedElement) {
         this.selectedElement.classList.remove("border-black", "border-solid");
         this.selectedElement.classList.add("border-black/50", "border-dashed");
       }
+
       this.selectedElement = component;
       this.selectedElement.classList.add("border-black", 'border-solid');
       this.selectedElement.classList.remove("border-black/50", "border-dashed");
+
+      const root = this._getRoot(type);
       this.selectedNode = findDataById({ root, id: this.selectedElement.id });
 
-      this.options.class = this.selectedNode.data.class || "";
-      this.options.content = this.selectedNode.data.content || "";
-      this.options.columns = this.selectedNode.data.columns;
-      this.options.rows = this.selectedNode.data.rows;
-      this.options.src = this.selectedNode.data.src;
-      this.options.name = this.selectedNode.data.name;
-      this.options.checkValue = this.selectedNode.data.value.toString();
+      if (this.selectedNode) {
+        this.options.class = this.selectedNode.data.class || "";
+        this.options.content = this.selectedNode.data.content || "";
+        this.options.columns = this.selectedNode.data.columns;
+        this.options.rows = this.selectedNode.data.rows;
+        this.options.src = this.selectedNode.data.src;
+        this.options.name = this.selectedNode.data.name;
+        this.options.checkValue = this.selectedNode.data.value.toString();
+      }
     },
     async saveDataOptions() {
-      if (!this.selectedElement) return;
+      if (!this.selectedElement || !this.selectedNode) return;
 
       const element_schema = this.selectedNode
       let data = {
