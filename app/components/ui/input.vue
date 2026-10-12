@@ -9,7 +9,7 @@
         <div v-if="showDropdown && filteredKeys.length" :style="dropdownStyle"
           class="fixed z-[9999] bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden w-56">
           <div class="px-3 py-2 border-b border-slate-100 bg-slate-50">
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Variables disponibles</span>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{{ t('editor.views.variables') }}</span>
           </div>
           <ul class="max-h-48 overflow-y-auto py-1">
             <li v-for="(key, i) in filteredKeys" :key="key" :class="[
@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { templateStore } from "../../stores/templateStore";
 const CLASS =
-  "w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-colors"
+  "w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
 
 const emit = defineEmits(["update:modelValue"]);
 const activeIndex = ref(0);
@@ -42,6 +42,7 @@ const showDropdown = ref(false);
 const dropdownStyle = ref({});
 const inputRef = ref<HTMLInputElement | null>(null);
 const store = templateStore();
+const { t } = useI18n();
 
 const proxyValue = computed({
   get() {

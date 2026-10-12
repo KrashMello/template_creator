@@ -1,13 +1,12 @@
 <template>
-  <div
-    class="flex flex-col gap-2 h-[84dvh] p-2 rounded-lg shadow-sm border-2 border-dashed border-slate-100"
-  >
-    <h2 class="text-xl font-bold text-slate-800">Styles</h2>
-    <div class="h-full gap-2">
+  <div class="flex h-full flex-col gap-2 p-4">
+    <h2 class="text-sm font-bold text-slate-800">{{ t('editor.views.styles') }}</h2>
+    <div class="min-h-0 flex-1">
       <textarea
         v-model="cssCode"
-        :class="`w-full h-full font-mono text-sm border-2 border-dashed border-slate-200 text-slate-700  rounded-md p-3 focus:outline-none focus:ring-0 resize-none`"
+        class="h-full w-full resize-none rounded-lg border border-slate-200 bg-white p-3 font-mono text-sm text-slate-700 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
         spellcheck="false"
+        placeholder="/* Tailwind / CSS */"
       />
     </div>
   </div>
@@ -15,6 +14,7 @@
 
 <script setup>
 import { templateStore } from "../../stores/templateStore";
+const { t } = useI18n();
 const setStyleElTexContent = templateStore().setStyleElTexContent;
 const setStyleEl = templateStore().setStyleEl;
 const cssCode = computed({

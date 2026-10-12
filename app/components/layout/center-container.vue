@@ -1,6 +1,11 @@
 <template>
   <div class="center-panel flex-1 flex flex-col h-full overflow-hidden" id="dropzone">
-    <layout-content-header @select="selectView" @export="generateDocument" />
+    <layout-content-header
+      :view="selectedView"
+      :exporting="exporting"
+      @select="selectView"
+      @export="onExport"
+    />
     <div class="flex-1 overflow-auto canvas-bg py-8 px-4" v-if="selectedView === 1">
       <div class="a4-page mx-auto bg-white rounded-sm shadow-xl overflow-hidden gap-2">
 
@@ -12,7 +17,7 @@
                 <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z" />
                 <path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4" />
               </svg>
-              Global Page Header
+              {{ t('editor.zones.header') }}
             </div>
           </div>
           <div id="header" class="flex flex-1 h-full" v-html="previewHtmlHeader" @dragenter="onDragEnter"
@@ -27,7 +32,7 @@
                 <rect x="3" y="3" width="18" height="18" rx="2" />
                 <path d="M9 9h6M9 12h6M9 15h4" />
               </svg>
-              Dynamic Content Area
+              {{ t('editor.zones.body') }}
             </div>
           </div>
           <div id="preview" class="flex flex-1 h-full" v-html="previewHtml" @dragenter="onDragEnter"
@@ -42,7 +47,7 @@
                 <path d="M3 5h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5z" />
                 <path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4" />
               </svg>
-              Page Footer
+              {{ t('editor.zones.footer') }}
             </div>
           </div>
           <div id="footer" class="flex flex-1 h-full" v-html="previewHtmlFooter" @dragenter="onDragEnter"
@@ -51,19 +56,28 @@
         </div>
       </div>
     </div>
-    <ui-data-editor v-if="selectedView === 2" v-model="schemaJson" title="Esquema" :readOnly="true" />
-    <ui-style-editor v-if="selectedView === 3" />
-    <ui-data-editor v-if="selectedView === 4" v-model="data" title="Data" />
+    <div v-if="selectedView === 2" class="min-h-0 flex-1">
+      <ui-data-editor v-model="schemaJson" :title="t('editor.views.schema')" :readOnly="true" />
+    </div>
+    <div v-if="selectedView === 3" class="min-h-0 flex-1">
+      <ui-style-editor />
+    </div>
+    <div v-if="selectedView === 4" class="min-h-0 flex-1">
+      <ui-data-editor v-model="data" :title="t('editor.views.data')" />
+    </div>
   </div>
 </template>
 <script setup>
 import { templateStore } from "../../stores/templateStore";
 const store = templateStore();
+const { t } = useI18n();
 const previewHtml = computed(() => templateStore().previewHtml);
 const previewHtmlFooter = computed(() => store.previewHtmlFooter);
 const previewHtmlHeader = computed(() => store.previewHtmlHeader);
 const schemaJson = computed(() => store.schemaJson);
 const selectedView = ref(1);
+const exporting = ref(false);
+
 const selectView = (opt) => {
   selectedView.value = opt;
 };
@@ -103,7 +117,18 @@ const onDragLeave = (event) => {
   }
 };
 const onDrop = store.onDrop;
-const generateDocument = templateStore().generateDocument;
+
+async function onExport() {
+  if (exporting.value) return;
+  exporting.value = true;
+  try {
+    await store.generateDocument();
+  } catch (e) {
+    console.error("Error exportando PDF:", e);
+  } finally {
+    exporting.value = false;
+  }
+}
 </script>
 <style scoped>
 .center-panel {
@@ -170,25 +195,5 @@ const generateDocument = templateStore().generateDocument;
 .zone-label--footer {
   background: #e2e8f0;
   color: #64748b;
-}
-
-.zone-empty-hint {
-  font-size: 11px;
-  color: #94a3b8;
-  text-align: center;
-  padding: 16px;
-}
-
-.section-breakdown-divider {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 16px;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #94a3b8;
-  border-top: 1px dashed #e2e8f0;
 }
 </style>

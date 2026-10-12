@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-col gap-2 h-full p-2 rounded-lg shadow-sm border-2 border-dashed border-slate-100">
-    <h2 class="text-xl font-bold text-slate-800">{{ title }}</h2>
-    <div ref="containerRef" class="code-editor-wrapper" :style="{ height: props.height }">
+  <div class="flex h-full flex-col gap-2 p-4">
+    <h2 class="text-sm font-bold text-slate-800">{{ title }}</h2>
+    <div ref="containerRef" class="code-editor-wrapper min-h-0 flex-1" :style="heightStyle">
       <div ref="editorRef" class="code-editor-inner" />
     </div>
   </div>
@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import loader from "@monaco-editor/loader";
-import { ref, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, onMounted, onBeforeUnmount, watch, computed } from "vue";
 
 const props = withDefaults(
   defineProps<{
@@ -25,6 +25,8 @@ const props = withDefaults(
     readOnly: false,
   }
 );
+
+const heightStyle = computed(() => (props.height === "100%" ? {} : { height: props.height }));
 
 const emit = defineEmits<{
   "update:modelValue": [value: string];

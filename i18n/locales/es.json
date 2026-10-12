@@ -1,0 +1,221 @@
+{
+  "meta": {
+    "title": "Template Creator — Crea plantillas PDF con drag & drop",
+    "description": "Constructor visual de plantillas PDF con drag & drop, datos dinámicos y exportación en un clic."
+  },
+  "nav": {
+    "features": "Características",
+    "screenshots": "Capturas",
+    "pricing": "Precios",
+    "faq": "Preguntas",
+    "openDemo": "Abrir demo"
+  },
+  "hero": {
+    "badge": "Constructor visual de PDF",
+    "title": "Crea plantillas PDF arrastrando y soltando",
+    "subtitle": "Template Creator es el editor visual para diseñar documentos profesionales con encabezados, pies, tablas y datos dinámicos — y exportarlos en PDF de alta fidelidad sin escribir una sola línea de código.",
+    "ctaPrimary": "Probar la demo",
+    "ctaSecondary": "Ver precios",
+    "note": "Sin registro · Gratis para empezar"
+  },
+  "features": {
+    "title": "Todo lo que necesitas para generar documentos",
+    "subtitle": "Desde el primer arrastre hasta el PDF final, en un solo lugar.",
+    "items": [
+      {
+        "title": "Drag & drop visual",
+        "desc": "Compone tu documento con párrafos, tablas, imágenes, casillas y contenedores, y ordénalos con un simple arrastre."
+      },
+      {
+        "title": "Header, body y footer",
+        "desc": "Tres zonas independientes: encabezado y pie globales que se repiten automáticamente en todas las páginas del PDF."
+      },
+      {
+        "title": "Datos dinámicos con Handlebars",
+        "desc": "Conecta tu JSON y usa variables como {'{{'}cliente.nombre{'}'}{'}'} con autocompletado dentro del editor."
+      },
+      {
+        "title": "Estilos con Tailwind y CSS",
+        "desc": "Aplica clases Tailwind desde el panel de propiedades o escribe tu propio CSS en tiempo real."
+      },
+      {
+        "title": "Exportación PDF fiel",
+        "desc": "Chrome headless imprime tu diseño con colores de fondo y tamaño carta, listo para compartir o imprimir."
+      },
+      {
+        "title": "Deshacer, rehacer y editar al instante",
+        "desc": "Historial de 50 pasos, panel de propiedades por componente y atajos de teclado."
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Un vistazo al editor",
+    "subtitle": "Diseña en el lienzo, inspecciona el esquema JSON, ajusta tus estilos y edita los datos de ejemplo — todo en la misma pestaña.",
+    "tabs": {
+      "preview": "Vista previa",
+      "schema": "Esquema",
+      "styles": "Estilos",
+      "data": "Datos"
+    },
+    "alt": {
+      "preview": "Editor de Template Creator con la vista previa del documento",
+      "schema": "Editor de Template Creator mostrando el esquema JSON",
+      "styles": "Editor de Template Creator con el editor de estilos CSS",
+      "data": "Editor de Template Creator con el editor de datos JSON"
+    }
+  },
+  "pricing": {
+    "title": "Precios simples y transparentes",
+    "subtitle": "Empieza gratis y escala cuando lo necesites. Sin permanencia.",
+    "popular": "Más popular",
+    "monthly": "/mes",
+    "note": "Precios en USD. Puedes cancelar en cualquier momento.",
+    "plans": [
+      {
+        "name": "Gratis",
+        "price": "$0",
+        "desc": "Para probar y para proyectos personales.",
+        "features": [
+          "Editor completo drag & drop",
+          "Exportación PDF",
+          "Esquema JSON y datos de ejemplo",
+          "1 plantilla guardada"
+        ],
+        "cta": "Empezar gratis"
+      },
+      {
+        "name": "Pro",
+        "price": "$9",
+        "desc": "Para profesionales que generan documentos a diario.",
+        "features": [
+          "Todo lo del plan Gratis",
+          "Plantillas ilimitadas",
+          "Encabezados y pies globales",
+          "CSS personalizado",
+          "Soporte prioritario"
+        ],
+        "cta": "Probar la demo"
+      },
+      {
+        "name": "Equipo",
+        "price": "$29",
+        "desc": "Para equipos que comparten plantillas.",
+        "features": [
+          "Todo lo del plan Pro",
+          "5 usuarios incluidos",
+          "Biblioteca compartida",
+          "API de exportación",
+          "Soporte dedicado"
+        ],
+        "cta": "Hablar con ventas"
+      }
+    ]
+  },
+  "faq": {
+    "title": "Preguntas frecuentes",
+    "subtitle": "Lo que suelen preguntarnos antes de empezar.",
+    "items": [
+      {
+        "q": "¿Qué es Template Creator?",
+        "a": "Un constructor visual de plantillas PDF: arrastras componentes, conectas tus datos y exportas el documento final en PDF."
+      },
+      {
+        "q": "¿Necesito saber programar?",
+        "a": "No. Puedes diseñar todo el documento desde el editor. Si quieres avanzar, puedes usar clases Tailwind, CSS propio y plantillas Handlebars."
+      },
+      {
+        "q": "¿Cómo llegan los datos a la plantilla?",
+        "a": "A través de un JSON que se inyecta con Handlebars en la vista previa y en la exportación. Todo ocurre en tu navegador y tu servidor."
+      },
+      {
+        "q": "¿Qué tamaño y formato tiene el PDF?",
+        "a": "Se genera con Chrome headless en tamaño carta (letter) con colores de fondo activados, ideal para impresión y envío por correo."
+      },
+      {
+        "q": "¿Puedo probarlo sin registrarme?",
+        "a": "Sí. La demo está abierta en /demo, sin cuenta ni límite de tiempo."
+      },
+      {
+        "q": "¿Puedo personalizar los estilos?",
+        "a": "Sí: desde el panel de propiedades aplicas clases Tailwind, y en la pestaña CSS puedes escribir tus propias reglas en tiempo real."
+      }
+    ]
+  },
+  "cta": {
+    "title": "¿Listo para crear tu primera plantilla?",
+    "subtitle": "Abre el editor y ten un PDF profesional en minutos.",
+    "button": "Abrir la demo"
+  },
+  "footer": {
+    "tagline": "Constructor visual de plantillas PDF con datos dinámicos.",
+    "product": "Producto",
+    "demo": "Demo",
+    "rights": "© {year} Template Creator. Todos los derechos reservados."
+  },
+  "editor": {
+    "backToSite": "Inicio",
+    "pageTitle": "Demo del editor — Template Creator",
+    "emptyHint": "Arrastra un componente y suéltalo en el lienzo",
+    "leftBar": {
+      "title": "Componentes",
+      "section": "Básicos",
+      "hint": "Arrastra un componente al lienzo",
+      "components": {
+        "paragraph": "Párrafo",
+        "table": "Tabla",
+        "row": "Fila",
+        "col": "Columna",
+        "image": "Imagen",
+        "checkbox": "Casilla",
+        "container": "Contenedor"
+      }
+    },
+    "toolbar": {
+      "preview": "Vista previa",
+      "schema": "Esquema JSON",
+      "styles": "Estilos CSS",
+      "data": "Datos",
+      "undo": "Deshacer",
+      "redo": "Rehacer",
+      "export": "Exportar PDF",
+      "exporting": "Generando…"
+    },
+    "zones": {
+      "header": "Encabezado global",
+      "body": "Contenido dinámico",
+      "footer": "Pie de página"
+    },
+    "settings": {
+      "title": "Ajustes del componente",
+      "noSelection": "Selecciona un componente del lienzo para editar sus propiedades",
+      "delete": "Eliminar componente",
+      "fields": {
+        "content": "Texto",
+        "name": "Nombre",
+        "value": "Valor",
+        "columns": "Columnas",
+        "rows": "Filas",
+        "file": "Imagen",
+        "class": "Clases CSS",
+        "styleLayout": "Estilo y distribución",
+        "fontWeight": "Grosor de fuente",
+        "textColor": "Color de texto",
+        "customColor": "Color personalizado"
+      },
+      "colors": {
+        "black": "Negro",
+        "blue": "Azul",
+        "indigo": "Índigo",
+        "green": "Verde",
+        "yellow": "Amarillo",
+        "red": "Rojo"
+      }
+    },
+    "views": {
+      "schema": "Esquema",
+      "data": "Datos",
+      "styles": "Estilos",
+      "variables": "Variables disponibles"
+    }
+  }
+}

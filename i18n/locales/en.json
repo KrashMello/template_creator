@@ -1,0 +1,221 @@
+{
+  "meta": {
+    "title": "Template Creator — Build PDF templates with drag & drop",
+    "description": "Visual PDF template builder with drag & drop, dynamic data and one-click export."
+  },
+  "nav": {
+    "features": "Features",
+    "screenshots": "Screenshots",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "openDemo": "Open demo"
+  },
+  "hero": {
+    "badge": "Visual PDF builder",
+    "title": "Build PDF templates by dragging and dropping",
+    "subtitle": "Template Creator is the visual editor for designing professional documents with headers, footers, tables and dynamic data — then exporting them as pixel-faithful PDFs without writing a single line of code.",
+    "ctaPrimary": "Try the demo",
+    "ctaSecondary": "See pricing",
+    "note": "No sign-up · Free to start"
+  },
+  "features": {
+    "title": "Everything you need to produce documents",
+    "subtitle": "From the first drag to the final PDF, all in one place.",
+    "items": [
+      {
+        "title": "Visual drag & drop",
+        "desc": "Compose your document with paragraphs, tables, images, checkboxes and containers, and reorder them with a single drag."
+      },
+      {
+        "title": "Header, body and footer",
+        "desc": "Three independent zones: global header and footer that repeat automatically on every page of the PDF."
+      },
+      {
+        "title": "Dynamic data with Handlebars",
+        "desc": "Connect your JSON and use variables like {'{{'}client.name{'}'}{'}'} with autocomplete inside the editor."
+      },
+      {
+        "title": "Styling with Tailwind and CSS",
+        "desc": "Apply Tailwind classes from the properties panel or write your own CSS live."
+      },
+      {
+        "title": "Faithful PDF export",
+        "desc": "Chrome headless prints your design with background colors and letter size, ready to share or print."
+      },
+      {
+        "title": "Undo, redo and instant editing",
+        "desc": "50-step history, per-component properties panel and keyboard shortcuts."
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "A look inside the editor",
+    "subtitle": "Design on the canvas, inspect the JSON schema, tune your styles and edit the sample data — all in the same tab.",
+    "tabs": {
+      "preview": "Preview",
+      "schema": "Schema",
+      "styles": "Styles",
+      "data": "Data"
+    },
+    "alt": {
+      "preview": "Template Creator editor showing the document preview",
+      "schema": "Template Creator editor showing the JSON schema",
+      "styles": "Template Creator editor with the CSS style editor",
+      "data": "Template Creator editor with the JSON data editor"
+    }
+  },
+  "pricing": {
+    "title": "Simple, transparent pricing",
+    "subtitle": "Start free and scale when you need to. No lock-in.",
+    "popular": "Most popular",
+    "monthly": "/mo",
+    "note": "Prices in USD. Cancel anytime.",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "$0",
+        "desc": "For trying things out and personal projects.",
+        "features": [
+          "Full drag & drop editor",
+          "PDF export",
+          "JSON schema and sample data",
+          "1 saved template"
+        ],
+        "cta": "Start for free"
+      },
+      {
+        "name": "Pro",
+        "price": "$9",
+        "desc": "For professionals producing documents every day.",
+        "features": [
+          "Everything in Free",
+          "Unlimited templates",
+          "Global headers and footers",
+          "Custom CSS",
+          "Priority support"
+        ],
+        "cta": "Try the demo"
+      },
+      {
+        "name": "Team",
+        "price": "$29",
+        "desc": "For teams sharing templates.",
+        "features": [
+          "Everything in Pro",
+          "5 seats included",
+          "Shared library",
+          "Export API",
+          "Dedicated support"
+        ],
+        "cta": "Talk to sales"
+      }
+    ]
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "subtitle": "What people usually ask before getting started.",
+    "items": [
+      {
+        "q": "What is Template Creator?",
+        "a": "A visual PDF template builder: drag components in, connect your data, and export the final document as a PDF."
+      },
+      {
+        "q": "Do I need to know how to code?",
+        "a": "No. You can design the whole document from the editor. If you want to go further, you can use Tailwind classes, custom CSS and Handlebars templates."
+      },
+      {
+        "q": "How does data reach the template?",
+        "a": "Through a JSON payload injected with Handlebars on preview and export. Everything runs in your browser and on your server."
+      },
+      {
+        "q": "What size and format is the PDF?",
+        "a": "It is generated with Chrome headless in letter size with background colors enabled, ideal for printing and emailing."
+      },
+      {
+        "q": "Can I try it without signing up?",
+        "a": "Yes. The demo is open at /demo, no account and no time limit."
+      },
+      {
+        "q": "Can I customize the styles?",
+        "a": "Yes: apply Tailwind classes from the properties panel, and write your own rules live in the CSS tab."
+      }
+    ]
+  },
+  "cta": {
+    "title": "Ready to create your first template?",
+    "subtitle": "Open the editor and have a professional PDF in minutes.",
+    "button": "Open the demo"
+  },
+  "footer": {
+    "tagline": "Visual PDF template builder with dynamic data.",
+    "product": "Product",
+    "demo": "Demo",
+    "rights": "© {year} Template Creator. All rights reserved."
+  },
+  "editor": {
+    "backToSite": "Home",
+    "pageTitle": "Editor demo — Template Creator",
+    "emptyHint": "Drag a component and drop it onto the canvas",
+    "leftBar": {
+      "title": "Components",
+      "section": "Basics",
+      "hint": "Drag a component onto the canvas",
+      "components": {
+        "paragraph": "Paragraph",
+        "table": "Table",
+        "row": "Row",
+        "col": "Column",
+        "image": "Image",
+        "checkbox": "Checkbox",
+        "container": "Container"
+      }
+    },
+    "toolbar": {
+      "preview": "Preview",
+      "schema": "JSON schema",
+      "styles": "CSS styles",
+      "data": "Data",
+      "undo": "Undo",
+      "redo": "Redo",
+      "export": "Export PDF",
+      "exporting": "Generating…"
+    },
+    "zones": {
+      "header": "Global header",
+      "body": "Dynamic content",
+      "footer": "Page footer"
+    },
+    "settings": {
+      "title": "Component settings",
+      "noSelection": "Select a component on the canvas to edit its properties",
+      "delete": "Delete component",
+      "fields": {
+        "content": "Text",
+        "name": "Name",
+        "value": "Value",
+        "columns": "Columns",
+        "rows": "Rows",
+        "file": "Image",
+        "class": "CSS classes",
+        "styleLayout": "Style & layout",
+        "fontWeight": "Font weight",
+        "textColor": "Text color",
+        "customColor": "Custom color"
+      },
+      "colors": {
+        "black": "Black",
+        "blue": "Blue",
+        "indigo": "Indigo",
+        "green": "Green",
+        "yellow": "Yellow",
+        "red": "Red"
+      }
+    },
+    "views": {
+      "schema": "Schema",
+      "data": "Data",
+      "styles": "Styles",
+      "variables": "Available variables"
+    }
+  }
+}

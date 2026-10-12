@@ -1,15 +1,15 @@
 <template>
   <div class="right-panel flex flex-col h-full bg-white border-l border-slate-200 overflow-hidden">
-    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
-      <div>
-        <h2 class="text-sm font-bold text-slate-800">Component Settings</h2>
-        <p class="text-[10px] uppercase tracking-wider text-slate-400 mt-0.5">
-          {{ selectedElement ? `${selectedElement.tagName} ${selectedNode.name}` : 'No selection' }}
+    <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+      <div class="min-w-0">
+        <h2 class="text-sm font-bold text-slate-800">{{ t('editor.settings.title') }}</h2>
+        <p class="mt-0.5 truncate text-[10px] uppercase tracking-wider text-slate-400">
+          {{ selectedElement ? `${selectedElement.tagName} ${selectedNode.name}` : '—' }}
         </p>
       </div>
       <button v-if="selectedElement" @click="deleteElement"
-        class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-        title="Delete component">
+        :title="t('editor.settings.delete')"
+        class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50 transition-colors">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="3 6 5 6 21 6" />
@@ -19,42 +19,48 @@
         </svg>
       </button>
     </div>
+
     <div v-if="!selectedElement" class="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
-      <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
+      <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
           stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <path d="M9 9h6M9 12h6M9 15h4" />
         </svg>
       </div>
-      <p class="text-sm text-slate-400">Select a component on the canvas to edit its properties</p>
+      <p class="max-w-[200px] text-sm leading-relaxed text-slate-400">{{ t('editor.settings.noSelection') }}</p>
     </div>
-    <div id="options" v-else class="flex-1">
-      <form @submit.prevent="saveDataOptions" class="h-full flex flex-col gap-2">
-        <div class="flex-1 px-5">
-          <ui-input v-if="selectedNode.data.content" v-model="options.content" type="textarea" title="texto"
-            @blur="saveContent" placeholder="content" />
-          <ui-input v-if="selectedNode.data.name" v-model="options.name" type="text" title="name" placeholder="name"
-            :onInputt="saveContent" />
-          <ui-input v-if="selectedNode.data.value != null" v-model="options.checkValue" type="checkbox" title="value"
-            :onChange="saveContent" />
-          <ui-input v-if="selectedNode.data.columns" v-model="options.columns" type="textarea" title="columns"
-            placeholder="columns" />
-          <ui-input v-if="selectedNode.data.src" @change="onImageFile" title="file" placeholder="src" type="file"
-            acepted="image/*" />
-          <ui-input v-if="selectedNode.data.rows" v-model="options.rows" type="textarea" title="rows"
-            placeholder="rows" />
-          <section>
-            <span>Style &amp; Layout</span>
-            <ui-input v-model="options.class" title="CSS classes" placeholder="classes" />
-            <div v-if="selectedNode.tag === 'p'" class="space-y-3 pt-2">
+
+    <div id="options" v-else class="flex-1 overflow-y-auto">
+      <form @submit.prevent="saveDataOptions" class="flex flex-col gap-4 px-5 py-4">
+        <ui-input v-if="selectedNode.data.content" v-model="options.content" type="textarea"
+          :title="t('editor.settings.fields.content')" @blur="saveContent" :placeholder="t('editor.settings.fields.content')" />
+        <ui-input v-if="selectedNode.data.name" v-model="options.name" type="text"
+          :title="t('editor.settings.fields.name')" :placeholder="t('editor.settings.fields.name')" :onInputt="saveContent" />
+        <ui-input v-if="selectedNode.data.value != null" v-model="options.checkValue" type="checkbox"
+          :title="t('editor.settings.fields.value')" :onChange="saveContent" />
+        <ui-input v-if="selectedNode.data.columns" v-model="options.columns" type="textarea"
+          :title="t('editor.settings.fields.columns')" :placeholder="t('editor.settings.fields.columns')" />
+        <ui-input v-if="selectedNode.data.src" @change="onImageFile" :title="t('editor.settings.fields.file')"
+          :placeholder="t('editor.settings.fields.file')" type="file" acepted="image/*" />
+        <ui-input v-if="selectedNode.data.rows" v-model="options.rows" type="textarea"
+          :title="t('editor.settings.fields.rows')" :placeholder="t('editor.settings.fields.rows')" />
+
+        <section class="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+          <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            {{ t('editor.settings.fields.styleLayout') }}
+          </span>
+          <div class="mt-3 space-y-3">
+            <ui-input v-model="options.class" :title="t('editor.settings.fields.class')" placeholder="classes" />
+
+            <div v-if="selectedNode.tag === 'p'" class="space-y-4 pt-1">
               <div>
-                <label class=" block text-xs font-medium text-slate-600 mb-1">Font Weight</label>
+                <label class="block text-xs font-medium text-slate-600 mb-1.5">{{ t('editor.settings.fields.fontWeight') }}</label>
                 <div class="flex gap-1">
                   <button v-for="fw in fontWeights" :key="fw.value" :class="[
-                    'flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors',
+                    'flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40',
                     localFontWeight === fw.value
-                      ? 'bg-blue-600 text-white border-blue-600'
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                       : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300',
                   ]" @click.prevent="localFontWeight = fw.value; saveFontWeight()">
                     {{ fw.label }}
@@ -63,21 +69,22 @@
               </div>
 
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Text Color</label>
+                <label class="block text-xs font-medium text-slate-600 mb-1.5">{{ t('editor.settings.fields.textColor') }}</label>
                 <div class="flex gap-2 items-center flex-wrap">
                   <button v-for="color in presetColors" :key="color.class" :class="[
-                    'w-6 h-6 rounded-full border-2 transition-all',
-                    localColor === color.class ? 'border-blue-500 scale-110' : 'border-transparent',
+                    'w-6 h-6 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40',
+                    localColor === color.class ? 'border-blue-500 scale-110' : 'border-transparent hover:scale-110',
                     color.bg,
-                  ]" @click.prevent="localColor = color.class; saveColor()" :title="color.label" />
+                  ]" @click.prevent="localColor = color.class; saveColor()" :title="t(`editor.settings.colors.${color.key}`)" />
                   <input type="color"
                     class="w-6 h-6 rounded-full border border-slate-200 cursor-pointer bg-transparent p-0"
-                    title="Custom color" @change="(e) => console.log(e.target.value)" />
+                    :title="t('editor.settings.fields.customColor')"
+                    @change="(e) => console.log(e.target.value)" />
                 </div>
               </div>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
       </form>
     </div>
   </div>
@@ -86,6 +93,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, computed } from "vue";
 const store = templateStore();
+const { t } = useI18n();
 const selectedElement = computed(() => store.selectedElement);
 const selectedNode = computed(() => store.selectedNode);
 const options = computed(() => store.options);
@@ -128,13 +136,6 @@ async function onImageFile(e: Event) {
   store.saveDataOptions();
 }
 
-const formats = [
-  { value: "default", label: "Default" },
-  { value: "uppercase", label: "Uppercase" },
-  { value: "currency", label: "Currency" },
-  { value: "short-date", label: "Short Date" },
-];
-
 const fontWeights = [
   { value: "font-light", label: "L" },
   { value: "font-normal", label: "N" },
@@ -142,13 +143,12 @@ const fontWeights = [
 ];
 
 const presetColors = [
-  { class: "text-slate-900", bg: "bg-slate-900", label: "Black" },
-  { class: "text-blue-600", bg: "bg-blue-600", label: "Blue" },
-  { class: "text-indigo-600", bg: "bg-indigo-600", label: "Indigo" },
-  { class: "text-green-600", bg: "bg-green-600", label: "Green" },
-  { class: "text-yellow-600", bg: "bg-yellow-600", label: "Yellow" },
-  { class: "text-red-600", bg: "bg-red-600", label: "Red" },
-
+  { key: "black", class: "text-slate-900", bg: "bg-slate-900" },
+  { key: "blue", class: "text-blue-600", bg: "bg-blue-600" },
+  { key: "indigo", class: "text-indigo-600", bg: "bg-indigo-600" },
+  { key: "green", class: "text-green-600", bg: "bg-green-600" },
+  { key: "yellow", class: "text-yellow-600", bg: "bg-yellow-600" },
+  { key: "red", class: "text-red-600", bg: "bg-red-600" },
 ];
 
 const handleKeyDown = (event) => {

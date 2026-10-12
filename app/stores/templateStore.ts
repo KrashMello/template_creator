@@ -37,6 +37,7 @@ export const templateStore = defineStore("template", {
     selectedNode: null,
     selectedType: 'body',
     cssCode: "",
+    emptyHint: "drag a component and drop it to the canvas",
     schema: {
       type: "container",
       id: "preview",
@@ -118,7 +119,7 @@ export const templateStore = defineStore("template", {
       return type === 'footer' ? this.footer : type === 'header' ? this.header : this.schema;
     },
     buildHtml(schemaData: ElementDataSet) {
-      let html = generateLayoutHtml({ schema: schemaData, cssCode: this.cssCode });
+      let html = generateLayoutHtml({ schema: schemaData, cssCode: this.cssCode, emptyHint: this.emptyHint });
       return handlebars.compile(html)(this.data);
     },
     renderPreview() {
@@ -339,7 +340,8 @@ export const templateStore = defineStore("template", {
         this.options.rows = this.selectedNode.data.rows;
         this.options.src = this.selectedNode.data.src;
         this.options.name = this.selectedNode.data.name;
-        this.options.checkValue = this.selectedNode.data.value.toString();
+        this.options.checkValue =
+          this.selectedNode.data.value != null ? String(this.selectedNode.data.value) : "false";
       }
     },
     async saveDataOptions() {

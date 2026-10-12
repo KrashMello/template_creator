@@ -5,6 +5,7 @@ Drag-and-drop PDF layout builder. Single-package Nuxt app; no monorepo.
 ## Stack
 
 - **Nuxt 4** (SSR) + **Pinia** (Options API stores) + **Tailwind 4** (via `@tailwindcss/vite`)
+- **@nuxtjs/i18n** — es/en, browser detection + cookie (`tc_locale`), `strategy: 'no_prefix'`
 - **Puppeteer-core** + `@sparticuz/chromium` — server-side PDF generation
 - **Handlebars** — injects `store.data` into templates at preview and export time
 - **Monaco Editor** (`@monaco-editor/loader`) — JSON schema/data editing
@@ -15,15 +16,21 @@ Drag-and-drop PDF layout builder. Single-package Nuxt app; no monorepo.
 ## Commands
 
 ```bash
-pnpm dev      # dev server
-pnpm build    # nitro build → .vercel/output
-pnpm generate # static generate
-pnpm preview  # preview build
+pnpm dev         # dev server
+pnpm build       # nitro build → .vercel/output
+pnpm generate    # static generate
+pnpm preview     # preview build
+pnpm screenshots # refresh public/screenshots/* (needs `pnpm dev` running)
 ```
 
 **No tests, linter, typechecker, or formatter exist.** Don't hunt for them; `pnpm build` is the only verification step. No root `tsconfig.json` — Nuxt generates `.nuxt/tsconfig.json` via `postinstall: nuxt prepare`.
 
 ## Architecture
+
+### Routes
+- **`/`** — marketing landing (`app/pages/index.vue`), layout `default` (site header/footer). Sections live in `app/components/landing/*`.
+- **`/demo`** — the editor (`app/pages/demo.vue`), `definePageMeta({ layout: 'editor' })` (`app/layouts/editor.vue`, the full-screen 3-panel shell).
+- Everything is translated: es/en JSON in `i18n/locales/*.json` (flat key space, `meta.*` for landing SEO, `editor.*` for the UI). Locale auto-detected from the browser (`detectBrowserLanguage` + cookie) with a manual switcher (`app/components/ui/locale-switcher.vue`, in the site header and the editor toolbar).
 
 ### Three-zone PDF layout
 Canvas has **header / body / footer** zones (`SectionType = "body" | "footer" | "header"`). Each zone is a separate schema tree (`schema`, `header`, `footer` in the store); components can be dropped into any zone.
@@ -64,6 +71,10 @@ The handler lives inside the single `__fallback.func` Vercel function and is dis
 - **Pinia persistence**: `pinia-plugin-persistedstate` uses **sessionStorage** (24h). `persist.pick` includes `styleEl` (a DOM element ref) but excludes `selectedElement` / `selectedNode` — re-select after reload.
 - **Custom CSS is runtime-injected**: user CSS lives in `store.cssCode` and is written into a `<style data-dynamic-css>` element (`setStyleElTexContent`, wired by `app/components/ui/style-editor.vue`). Don't add CSS files to `nuxt.config.ts` `css` for user-editable styles.
 - **`pnpm-workspace.yaml` is not a workspace** — it only exists to allow pnpm's `onlyBuiltDependencies` build scripts (`esbuild`, `@parcel/watcher`). All deps go in the root `package.json`. Also note `pnpm-lock.yaml` is gitignored.
+- **Never render `tm()` leaves directly**: vue-i18n's `tm()` can return message **AST objects** on the client while SSR returns plain strings — rendering them shows raw JSON and triggers hydration mismatches. Use `tm()` only for array length/shape and resolve every leaf through `t('path.0.key')` (see `landing/features.vue`, `pricing.vue`, `faq.vue`).
+- **`ui/button.vue` relies on `@theme` tokens** (`--color-primary`, `--color-ring`, `--color-background`) defined in `app/assets/css/main.css`; without them `bg-primary` etc. compile to nothing. Variants: `primary | ghost | outline` + `active` (used by the toolbar tabs in `content-header.vue`, which receives the current view as a `view` prop from `center-container.vue`).
+- **Editor strings must go through i18n**, including the empty-canvas hint: it's rendered inside `v-html`, so `store.emptyHint` is set/watched on locale change in `app/pages/demo.vue` and passed into `generateLayoutHtml`.
+- **Landing screenshots** (`public/screenshots/editor-*.png`) are regenerated with `pnpm screenshots` (headless Chromium, seeds a sample document via sessionStorage, hides `#nuxt-devtools-container`). The landing `<img>` tags resolve at build time — deleting a referenced screenshot breaks `pnpm build`.
 
 ## Skills
 

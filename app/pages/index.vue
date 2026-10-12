@@ -1,31 +1,17 @@
 <template>
-  <layout-left-bar />
-  <layout-center-container />
-  <layout-right-bar />
+  <landing-hero />
+  <landing-features />
+  <landing-screenshots />
+  <landing-pricing />
+  <landing-faq />
+  <landing-cta />
 </template>
 
-<script setup>
-import { ref, onMounted, nextTick } from 'vue'
-import { templateStore } from '../stores/templateStore'
-const store = templateStore()
-const schema = store.schema
-const renderPreview = store.renderPreview
-const updateSchemaDisplay = store.updateSchemaDisplay
-const selectedElementClick = store.selectedElementClick
-const deleteElementById = store.deleteElementById
-onMounted(() => {
-  renderPreview()
-  updateSchemaDisplay()
+<script setup lang="ts">
+const { t } = useI18n()
 
-  document.addEventListener('dragover', (e) => {
-    if (e.target.closest('#dropzone')) {
-      e.preventDefault()
-    }
-  })
-
-  document.addEventListener('keydown', (e) => {
-    if (store.selectedElement && e.key === "Escape")
-      store.clearSelectedElemen()
-  })
-})
+useHead(() => ({
+  title: t('meta.title'),
+  meta: [{ name: 'description', content: t('meta.description') }]
+}))
 </script>
