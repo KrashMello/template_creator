@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, nextTick } from "vue";
 import handlebars from "handlebars";
-import { applyBorderStyles, clearBorderStyles, findDataById, findIndexElement, findPathById, generateLayoutHeaderFooterHtml, generateLayoutHtml, getDropTarget, getElementByPath, getInsertType, insertElementAtPath, insertNodeRelativeTo, removeElementAtPath, replace, sleep } from "./template";
+import { applyBorderStyles, applyRowChildFlex, clearBorderStyles, findDataById, findIndexElement, findPathById, generateLayoutHeaderFooterHtml, generateLayoutHtml, getDropTarget, getElementByPath, getInsertType, insertElementAtPath, insertNodeRelativeTo, removeElementAtPath, replace, sleep } from "./template";
 import type { ElementDataSet } from "./template";
 
 export type SectionType = "body" | "footer" | "header";
@@ -237,6 +237,9 @@ export const templateStore = defineStore("template", {
         const targetNode = getElementByPath({ root, path: targetPath })
         clearBorderStyles(document.getElementById(elementId))
         if (targetNode?.tag === 'div') {
+          // targetNode es el contenedor donde acaba el elemento (dentro de él, o
+          // como hermano cuando target es su padre). Si es un Row, reparte ancho.
+          applyRowChildFlex(nuevoElemento, targetNode)
           if (insertType === 'inside') {
             if (targetNode) targetNode.children.push(nuevoElemento)
           } else {
@@ -248,6 +251,7 @@ export const templateStore = defineStore("template", {
       } else {
         const { elementId, index } = this.position
         if (dropTarget) clearBorderStyles(document.getElementById(elementId))
+        applyRowChildFlex(nuevoElemento, root)
         insertElementAtPath({ root, element: nuevoElemento, path: [], index })
       }
       this.pushHistory();

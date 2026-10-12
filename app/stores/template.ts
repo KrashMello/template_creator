@@ -94,16 +94,18 @@ ${schema.children.map((child) => generateElementHtml(child, pdf)).join("")}
 </body>
 </html>
 `;
-  return html;
+  return html.replace(/(\n+)/g, "");
 }
 export const generateLayoutHeaderFooterHtml = (opt: { schema: ElementDataSet, cssCode?: string, pdf: boolean }): string => {
   let { schema, pdf, cssCode } = opt;
   pdf = pdf || false;
-  if (!schema.children || schema.children.length === 0) return `<div class="flex flex-1 gap-3 flex-col justify-center items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="text-slate-400"><!-- Icon from Iconoir by Luca Burgio - https://github.com/iconoir-icons/iconoir/blob/main/LICENSE --><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="m5.212 15.111l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848L6.06 15.111a.6.6 0 0 1-.848 0Zm6.364 6.365l-2.687-2.687a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.688a.6.6 0 0 1-.848 0Zm0-12.729L8.889 6.06a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .849l-2.687 2.687a.6.6 0 0 1-.848 0Zm6.364 6.364l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.687a.6.6 0 0 1-.848 0Z"/></svg><span class="text-sm text-slate-400">drag a component and drop it to the canvas</span></div>`;
+  if ((!schema.children || schema.children.length === 0) && !pdf) return `<div class="flex flex-1 gap-3 flex-col justify-center items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="text-slate-400"><!-- Icon from Iconoir by Luca Burgio - https://github.com/iconoir-icons/iconoir/blob/main/LICENSE --><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="m5.212 15.111l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848L6.06 15.111a.6.6 0 0 1-.848 0Zm6.364 6.365l-2.687-2.687a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.688a.6.6 0 0 1-.848 0Zm0-12.729L8.889 6.06a.6.6 0 0 1 0-.849l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .849l-2.687 2.687a.6.6 0 0 1-.848 0Zm6.364 6.364l-2.687-2.687a.6.6 0 0 1 0-.848l2.687-2.687a.6.6 0 0 1 .848 0l2.687 2.687a.6.6 0 0 1 0 .848l-2.687 2.687a.6.6 0 0 1-.848 0Z"/></svg><span class="text-sm text-slate-400">drag a component and drop it to the canvas</span></div>`;
+  else if ((!schema.children || schema.children.length === 0) && pdf) return ''
   const html = `
 ${schema.children.map((child) => generateElementHtml(child, pdf)).join("")}
 `;
-  return html;
+
+  return html.replace(/(\n+)/g, "");
 }
 export const findIndexElement = (opt: {
   root: ElementDataSet[],
@@ -167,6 +169,39 @@ export const getElementByPath = (opt: { root: ElementDataSet, path: Array<number
     current = current.children[index];
   }
   return current;
+}
+/** Un nodo es un "Row" si es un div con la clase flex-row (componente Row de la paleta). */
+export const isRowNode = (node?: ElementDataSet | null): boolean =>
+  !!node && node.tag === "div" && /(?:^|\s)flex-row(?:-reverse)?(?:\s|$)/.test(node.data?.class || "");
+
+/**
+ * Gestiona flex-1 de los hijos al soltarlos en un Row: sin esto el <p> se
+ * dimensiona por su contenido y todos los hijos quedan pegados a la izquierda
+ * del PDF (el fondo de la fila llega al 100%, pero el contenido no).
+ * - Imágenes y checkbox nunca lo reciben (flex-1 rompería su size-24).
+ * - Si el usuario ya puso flex-1/grow a mano, no se toca su clase.
+ * - Lo que añadimos nosotros queda marcado con data.autoFlex1, y al salir de un
+ *   Row se retira (si no, un párrafo con flex-1 en el body estiraría su alto en
+ *   el editor cuando sobra espacio vertical).
+ */
+export const applyRowChildFlex = (element: ElementDataSet, parent?: ElementDataSet | null): void => {
+  const data = element.data || (element.data = {});
+  const cls = data.class || "";
+  const hasWord = (word: string) => new RegExp(`(?:^|\\s)${word}(?:\\s|$)`).test(cls);
+
+  if (isRowNode(parent)) {
+    if (element.tag !== "p" && element.tag !== "table" && element.tag !== "div") return;
+    if (data.autoFlex1) {
+      if (!hasWord("flex-1")) data.class = (cls + " flex-1").trim();
+      return;
+    }
+    if (/(?:^|\s)(?:flex-1|flex-auto|flex-grow|grow)(?:\s|$)/.test(cls)) return;
+    data.class = (cls ? cls + " " : "") + "flex-1";
+    data.autoFlex1 = true;
+  } else if (data.autoFlex1) {
+    data.class = cls.split(/\s+/).filter((w) => w && w !== "flex-1").join(" ");
+    delete data.autoFlex1;
+  }
 }
 export const findDataById = (opt: { root: ElementDataSet, id: string }) => {
   const { root, id } = opt;
