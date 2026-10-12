@@ -2,19 +2,15 @@
   <button
     :type="props.type"
     :title="props.title"
+    :aria-pressed="props.active"
     :class="[
-      'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium',
-      'transition-all duration-200 ease-in-out',
-      'active:scale-[0.97]',
-      'bg-primary text-primary-foreground shadow-sm',
-      'hover:bg-primary/90 hover:shadow-md',
-      'hover:-translate-y-[1px]',
-      'dark:ring-offset-background',
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-      'disabled:pointer-events-none disabled:opacity-50',
-      '[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:transition-transform',
-      'hover:[&_svg]:scale-110',
-      'h-9 px-4 py-2',
+      'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium',
+      'transition-all duration-150 ease-in-out active:scale-[0.97]',
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40',
+      'disabled:pointer-events-none disabled:opacity-40',
+      '[&_svg]:pointer-events-none [&_svg]:shrink-0',
+      variantClasses,
+      activeClasses,
       $attrs.class,
     ]"
     @click="props.click"
@@ -27,9 +23,7 @@
 const props = defineProps({
   click: {
     type: Function,
-    default: () => {
-      return;
-    },
+    default: () => {},
   },
   title: {
     type: String,
@@ -39,5 +33,32 @@ const props = defineProps({
     type: String,
     default: "button",
   },
+  variant: {
+    type: String,
+    default: "primary", // primary | ghost | outline
+    validator: (v) => ["primary", "ghost", "outline"].includes(v),
+  },
+  active: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const variantClasses = computed(() => {
+  switch (props.variant) {
+    case "ghost":
+      return "text-slate-500 hover:bg-slate-100 hover:text-slate-800";
+    case "outline":
+      return "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50";
+    default:
+      return "bg-blue-600 text-white shadow-sm shadow-blue-600/20 hover:bg-blue-700 hover:shadow-md";
+  }
+});
+
+const activeClasses = computed(() => {
+  if (!props.active) return "";
+  return props.variant === "ghost"
+    ? "bg-slate-900 text-white shadow-sm hover:bg-slate-900 hover:text-white"
+    : "ring-2 ring-blue-500/40";
 });
 </script>

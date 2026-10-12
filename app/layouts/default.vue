@@ -1,7 +1,9 @@
 <template>
-  <div class="bg-white min-h-screen flex">
-    <div class="grid grid-cols-12 flex-1">
+  <div class="flex min-h-svh flex-col bg-white text-slate-900 antialiased">
+    <layout-site-header />
+    <main class="flex-1">
       <slot />
-    </div>
+    </main>
+    <layout-site-footer />
   </div>
 </template>

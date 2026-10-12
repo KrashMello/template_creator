@@ -1,4 +1,4 @@
-import { Browser, Page } from 'puppeteer'
+import type { Browser, Page } from 'puppeteer-core'
 import puppeteer from 'puppeteer-core'
 import chromium from '@sparticuz/chromium'
 export async function withPuppeteer<T>(
@@ -6,10 +6,9 @@ export async function withPuppeteer<T>(
 ): Promise<T> {
   const browser = await puppeteer.launch({
     executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
+    headless: true,
     args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    ignoreHTTPSErrors: true,
+    acceptInsecureCerts: true,
   })
 
   try {
