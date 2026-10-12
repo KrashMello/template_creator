@@ -153,12 +153,14 @@ export const templateStore = defineStore("template", {
           html: handlebars.compile(html)(this.data),
           header: handlebars.compile(header)(this.data),
           footer: handlebars.compile(footer)(this.data),
+          css: this.cssCode || "",
         }),
       });
       const url = URL.createObjectURL(await res.blob());
       window.open(url, "_blank");
       URL.revokeObjectURL(url);
     },
+
     deleteElementById(id: string, type: "body" | "footer" | "header" = "body") {
       const root = this._getRoot(type);
       const path = findPathById(
