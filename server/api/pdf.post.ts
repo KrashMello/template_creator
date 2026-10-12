@@ -193,9 +193,13 @@ export default defineEventHandler(async (event) => {
       pdfOptions.footerTemplate = footerTemplate || '<span></span>'
     }
 
+    // `networkidle0` is no longer part of `setContent`'s public options, and
+    // Tailwind is compiled at runtime by the CDN script, so the print has to
+    // wait for the network to settle instead of racing the stylesheet.
     await page.setContent(body.html, {
-      waitUntil: 'networkidle0',
+      waitUntil: 'load',
     })
+    await page.waitForNetworkIdle({ idleTime: 500, timeout: 15_000 })
     const buffer = await page.pdf(pdfOptions)
 
     return buffer
