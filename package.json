@@ -4,6 +4,7 @@
   "description": "Layout Builder with Nuxt.js",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.18.3",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
