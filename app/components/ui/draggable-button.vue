@@ -21,6 +21,8 @@
 </template>
 
 <script setup lang="ts">
+import { ACCENT_MAP } from "../../palette";
+
 const props = withDefaults(
   defineProps<{
     name: string;
@@ -32,17 +34,9 @@ const props = withDefaults(
   { accent: "slate" }
 );
 
-const accentMap: Record<string, { border: string; bg: string; iconBg: string; icon: string }> = {
-  slate: { border: "border-slate-200 hover:border-slate-300", bg: "bg-white hover:bg-slate-50", iconBg: "bg-slate-100", icon: "text-slate-600" },
-  blue: { border: "border-blue-100 hover:border-blue-200", bg: "bg-blue-50/50 hover:bg-blue-50", iconBg: "bg-blue-100", icon: "text-blue-600" },
-  indigo: { border: "border-indigo-100 hover:border-indigo-200", bg: "bg-indigo-50/50 hover:bg-indigo-50", iconBg: "bg-indigo-100", icon: "text-indigo-600" },
-  emerald: { border: "border-emerald-100 hover:border-emerald-200", bg: "bg-emerald-50/50 hover:bg-emerald-50", iconBg: "bg-emerald-100", icon: "text-emerald-600" },
-  purple: { border: "border-purple-100 hover:border-purple-200", bg: "bg-purple-50/50 hover:bg-purple-50", iconBg: "bg-purple-100", icon: "text-purple-600" },
-  amber: { border: "border-amber-100 hover:border-amber-200", bg: "bg-amber-50/50 hover:bg-amber-50", iconBg: "bg-amber-100", icon: "text-amber-600" },
-  pink: { border: "border-pink-100 hover:border-pink-200", bg: "bg-pink-50/50 hover:bg-pink-50", iconBg: "bg-pink-100", icon: "text-pink-600" },
-};
-
-const accentClasses = computed(() => accentMap[props.accent] ?? accentMap.slate);
+const accentClasses = computed(
+  () => ACCENT_MAP[props.accent as keyof typeof ACCENT_MAP] ?? ACCENT_MAP.slate
+);
 const onDragStart = (event) => {
   const tag =
     event.target.dataset.tag ||
