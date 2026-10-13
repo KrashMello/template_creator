@@ -25,6 +25,9 @@ pnpm screenshots # refresh public/screenshots/* (needs `pnpm dev` running)
 
 **No tests, linter, typechecker, or formatter exist.** Don't hunt for them; `pnpm build` is the only verification step. No root `tsconfig.json` — Nuxt generates `.nuxt/tsconfig.json` via `postinstall: nuxt prepare`.
 
+### E2E testing
+Drive the real UI with **terminal-browser** (skill `terminal-browser`): `terminal-browser open localhost:3000/demo --split right` to show it beside the chat, `terminal-browser ls` for tab ids, and `terminal-browser action -- snapshot|click @eN|fill @eN "x"|open <url>|eval "js"` against the active tab. The pane's locale follows the browser (usually `en`) — pin Spanish with `action -- eval "document.cookie='tc_locale=es; path=/'"` and then re-`open` the URL. If an eval fails with `SecurityError` while `location.href` is `chrome-error://chromewebdata/`, the tab is sitting on an error page (typically after the dev server restarted): re-`open` the URL and retry. Batch renders and PDF checks stay on headless puppeteer-core (`scripts/capture-screenshots.mjs` pattern) plus the esbuild bundle below.
+
 ## Architecture
 
 ### Routes
