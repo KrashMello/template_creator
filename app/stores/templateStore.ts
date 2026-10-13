@@ -3,6 +3,7 @@ import { ref, nextTick } from "vue";
 import handlebars from "handlebars";
 import { applyBorderStyles, applyRowChildFlex, clearBorderStyles, findDataById, findIndexElement, findPathById, generateLayoutHeaderFooterHtml, generateLayoutHtml, getDropTarget, getElementByPath, getInsertType, insertElementAtPath, insertNodeRelativeTo, removeElementAtPath, replace, sleep } from "./template";
 import type { ElementDataSet } from "./template";
+import type { TemplateDoc } from "../templates/types";
 
 export type SectionType = "body" | "footer" | "header";
 function extractKeys(obj: Record<string, any>, prefix = ""): string[] {
@@ -66,6 +67,10 @@ export const templateStore = defineStore("template", {
       columns: "",
       rows: "",
       src: "",
+      /** Nombre visible del nodo (la etiqueta que muestra el lienzo). */
+      nodeName: "",
+      /** Alto en px del código de barras (`data.height`). */
+      height: "",
     },
     history: [] as string[],
     redoStack: [] as string[],
@@ -82,7 +87,9 @@ export const templateStore = defineStore("template", {
       if (this.history.length > 50) this.history.shift();
     },
     undo() {
-      if (!this.history.length) return;
+      // `history` guarda el estado *tras* cada cambio, así que hacen falta dos
+      // entradas para poder volver atrás (con una sola no hay estado previo).
+      if (this.history.length < 2) return;
       this.redoStack.push(this.history.pop()!);
       this.schema = JSON.parse(this.history[this.history.length - 1]);
       this.renderPreview();
@@ -181,8 +188,51 @@ export const templateStore = defineStore("template", {
     setStyleEl(el) {
       this.styleEl = el;
     },
+    /**
+     * Garantiza que existe el `<style data-dynamic-css>` de la pestaña Estilos.
+     * `persist` guarda `styleEl` en sessionStorage, así que tras recargar el
+     * valor persistido es un objeto plano (`{}`) y escribir en él no hace nada;
+     * además la pestaña Estilos solo se monta cuando el usuario la abre.
+     */
+    ensureStyleEl() {
+      if (typeof document === "undefined") return;
+      if (this.styleEl instanceof HTMLStyleElement && document.head.contains(this.styleEl)) return;
+      let el = document.head.querySelector("style[data-dynamic-css]");
+      if (!el) {
+        el = document.createElement("style");
+        el.setAttribute("data-dynamic-css", "true");
+        document.head.appendChild(el);
+      }
+      this.styleEl = el;
+    },
     setStyleElTexContent(css) {
+      this.ensureStyleEl();
       if (this.styleEl) this.styleEl.textContent = css;
+    },
+    /**
+     * Carga una plantilla precreada reemplazando las tres zonas, los datos y el
+     * CSS. El cuerpo actual queda en el historial (deshacer), pero cabecera, pie
+     * y datos no: por eso la galería pide confirmación antes.
+     * `pushHistory` va después de mutar, igual que en `onDrop`/`deleteElementById`.
+     */
+    loadTemplate(doc: TemplateDoc) {
+      // Snapshot del lienzo anterior: sin él, cargar una plantilla sobre un
+      // lienzo vacío dejaría la deshacer sin estado previo al que volver.
+      const previous = JSON.stringify(this.schema);
+      if (this.history[this.history.length - 1] !== previous) {
+        this.history.push(previous);
+        if (this.history.length > 50) this.history.shift();
+      }
+      this.schema = doc.schema;
+      this.header = doc.header;
+      this.footer = doc.footer;
+      this.data = doc.data;
+      this.cssCode = doc.cssCode;
+      this.clearSelectedElemen();
+      this.pushHistory();
+      this.setStyleElTexContent(doc.cssCode);
+      this.renderPreview();
+      this.updateSchemaDisplay();
     },
     onDragOver(event, type: "body" | "footer" | "header" = "body") {
       event.preventDefault();
@@ -340,6 +390,9 @@ export const templateStore = defineStore("template", {
         this.options.rows = this.selectedNode.data.rows;
         this.options.src = this.selectedNode.data.src;
         this.options.name = this.selectedNode.data.name;
+        this.options.nodeName = this.selectedNode.name || "";
+        this.options.height =
+          this.selectedNode.data.height != null ? String(this.selectedNode.data.height) : "";
         this.options.checkValue =
           this.selectedNode.data.value != null ? String(this.selectedNode.data.value) : "false";
       }
@@ -374,11 +427,20 @@ export const templateStore = defineStore("template", {
       if (this.options.name) {
         data.name = this.options.name;
       }
+      if (this.options.height !== "" && this.options.height != null) {
+        const height = Number(this.options.height);
+        if (Number.isFinite(height)) data.height = height;
+      }
       if (this.options.checkValue != null) {
         data.value = this.options.checkValue == 'true' ? true : false;
       }
+      // `name` es la etiqueta que ven el lienzo y el JSON; se edita con el campo
+      // "Nombre del componente" y un valor vacío conserva la que ya tenía.
+      const nodeName =
+        typeof this.options.nodeName === "string" ? this.options.nodeName.trim() : "";
       const dataTransfer = {
         ...element_schema,
+        name: nodeName || element_schema.name,
         data,
       };
       this.selectedNode = dataTransfer;

@@ -33,8 +33,12 @@
 
     <div id="options" v-else class="flex-1 overflow-y-auto">
       <form @submit.prevent="saveDataOptions" class="flex flex-col gap-4 px-5 py-4">
+        <ui-input v-model="options.nodeName" type="text"
+          :title="t('editor.settings.fields.nodeName')" :placeholder="selectedNode.name" :onInputt="saveContent" />
         <ui-input v-if="selectedNode.data.content" v-model="options.content" type="textarea"
           :title="t('editor.settings.fields.content')" @blur="saveContent" :placeholder="t('editor.settings.fields.content')" />
+        <ui-input v-if="selectedNode.data.height != null" v-model="options.height" type="number"
+          :title="t('editor.settings.fields.height')" :placeholder="t('editor.settings.fields.height')" :onInputt="saveContent" />
         <ui-input v-if="selectedNode.data.name" v-model="options.name" type="text"
           :title="t('editor.settings.fields.name')" :placeholder="t('editor.settings.fields.name')" :onInputt="saveContent" />
         <ui-input v-if="selectedNode.data.value != null" v-model="options.checkValue" type="checkbox"

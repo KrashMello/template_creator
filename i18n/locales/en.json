@@ -161,13 +161,57 @@
       "section": "Basics",
       "hint": "Drag a component onto the canvas",
       "components": {
-        "paragraph": "Paragraph",
+        "text": "Text",
         "table": "Table",
         "row": "Row",
         "col": "Column",
         "image": "Image",
         "checkbox": "Checkbox",
-        "container": "Container"
+        "container": "Container",
+        "barcode": "Barcode",
+        "defaultText": "type here..."
+      },
+      "templates": {
+        "title": "Prebuilt templates",
+        "hint": "Load a template and edit it on the canvas",
+        "items": {
+          "invoice": {
+            "title": "Invoice",
+            "desc": "Header with logo, line-items table, totals and client data.",
+            "features": ["Header & footer", "Table", "Handlebars", "CSS"]
+          },
+          "report": {
+            "title": "Report",
+            "desc": "KPIs in rows and columns, two tables and custom CSS rules.",
+            "features": ["Rows & columns", "Tables", "CSS"]
+          },
+          "certificate": {
+            "title": "Certificate",
+            "desc": "Centered design with a seal, verification checkbox and double border.",
+            "features": ["Three zones", "Image", "Checkbox"]
+          },
+          "receipt": {
+            "title": "Receipt",
+            "desc": "Short list with items, totals, a checkbox and a fiscal footer.",
+            "features": ["Table", "Checkbox", "Data"]
+          },
+          "shipping-label": {
+            "title": "Shipping label",
+            "desc": "Compact format with a dynamic address and a real Code 39 barcode.",
+            "features": ["Checkboxes", "Barcode", "Handlebars"]
+          },
+          "showcase": {
+            "title": "Full demo",
+            "desc": "All eight palette components across the three canvas zones.",
+            "features": ["Whole system", "Three zones", "Handlebars"]
+          }
+        },
+        "confirm": {
+          "title": "Replace the content?",
+          "message": "The template will replace the body, header, footer and data. Only the body can be undone.",
+          "cancel": "Cancel",
+          "accept": "Load template"
+        }
       }
     },
     "toolbar": {
@@ -191,7 +235,9 @@
       "delete": "Delete component",
       "fields": {
         "content": "Text",
-        "name": "Name",
+        "name": "Label",
+        "nodeName": "Component name",
+        "height": "Height",
         "value": "Value",
         "columns": "Columns",
         "rows": "Rows",
