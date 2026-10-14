@@ -248,7 +248,7 @@
       "orientation": "Orientación",
       "orientations": {
         "portrait": "Vertical",
-        "landscape": "Apaisada"
+        "landscape": "Horizontal"
       },
       "headerRepeat": "Encabezado en todas las páginas",
       "footerRepeat": "Pie en todas las páginas",
