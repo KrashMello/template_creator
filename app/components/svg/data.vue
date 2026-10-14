@@ -1,21 +1,17 @@
 <template>
   <svg
-    width="800px"
-    height="800px"
-    viewBox="0 0 24 24"
     xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
     fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
   >
-    <path
-      fill="#000000"
-      d="M21 7c0 2.21-4.03 4-9 4S3 9.21 3 7s4.03-4 9-4 9 1.79 9 4z"
-    />
-    <path
-      stroke="#000000"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M21 7c0 2.21-4.03 4-9 4S3 9.21 3 7m18 0c0-2.21-4.03-4-9-4S3 4.79 3 7m18 0v5M3 7v5m18 0c0 2.21-4.03 4-9 4s-9-1.79-9-4m18 0v5c0 2.21-4.03 4-9 4s-9-1.79-9-4v-5"
-    />
+    <ellipse cx="12" cy="5.5" rx="8" ry="3.5" />
+    <path d="M4 5.5v6c0 1.93 3.58 3.5 8 3.5s8-1.57 8-3.5v-6" />
+    <path d="M4 11.5v6c0 1.93 3.58 3.5 8 3.5s8-1.57 8-3.5v-6" />
   </svg>
 </template>
