@@ -36,12 +36,14 @@
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </NuxtLink>
+        <!-- secondary CTA ("See pricing") hidden while pricing section is disabled
         <a
           href="#pricing"
           class="inline-flex h-12 items-center rounded-full border border-slate-300 bg-white px-7 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
           {{ t('hero.ctaSecondary') }}
         </a>
+        -->
       </div>
 
       <p class="mt-4 text-xs font-medium text-slate-400">{{ t('hero.note') }}</p>

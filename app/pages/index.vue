@@ -2,7 +2,9 @@
   <landing-hero />
   <landing-features />
   <landing-screenshots />
+  <!-- pricing hidden temporarily
   <landing-pricing />
+  -->
   <landing-faq />
   <landing-cta />
 </template>

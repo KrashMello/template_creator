@@ -43,7 +43,6 @@ const { t } = useI18n()
 const links = computed(() => [
   { href: '#features', label: t('nav.features') },
   { href: '#screenshots', label: t('nav.screenshots') },
-  { href: '#pricing', label: t('nav.pricing') },
   { href: '#faq', label: t('nav.faq') }
 ])
 </script>
