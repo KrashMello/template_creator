@@ -61,6 +61,21 @@ export const templateStore = defineStore("template", {
     previewHtml: "",
     previewHtmlFooter: "",
     previewHtmlHeader: "",
+    /**
+     * Ajustes de página para el export PDF. Por defecto reproducen el
+     * comportamiento histórico (carta, vertical, 10mm, header y pie repetidos).
+     * No forman parte del historial de deshacer (solo se serializa el body).
+     */
+    page: {
+      format: "letter" as "letter" | "a4" | "legal" | "oficio",
+      orientation: "portrait" as "portrait" | "landscape",
+      /** Márgenes en mm. */
+      margins: { top: 10, right: 10, bottom: 10, left: 10 },
+      /** Checkbox: header en todas las páginas (false = solo la primera). */
+      headerRepeat: true,
+      /** Checkbox: pie en todas las páginas (false = solo al final del contenido). */
+      footerRepeat: true,
+    },
     options: {
       class: "",
       content: "",
@@ -145,7 +160,7 @@ export const templateStore = defineStore("template", {
     },
     updateSchemaDisplay() {
       this.schemaJson = JSON.stringify(
-        { style: this.cssCode, schema: this.schema, header: this.header, footer: this.footer },
+        { style: this.cssCode, page: this.page, schema: this.schema, header: this.header, footer: this.footer },
         null,
         2,
       ).trim();
@@ -162,6 +177,13 @@ export const templateStore = defineStore("template", {
           header: handlebars.compile(header)(this.data),
           footer: handlebars.compile(footer)(this.data),
           css: this.cssCode || "",
+          page: {
+            format: this.page.format,
+            orientation: this.page.orientation,
+            margins: { ...this.page.margins },
+            headerRepeat: this.page.headerRepeat,
+            footerRepeat: this.page.footerRepeat,
+          },
         }),
       });
       const url = URL.createObjectURL(await res.blob());
@@ -451,7 +473,7 @@ export const templateStore = defineStore("template", {
     },
   },
   persist: {
-    pick: ["styleEl", "cssCode", "schema", "data", "history", "redoStack", "footer", "header"],
+    pick: ["styleEl", "cssCode", "page", "schema", "data", "history", "redoStack", "footer", "header"],
   },
 });
 

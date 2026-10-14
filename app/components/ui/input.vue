@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col gap-2">
-    <label class=" block text-xs font-medium text-slate-600 mb-1" :for="props.id">{{ props.title }}</label>
+    <label class=" block text-xs font-medium text-slate-600 mb-1" :for="inputId">{{ props.title }}</label>
     <div v-if="props.type === 'textarea'" class="relative">
-      <!-- <textarea :id="props.id" v-model="proxyValue" :class="CLASS" :placeholder="props.placeholder"></textarea> -->
-      <textarea ref="inputRef" v-bind="$attrs" :value="props.modelValue" @input="onInput" @keydown="onKeyDown"
+      <!-- <textarea :id="inputId" v-model="proxyValue" :class="CLASS" :placeholder="props.placeholder"></textarea> -->
+      <textarea ref="inputRef" :id="inputId" v-bind="$attrs" :value="props.modelValue" @input="onInput" @keydown="onKeyDown"
         @blur="onBlur" :class="`${CLASS} ${$attrs.class}`" />
       <Teleport to="body">
         <div v-if="showDropdown && filteredKeys.length" :style="dropdownStyle"
@@ -24,9 +24,9 @@
         </div>
       </Teleport>
     </div>
-    <input v-else-if="props.type !== 'file'" :type="props.type" :id="props.id" v-model="proxyValue" :class="CLASS"
+    <input v-else-if="props.type !== 'file'" :type="props.type" :id="inputId" v-model="proxyValue" :class="CLASS"
       @change="props.onChange" @blur="props.onBlur" @input="props.onInputt" :placeholder="props.placeholder" />
-    <input v-else :type="props.type" :acepted="props.acepted" :id="props.id" @change="props.onChange" :class="CLASS"
+    <input v-else :type="props.type" :acepted="props.acepted" :id="inputId" @change="props.onChange" :class="CLASS"
       :placeholder="props.placeholder" />
   </div>
 </template>
@@ -43,6 +43,10 @@ const dropdownStyle = ref({});
 const inputRef = ref<HTMLInputElement | null>(null);
 const store = templateStore();
 const { t } = useI18n();
+// Id único y estable entre servidor y cliente (el randomUUID del `default`
+// no lo era: rompía el hidratación y colisionaba entre instancias).
+const uid = useId();
+const inputId = computed(() => props.id || `ui-input-${uid}`);
 
 const proxyValue = computed({
   get() {
@@ -69,15 +73,20 @@ const props = defineProps({
     default: "",
   },
   id: {
+    // Opcional: si no se pasa, se genera uno por instancia abajo. El `default`
+    // de defineProps se evalúa una sola vez por definición de componente, así
+    // que todos los inputs de la página compartían id y los `<label for>`
+    // apuntaban todos al primero.
     type: String,
-    default: crypto.randomUUID().split("-").join(""),
+    default: "",
   },
   placeholder: {
     type: String,
     default: "placeholder",
   },
   modelValue: {
-    type: String,
+    // `v-model.number` (inputs numéricos, p. ej. los márgenes) emite Number.
+    type: [String, Number],
     default: "",
   },
   onChange: {

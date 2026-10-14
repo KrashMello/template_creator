@@ -229,6 +229,31 @@
       "body": "Contenido dinámico",
       "footer": "Pie de página"
     },
+    "doc": {
+      "title": "Documento",
+      "margins": {
+        "title": "Márgenes (mm)",
+        "top": "Superior",
+        "bottom": "Inferior",
+        "left": "Izquierdo",
+        "right": "Derecho"
+      },
+      "format": "Formato",
+      "formats": {
+        "letter": "Carta",
+        "legal": "Legal",
+        "oficio": "Oficio",
+        "a4": "A4"
+      },
+      "orientation": "Orientación",
+      "orientations": {
+        "portrait": "Vertical",
+        "landscape": "Apaisada"
+      },
+      "headerRepeat": "Encabezado en todas las páginas",
+      "footerRepeat": "Pie en todas las páginas",
+      "onlyFirstHint": "Desmarcado: el encabezado se coloca al inicio del contenido y el pie al final; no se repiten en las demás páginas."
+    },
     "settings": {
       "title": "Ajustes del componente",
       "noSelection": "Selecciona un componente del lienzo para editar sus propiedades",

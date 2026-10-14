@@ -229,6 +229,31 @@
       "body": "Dynamic content",
       "footer": "Page footer"
     },
+    "doc": {
+      "title": "Document",
+      "margins": {
+        "title": "Margins (mm)",
+        "top": "Top",
+        "bottom": "Bottom",
+        "left": "Left",
+        "right": "Right"
+      },
+      "format": "Format",
+      "formats": {
+        "letter": "Letter",
+        "legal": "Legal",
+        "oficio": "Oficio",
+        "a4": "A4"
+      },
+      "orientation": "Orientation",
+      "orientations": {
+        "portrait": "Portrait",
+        "landscape": "Landscape"
+      },
+      "headerRepeat": "Header on every page",
+      "footerRepeat": "Footer on every page",
+      "onlyFirstHint": "Unchecked: the header is placed at the start of the content and the footer at the end; neither repeats on later pages."
+    },
     "settings": {
       "title": "Component settings",
       "noSelection": "Select a component on the canvas to edit its properties",
