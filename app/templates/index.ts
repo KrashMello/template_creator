@@ -2,8 +2,11 @@ import handlebars from "handlebars";
 import { generateLayoutHtml } from "../stores/template";
 import type { ElementDataSet } from "../stores/template";
 import { certificate } from "./certificate";
+import { contract } from "./contract";
 import { invoice } from "./invoice";
+import { nda } from "./nda";
 import { receipt } from "./receipt";
+import { rental } from "./rental";
 import { report } from "./report";
 import { shippingLabel } from "./shipping-label";
 import { showcase } from "./showcase";
@@ -14,6 +17,9 @@ export const PREBUILT_TEMPLATES: PrebuiltTemplate[] = [
   invoice,
   report,
   certificate,
+  contract,
+  nda,
+  rental,
   receipt,
   shippingLabel,
   showcase,

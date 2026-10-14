@@ -101,7 +101,10 @@
 
 <script setup lang="ts">
 import certificateIcon from "../svg/certificate.vue";
+import contractIcon from "../svg/contract.vue";
 import invoiceIcon from "../svg/invoice.vue";
+import ndaIcon from "../svg/nda.vue";
+import rentalIcon from "../svg/rental.vue";
 import reportIcon from "../svg/report.vue";
 import shippingIcon from "../svg/shipping.vue";
 import showcaseIcon from "../svg/showcase.vue";
@@ -123,6 +126,9 @@ const ICONS: Record<string, any> = {
   invoice: invoiceIcon,
   report: reportIcon,
   certificate: certificateIcon,
+  contract: contractIcon,
+  nda: ndaIcon,
+  rental: rentalIcon,
   receipt: ticketIcon,
   "shipping-label": shippingIcon,
   showcase: showcaseIcon,
@@ -132,6 +138,9 @@ const ACCENTS: Record<string, string> = {
   invoice: "blue",
   report: "indigo",
   certificate: "amber",
+  contract: "slate",
+  nda: "purple",
+  rental: "emerald",
   receipt: "pink",
   "shipping-label": "emerald",
   showcase: "purple",

@@ -145,6 +145,34 @@ export const COMMON_CSS = `
 export const templateCss = (own: string): string => `${COMMON_CSS}\n${own.trim()}\n`;
 
 /**
+ * CSS compartido por los documentos legales (contrato, NDA, arrendamiento):
+ * cuerpo envuelto en un contenedor con tipografía serif, título con línea de
+ * referencias, cláusulas numeradas y bloque de firmas.
+ *
+ * El aire sobre `.tc-sign-line` (margin-top) es el espacio para la firma
+ * manuscrita; la línea queda justo encima del nombre del firmante.
+ */
+export const LEGAL_CSS = `
+   /* --- documentos legales ------------------------------------------------- */
+   .tc-legal-body[class] { min-height: 0; gap: 0; margin-top: 8px; padding-left: 0; padding-right: 0; }
+   .tc-legal-body[class] p { font-family: Georgia, 'Times New Roman', serif; }
+   .tc-legal-logo[class] { width: 32px; height: 32px; border-radius: 8px; }
+   .tc-legal-wordmark[class] { padding: 0; font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: #1e293b; }
+   .tc-legal-title[class] { padding: 0; font-size: 25px; line-height: 1.2; font-weight: 700; color: #0f172a; }
+   .tc-legal-meta[class] { padding: 0; margin-top: 6px; font-size: 12px; }
+   .tc-legal-parties[class] { padding: 0; margin-top: 18px; }
+   .tc-legal-clause[class] { padding: 0; margin-top: 18px; font-weight: 700; color: #0f172a; }
+   .tc-legal-text[class] { padding: 0; margin-top: 2px; line-height: 1.65; color: #334155; }
+   .tc-legal-closing[class] { padding: 0; margin-top: 24px; font-style: italic; line-height: 1.65; color: #334155; }
+   /* Firmas: una columna por firmante, aire para escribir y línea sólida. */
+   .tc-signs[class] { margin-top: 26px; padding-left: 0; padding-right: 0; gap: 40px; }
+   .tc-sign-col[class] { min-height: 0; gap: 4px; }
+   .tc-sign-line[class] { margin-top: 46px; padding: 6px 0 0; border-top: 1px solid #334155; font-weight: 600; color: #0f172a; }
+   .tc-sign-role[class] { padding: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #64748b; }
+   .tc-sign-detail[class] { padding: 0; font-size: 11px; color: #94a3b8; }
+ `;
+
+/**
  * Raíz de una zona. Los ids son fijos: `center-container` hace `v-html` sobre
  * `#preview` / `#header` / `#footer` y `findPathById` los reconoce.
  */

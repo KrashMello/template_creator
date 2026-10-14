@@ -190,6 +190,21 @@
             "desc": "Centered design with a seal, verification checkbox and double border.",
             "features": ["Three zones", "Image", "Checkbox"]
           },
+          "contract": {
+            "title": "Contract",
+            "desc": "Two-page contract with a preamble, eight numbered clauses and both parties' signatures.",
+            "features": ["Three zones", "Signatures", "Handlebars"]
+          },
+          "nda": {
+            "title": "NDA",
+            "desc": "Two-page non-disclosure agreement with eight clauses and both parties' signatures.",
+            "features": ["Clauses", "Signatures", "Three zones"]
+          },
+          "rental": {
+            "title": "Lease",
+            "desc": "Two-page lease with rent, deposit, renewal and both parties' signatures.",
+            "features": ["Three zones", "Signatures", "Handlebars"]
+          },
           "receipt": {
             "title": "Receipt",
             "desc": "Short list with items, totals, a checkbox and a fiscal footer.",

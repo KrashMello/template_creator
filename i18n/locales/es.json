@@ -190,6 +190,21 @@
             "desc": "Diseño centrado con sello, casilla de verificación y borde doble.",
             "features": ["Tres zonas", "Imagen", "Casilla"]
           },
+          "contract": {
+            "title": "Contrato",
+            "desc": "Contrato a dos páginas con preámbulo, ocho cláusulas numeradas y las firmas de las dos partes.",
+            "features": ["Tres zonas", "Firmas", "Handlebars"]
+          },
+          "nda": {
+            "title": "Confidencialidad",
+            "desc": "Acuerdo de confidencialidad (NDA) a dos páginas, con ocho cláusulas y las firmas de las dos partes.",
+            "features": ["Cláusulas", "Firmas", "Tres zonas"]
+          },
+          "rental": {
+            "title": "Arrendamiento",
+            "desc": "Contrato de alquiler a dos páginas con renta, fianza, prórroga y firmas de las dos partes.",
+            "features": ["Tres zonas", "Firmas", "Handlebars"]
+          },
           "receipt": {
             "title": "Ticket",
             "desc": "Lista corta con artículos, totales, casilla y pie fiscal.",
