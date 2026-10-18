@@ -5,17 +5,44 @@ import { parse as parseHtml } from "node-html-parser";
 import { tws } from "tailwind-to-style";
 
 /**
- * Page geometry (letter format, CSS pixels at 96dpi).
+ * Page geometry (CSS pixels at 96dpi).
  *
  * Header/footer templates are laid out by Chromium in a box that spans the
  * whole page width (it ignores the left/right margins), and we deliberately
  * add no padding of our own: the template is full-bleed, so a `w-full` row
  * reaches 100% of the page exactly like it does in the editor preview. The
- * body content keeps the `SIDE_MARGIN_MM` page margins below it.
+ * body content keeps the configured page margins below it.
  */
-const PAGE_WIDTH_PX = 8.5 * 96
+/** Paper sizes in inches: [width, height]. */
+type PageFormat = "letter" | "legal" | "oficio" | "a4"
+type PageOrientation = "portrait" | "landscape"
+const PAGE_SIZES_IN: Record<PageFormat, [number, number]> = {
+  letter: [8.5, 11],
+  legal: [8.5, 14],
+  oficio: [216 / 25.4, 330 / 25.4], // 216 × 330 mm
+  a4: [210 / 25.4, 297 / 25.4],
+}
+const PAGE_FORMATS = Object.keys(PAGE_SIZES_IN) as PageFormat[]
+/**
+ * `paperFormats` de puppeteer solo conoce letter/legal/tabloid/ledger/a0-a6;
+ * los tamaños de esta lista se pasan como `width`/`height` explícitos en mm.
+ * (`landscape` sigue funcionando: puppeteer manda paperWidth/paperHeight y
+ * `landscape` por separado, y Chromium rota el papel.)
+ */
+const CUSTOM_PAGE_MM: Partial<Record<PageFormat, [number, number]>> = {
+  oficio: [216, 330],
+}
+
+function pageWidthPx(format: PageFormat, orientation: PageOrientation): number {
+  const [w, h] = PAGE_SIZES_IN[format] || PAGE_SIZES_IN.letter
+  const [fw] = orientation === "landscape" ? [h, w] : [w, h]
+  return fw * 96
+}
+
 const MM_TO_PX = 96 / 25.4
-const SIDE_MARGIN_MM = 10
+/** Margen lateral por defecto (y respaldo de cualquier valor ausente/inválido). */
+const DEFAULT_MARGIN_MM = 10
+const MAX_MARGIN_MM = 100
 /** Extra breathing room added below/above the measured header/footer height. */
 const HEADER_GAP_MM = 2
 const MIN_VERTICAL_MARGIN_MM = 8
@@ -115,12 +142,12 @@ function buildTemplate(html: string, css: string, prefix: string): string {
  * sized after it: the header/footer live in the margin box, and anything taller
  * than the margin gets clipped and overlaps the body content.
  */
-async function measureTemplateHeight(page: Page, template: string): Promise<number> {
+async function measureTemplateHeight(page: Page, template: string, widthPx: number): Promise<number> {
   try {
     // `networkidle0` is unreliable for repeated `setContent` calls on the same
     // page; images are awaited explicitly inside the evaluate below instead.
     await page.setContent(
-      `<!doctype html><html><head></head><body style="margin:0;width:${PAGE_WIDTH_PX}px">${template}</body></html>`,
+      `<!doctype html><html><head></head><body style="margin:0;width:${widthPx}px">${template}</body></html>`,
       { waitUntil: "load" }
     );
 
@@ -149,14 +176,69 @@ async function measureTemplateHeight(page: Page, template: string): Promise<numb
   }
 }
 
-function verticalMarginFor(heightPx: number): string {
-  if (!heightPx) return `${SIDE_MARGIN_MM}mm`;
+/**
+ * Margen vertical de una zona que se repite: necesita como mínimo la altura
+ * medida (si no, la plantilla se solapa con el cuerpo), pero nunca menos del
+ * margen que ha configurado el usuario. Sin altura medida se usa el margen tal
+ * cual (zona no repetida o vacía).
+ */
+function verticalMarginFor(heightPx: number, configuredMm: number): string {
+  if (!heightPx) return `${configuredMm}mm`;
   const heightMm = heightPx / MM_TO_PX + HEADER_GAP_MM;
-  return `${Math.min(Math.max(heightMm, MIN_VERTICAL_MARGIN_MM), MAX_VERTICAL_MARGIN_MM)}mm`;
+  const needed = Math.max(configuredMm, heightMm);
+  return `${Math.min(Math.max(needed, MIN_VERTICAL_MARGIN_MM), MAX_VERTICAL_MARGIN_MM)}mm`;
+}
+
+function marginMm(value: unknown): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return DEFAULT_MARGIN_MM;
+  return Math.min(Math.max(n, 0), MAX_MARGIN_MM);
+}
+
+/**
+ * Inyecta una zona (header/footer) dentro del flujo del cuerpo para que solo
+ * aparezca donde toca sin plantilla de margen: el header antes del contenido
+ * (así las páginas siguientes usan el margen normal, sin reservar espacio) y el
+ * pie al final del contenido. El wrapper lleva márgenes negativos para que el
+ * contenido siga llegando a los bordes de página (full-bleed), igual que la
+ * plantilla en el margen.
+ *
+ * Si el HTML no trae `<body>` (lienzo vacío: `generateLayoutHtml` devuelve solo
+ * el hint) se envuelve primero; si no, la inyección no tendría dónde engancharse.
+ */
+function injectZoneInFlow(
+  html: string,
+  markup: string,
+  position: "start" | "end",
+  margins: { left: number, right: number },
+): string {
+  if (!markup) return html;
+  let doc = html;
+  if (!/<body[\s>]/i.test(doc)) doc = `<html><head></head><body>${doc}</body></html>`;
+  const block =
+    `<div style="margin-left:-${margins.left}mm;margin-right:-${margins.right}mm">${markup}</div>`;
+  if (position === "start") return doc.replace(/<body([^>]*)>/i, (tag) => `${tag}${block}`);
+  return doc.replace(/<\/body>/i, `${block}</body>`);
+}
+
+/** Ajustes de página enviados desde el store (`store.page`). */
+type PageSettings = {
+  format?: string
+  orientation?: PageOrientation
+  margins?: { top?: unknown, right?: unknown, bottom?: unknown, left?: unknown }
+  /** `false` desactiva la repetición; lo ausente mantiene el comportamiento histórico. */
+  headerRepeat?: boolean
+  footerRepeat?: boolean
 }
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody<{ html?: string, header?: string, footer?: string, css?: string }>(event)
+  const body = await readBody<{
+    html?: string
+    header?: string
+    footer?: string
+    css?: string
+    page?: PageSettings
+  }>(event)
   if (!body?.html) {
     throw createError({
       statusCode: 400,
@@ -165,24 +247,62 @@ export default defineEventHandler(async (event) => {
   }
 
   const css = body.css || ''
-  const headerTemplate = body.header ? buildTemplate(body.header, css, "hd") : ""
-  const footerTemplate = body.footer ? buildTemplate(body.footer, css, "ft") : ""
+  const rawFormat = body.page?.format
+  const format: PageFormat =
+    rawFormat && (PAGE_FORMATS as string[]).includes(rawFormat) ? (rawFormat as PageFormat) : 'letter'
+  const orientation: PageOrientation =
+    body.page?.orientation === 'landscape' ? 'landscape' : 'portrait'
+  const margins = {
+    top: marginMm(body.page?.margins?.top),
+    right: marginMm(body.page?.margins?.right),
+    bottom: marginMm(body.page?.margins?.bottom),
+    left: marginMm(body.page?.margins?.left),
+  }
+
+  const headerMarkup = body.header || ''
+  const footerMarkup = body.footer || ''
+  // Zona repetida → plantilla en el margen (se mide para dimensionarlo).
+  // Zona no repetida → se inyecta en el flujo del cuerpo y su margen es el
+  // configurado (sin medir: la medida solo sirve para la plantilla).
+  const useHeaderTemplate = body.page?.headerRepeat !== false && !!headerMarkup
+  const useFooterTemplate = body.page?.footerRepeat !== false && !!footerMarkup
+
+  const headerTemplate = useHeaderTemplate ? buildTemplate(headerMarkup, css, 'hd') : ''
+  const footerTemplate = useFooterTemplate ? buildTemplate(footerMarkup, css, 'ft') : ''
+
+  let html = body.html
+  if (!useHeaderTemplate && headerMarkup) {
+    html = injectZoneInFlow(html, headerMarkup, 'start', margins)
+  }
+  if (!useFooterTemplate && footerMarkup) {
+    html = injectZoneInFlow(html, footerMarkup, 'end', margins)
+  }
 
   const pdfBuffer = await withPuppeteer(async (page) => {
     // Measure first: this navigates the page, so it has to happen before the
     // document HTML is loaded.
-    const headerHeightPx = headerTemplate ? await measureTemplateHeight(page, headerTemplate) : 0
-    const footerHeightPx = footerTemplate ? await measureTemplateHeight(page, footerTemplate) : 0
+    const widthPx = pageWidthPx(format, orientation)
+    const headerHeightPx = headerTemplate ? await measureTemplateHeight(page, headerTemplate, widthPx) : 0
+    const footerHeightPx = footerTemplate ? await measureTemplateHeight(page, footerTemplate, widthPx) : 0
 
     const pdfOptions: PDFOptions = {
-      format: 'letter',
+      // `puppeteer-core` 25 solo acepta `landscape` (no existe `orientation`).
+      landscape: orientation === 'landscape',
       printBackground: true,
       margin: {
-        top: verticalMarginFor(headerHeightPx),
-        right: `${SIDE_MARGIN_MM}mm`,
-        bottom: verticalMarginFor(footerHeightPx),
-        left: `${SIDE_MARGIN_MM}mm`,
+        top: verticalMarginFor(headerHeightPx, margins.top),
+        right: `${margins.right}mm`,
+        bottom: verticalMarginFor(footerHeightPx, margins.bottom),
+        left: `${margins.left}mm`,
       },
+    }
+
+    const customSize = CUSTOM_PAGE_MM[format]
+    if (customSize) {
+      pdfOptions.width = `${customSize[0]}mm`
+      pdfOptions.height = `${customSize[1]}mm`
+    } else {
+      pdfOptions.format = format
     }
 
     if (headerTemplate || footerTemplate) {
@@ -196,7 +316,7 @@ export default defineEventHandler(async (event) => {
     // `networkidle0` is no longer part of `setContent`'s public options, and
     // Tailwind is compiled at runtime by the CDN script, so the print has to
     // wait for the network to settle instead of racing the stylesheet.
-    await page.setContent(body.html, {
+    await page.setContent(html, {
       waitUntil: 'load',
     })
     await page.waitForNetworkIdle({ idleTime: 500, timeout: 15_000 })

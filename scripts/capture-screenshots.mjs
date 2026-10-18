@@ -46,7 +46,7 @@ const seed = {
       {
         id: 'seedtitle',
         tag: 'p',
-        name: 'Párrafo',
+        name: 'Texto',
         data: {
           content: 'Informe mensual de servicios',
           class: 'p-2 text-2xl font-bold text-slate-900',
@@ -56,7 +56,7 @@ const seed = {
       {
         id: 'seedmeta',
         tag: 'p',
-        name: 'Párrafo',
+        name: 'Texto',
         data: {
           content: 'Cliente: {{name}} · Fecha: {{create_date}}',
           class: 'p-2 text-sm text-slate-500',
@@ -85,7 +85,7 @@ const seed = {
       {
         id: 'seedheader',
         tag: 'p',
-        name: 'Párrafo',
+        name: 'Texto',
         data: { content: 'Template Creator · Informe', class: 'p-2 text-sm font-semibold text-blue-700' },
         children: [],
       },
@@ -98,7 +98,7 @@ const seed = {
       {
         id: 'seedfooter',
         tag: 'p',
-        name: 'Párrafo',
+        name: 'Texto',
         data: { content: 'Documento generado con Template Creator', class: 'p-2 text-xs text-slate-400' },
         children: [],
       },

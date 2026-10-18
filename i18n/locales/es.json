@@ -161,13 +161,72 @@
       "section": "Básicos",
       "hint": "Arrastra un componente al lienzo",
       "components": {
-        "paragraph": "Párrafo",
+        "text": "Texto",
         "table": "Tabla",
         "row": "Fila",
         "col": "Columna",
         "image": "Imagen",
         "checkbox": "Casilla",
-        "container": "Contenedor"
+        "container": "Contenedor",
+        "barcode": "Código de barras",
+        "defaultText": "escribe aquí..."
+      },
+      "templates": {
+        "title": "Plantillas precreadas",
+        "hint": "Carga una plantilla y edítala en el lienzo",
+        "items": {
+          "invoice": {
+            "title": "Factura",
+            "desc": "Cabecera con logo, tabla de conceptos, totales y datos del cliente.",
+            "features": ["Cabecera y pie", "Tabla", "Handlebars", "CSS"]
+          },
+          "report": {
+            "title": "Informe",
+            "desc": "KPIs en filas y columnas, dos tablas y reglas CSS propias.",
+            "features": ["Filas y columnas", "Tablas", "CSS"]
+          },
+          "certificate": {
+            "title": "Certificado",
+            "desc": "Diseño centrado con sello, casilla de verificación y borde doble.",
+            "features": ["Tres zonas", "Imagen", "Casilla"]
+          },
+          "contract": {
+            "title": "Contrato",
+            "desc": "Contrato a dos páginas con preámbulo, ocho cláusulas numeradas y las firmas de las dos partes.",
+            "features": ["Tres zonas", "Firmas", "Handlebars"]
+          },
+          "nda": {
+            "title": "Confidencialidad",
+            "desc": "Acuerdo de confidencialidad (NDA) a dos páginas, con ocho cláusulas y las firmas de las dos partes.",
+            "features": ["Cláusulas", "Firmas", "Tres zonas"]
+          },
+          "rental": {
+            "title": "Arrendamiento",
+            "desc": "Contrato de alquiler a dos páginas con renta, fianza, prórroga y firmas de las dos partes.",
+            "features": ["Tres zonas", "Firmas", "Handlebars"]
+          },
+          "receipt": {
+            "title": "Ticket",
+            "desc": "Lista corta con artículos, totales, casilla y pie fiscal.",
+            "features": ["Tabla", "Casilla", "Datos"]
+          },
+          "shipping-label": {
+            "title": "Etiqueta de envío",
+            "desc": "Formato compacto con dirección dinámica y código de barras real (Code 39).",
+            "features": ["Casillas", "Código de barras", "Handlebars"]
+          },
+          "showcase": {
+            "title": "Demo completa",
+            "desc": "Los ocho componentes de la paleta en las tres zonas del lienzo.",
+            "features": ["Todo el sistema", "Tres zonas", "Handlebars"]
+          }
+        },
+        "confirm": {
+          "title": "¿Reemplazar el contenido?",
+          "message": "La plantilla sustituirá el cuerpo, la cabecera, el pie y los datos actuales. Solo el cuerpo se puede deshacer.",
+          "cancel": "Cancelar",
+          "accept": "Cargar plantilla"
+        }
       }
     },
     "toolbar": {
@@ -185,13 +244,40 @@
       "body": "Contenido dinámico",
       "footer": "Pie de página"
     },
+    "doc": {
+      "title": "Documento",
+      "margins": {
+        "title": "Márgenes (mm)",
+        "top": "Superior",
+        "bottom": "Inferior",
+        "left": "Izquierdo",
+        "right": "Derecho"
+      },
+      "format": "Formato",
+      "formats": {
+        "letter": "Carta",
+        "legal": "Legal",
+        "oficio": "Oficio",
+        "a4": "A4"
+      },
+      "orientation": "Orientación",
+      "orientations": {
+        "portrait": "Vertical",
+        "landscape": "Horizontal"
+      },
+      "headerRepeat": "Encabezado en todas las páginas",
+      "footerRepeat": "Pie en todas las páginas",
+      "onlyFirstHint": "Desmarcado: el encabezado se coloca al inicio del contenido y el pie al final; no se repiten en las demás páginas."
+    },
     "settings": {
       "title": "Ajustes del componente",
       "noSelection": "Selecciona un componente del lienzo para editar sus propiedades",
       "delete": "Eliminar componente",
       "fields": {
         "content": "Texto",
-        "name": "Nombre",
+        "name": "Etiqueta",
+        "nodeName": "Nombre del componente",
+        "height": "Alto",
         "value": "Valor",
         "columns": "Columnas",
         "rows": "Filas",

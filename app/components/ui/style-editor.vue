@@ -16,7 +16,6 @@
 import { templateStore } from "../../stores/templateStore";
 const { t } = useI18n();
 const setStyleElTexContent = templateStore().setStyleElTexContent;
-const setStyleEl = templateStore().setStyleEl;
 const cssCode = computed({
   get() {
     return templateStore().cssCode;
@@ -26,10 +25,9 @@ const cssCode = computed({
   },
 });
 if (process.client) {
-  const el = document.createElement("style");
-  el.setAttribute("data-dynamic-css", "true");
-  document.head.appendChild(el);
-  setStyleEl(el);
+  // Reutiliza el `<style data-dynamic-css>` si ya existe (lo crea el store al
+  // cargar una plantilla o en una visita anterior a esta pestaña).
+  templateStore().ensureStyleEl();
 
   setStyleElTexContent(cssCode.value);
 

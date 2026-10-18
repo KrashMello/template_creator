@@ -20,21 +20,86 @@
       </button>
     </div>
 
-    <div v-if="!selectedElement" class="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
-      <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
-          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <path d="M9 9h6M9 12h6M9 15h4" />
-        </svg>
-      </div>
-      <p class="max-w-[200px] text-sm leading-relaxed text-slate-400">{{ t('editor.settings.noSelection') }}</p>
-    </div>
+    <!-- Ajustes de documento: siempre visibles, aunque no haya selección -->
+    <div class="flex-1 overflow-y-auto">
+      <section class="border-b border-slate-200 bg-slate-50/60 px-5 py-4">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          {{ t('editor.doc.title') }}
+        </span>
 
-    <div id="options" v-else class="flex-1 overflow-y-auto">
-      <form @submit.prevent="saveDataOptions" class="flex flex-col gap-4 px-5 py-4">
+        <div class="mt-3 space-y-3">
+          <div>
+            <span class="block text-xs font-medium text-slate-600 mb-1.5">
+              {{ t('editor.doc.margins.title') }}
+            </span>
+            <div class="grid grid-cols-2 gap-x-3 gap-y-1">
+              <ui-input v-model.number="store.page.margins.top" type="number"
+                :title="t('editor.doc.margins.top')" />
+              <ui-input v-model.number="store.page.margins.bottom" type="number"
+                :title="t('editor.doc.margins.bottom')" />
+              <ui-input v-model.number="store.page.margins.left" type="number"
+                :title="t('editor.doc.margins.left')" />
+              <ui-input v-model.number="store.page.margins.right" type="number"
+                :title="t('editor.doc.margins.right')" />
+            </div>
+          </div>
+
+          <div>
+            <span class="block text-xs font-medium text-slate-600 mb-1.5">{{ t('editor.doc.format') }}</span>
+            <div class="grid grid-cols-4 gap-1">
+              <button v-for="f in pageFormats" :key="f" :class="segmentClass(store.page.format === f)"
+                @click.prevent="store.page.format = f">
+                {{ t(`editor.doc.formats.${f}`) }}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <span class="block text-xs font-medium text-slate-600 mb-1.5">{{ t('editor.doc.orientation') }}</span>
+            <div class="grid grid-cols-2 gap-1">
+              <button v-for="o in pageOrientations" :key="o" :class="segmentClass(store.page.orientation === o)"
+                @click.prevent="store.page.orientation = o">
+                {{ t(`editor.doc.orientations.${o}`) }}
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-1.5 pt-1">
+            <label class="flex items-start gap-2 cursor-pointer">
+              <input type="checkbox" class="mt-0.5 size-4 shrink-0 accent-blue-600 cursor-pointer"
+                :checked="store.page.headerRepeat"
+                @change="store.page.headerRepeat = $event.target.checked" />
+              <span class="text-xs font-medium text-slate-600">{{ t('editor.doc.headerRepeat') }}</span>
+            </label>
+            <label class="flex items-start gap-2 cursor-pointer">
+              <input type="checkbox" class="mt-0.5 size-4 shrink-0 accent-blue-600 cursor-pointer"
+                :checked="store.page.footerRepeat"
+                @change="store.page.footerRepeat = $event.target.checked" />
+              <span class="text-xs font-medium text-slate-600">{{ t('editor.doc.footerRepeat') }}</span>
+            </label>
+            <p class="text-[10px] leading-snug text-slate-400">{{ t('editor.doc.onlyFirstHint') }}</p>
+          </div>
+        </div>
+      </section>
+
+      <div v-if="!selectedElement" class="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+        <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M9 9h6M9 12h6M9 15h4" />
+          </svg>
+        </div>
+        <p class="max-w-[200px] text-sm leading-relaxed text-slate-400">{{ t('editor.settings.noSelection') }}</p>
+      </div>
+
+      <form v-else id="options" @submit.prevent="saveDataOptions" class="flex flex-col gap-4 px-5 py-4">
+        <ui-input v-model="options.nodeName" type="text"
+          :title="t('editor.settings.fields.nodeName')" :placeholder="selectedNode.name" :onInputt="saveContent" />
         <ui-input v-if="selectedNode.data.content" v-model="options.content" type="textarea"
           :title="t('editor.settings.fields.content')" @blur="saveContent" :placeholder="t('editor.settings.fields.content')" />
+        <ui-input v-if="selectedNode.data.height != null" v-model="options.height" type="number"
+          :title="t('editor.settings.fields.height')" :placeholder="t('editor.settings.fields.height')" :onInputt="saveContent" />
         <ui-input v-if="selectedNode.data.name" v-model="options.name" type="text"
           :title="t('editor.settings.fields.name')" :placeholder="t('editor.settings.fields.name')" :onInputt="saveContent" />
         <ui-input v-if="selectedNode.data.value != null" v-model="options.checkValue" type="checkbox"
@@ -141,6 +206,18 @@ const fontWeights = [
   { value: "font-normal", label: "N" },
   { value: "font-bold", label: "B" },
 ];
+
+/** Botones segmentados de la tarjeta Documento (formato y orientación). */
+const pageFormats: Array<"letter" | "legal" | "oficio" | "a4"> = ["letter", "legal", "oficio", "a4"];
+const pageOrientations: Array<"portrait" | "landscape"> = ["portrait", "landscape"];
+function segmentClass(active: boolean) {
+  return [
+    "flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40",
+    active
+      ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+      : "bg-white text-slate-600 border-slate-200 hover:border-slate-300",
+  ];
+}
 
 const presetColors = [
   { key: "black", class: "text-slate-900", bg: "bg-slate-900" },

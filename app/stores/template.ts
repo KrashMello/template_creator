@@ -1,5 +1,8 @@
-interface ElementDataSet {
+import { code39Svg } from "./barcode";
+
+export interface ElementDataSet {
   id: string;
+  type?: string;
   tag: string;
   name: string;
   data: Record<string, any>;
@@ -59,6 +62,17 @@ export const generateElementHtml = (elementDataSet: ElementDataSet, pdf = false)
     case 'p':
       innerContent = `<${tag} class="${className}">${data.content || ""}</${tag}>`;
       break;
+    case 'barcode': {
+      // `content` es el texto literal, o una expresión completa
+      // (`{{shipment.tracking}}`) para que el valor venga del JSON de datos.
+      const raw = String(data.content || "");
+      const expr = raw.trim().match(/^\{\{([\s\S]+?)\}\}$/);
+      const inner = expr
+        ? `{{barcode ${expr[1].trim()} ${data.height ?? 48}}}`
+        : code39Svg(raw, data.height);
+      innerContent = `<${tag} class="${className}">${inner}</${tag}>`;
+      break;
+    }
     default:
       innerContent = `<${tag} class="${className}">${childHtml}</${tag}>`;
   }

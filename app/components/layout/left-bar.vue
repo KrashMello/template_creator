@@ -31,95 +31,29 @@
           {{ t('editor.leftBar.hint') }}
         </p>
       </section>
+
+      <layout-templates-gallery />
     </div>
   </aside>
 </template>
 <script setup lang="ts">
-import paragraph from "../svg/paragraph.vue";
-import table from "../svg/table.vue";
-import row from "../svg/row.vue";
-import col from "../svg/col.vue";
-import image from "../svg/image.vue";
-import container from "../svg/container.vue";
-import checkbox from "../svg/checkbox.vue";
+import { PALETTE_COMPONENTS } from "../../palette";
 
 const { t } = useI18n();
 
-const rawComponents = shallowRef([
-  {
-    tag: "p",
-    nameKey: "editor.leftBar.components.paragraph",
-    accent: "slate",
-    icon: paragraph,
-    data: {
-      content: "type here...",
-      class: "p-2 text-slate-800 text-sm whitespace-pre-wrap leading-relaxed",
-    },
-  },
-  {
-    tag: "table",
-    nameKey: "editor.leftBar.components.table",
-    icon: table,
-    accent: "blue",
-    data: {
-      table: true,
-      columns: `{{#each table.cols}}
-    <th class="p-4">{{this}}</th>
-  {{/each}}`,
-      rows: `{{#each table.rows}}
-              <tr class="transition-colors hover:bg-zinc-50/80 dark:hover:bg-zinc-900/50">
-{{#each this}}
-    <td class="p-4">{{this}}</td>
-  {{/each}}
-</tr>
-  {{/each}}`,
-      class: "w-full text-sm text-left rtl:text-right text-body",
-    },
-  },
-  {
-    tag: "div",
-    nameKey: "editor.leftBar.components.row",
-    accent: "amber",
-    icon: row,
-    data: { class: "flex flex-row gap-4 min-h-16 w-full px-2" },
-  },
-  {
-    tag: "div",
-    nameKey: "editor.leftBar.components.col",
-    icon: col,
-    data: { class: "flex flex-col gap-4 min-h-16 w-full " },
-  },
-  {
-    tag: "img",
-    nameKey: "editor.leftBar.components.image",
-    accent: "purple",
-    icon: image,
-    data: {
-      class: "size-24 object-cover",
-      src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5Y2FjYmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cmVjdCB4PSIzIiB5PSIzIiB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHJ4PSIyIiByeT0iMiIvPjxjaXJjbGUgY3g9IjguNSIgY3k9IjguNSIgcj0iMS41Ii8+PHBhdGggZD0iTTIxIDE1bC01LTUtNCA0LTQtNC01IDUiLz48L3N2Zz4=",
-    },
-  },
-  {
-    tag: "checkbox",
-    nameKey: "editor.leftBar.components.checkbox",
-    accent: "pink",
-    icon: checkbox,
-    data: {
-      value: false,
-      name: "checkbox"
-    }
-  },
-  {
-    tag: "div",
-    nameKey: "editor.leftBar.components.container",
-    accent: "emerald",
-    icon: container,
-    data: { class: "flex flex-col gap-1 m-auto w-full min-h-16 w-full px-2" },
-  },
-]);
-
+/**
+ * La paleta vive en `app/palette.ts`: las mismas definiciones (y los mismos
+ * `data`) que clonan las plantillas precreadas al construirse.
+ */
 const components = computed(() =>
-  rawComponents.value.map((comp) => ({ ...comp, name: t(comp.nameKey) }))
+  PALETTE_COMPONENTS.map((comp) => ({
+    ...comp,
+    name: t(comp.nameKey),
+    data:
+      comp.id === "text"
+        ? { ...comp.data, content: t("editor.leftBar.components.defaultText") }
+        : comp.data,
+  })),
 );
 </script>
 <style scoped>
