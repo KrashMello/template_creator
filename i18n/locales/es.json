@@ -302,6 +302,29 @@
       "data": "Datos",
       "styles": "Estilos",
       "variables": "Variables disponibles"
+    },
+    "dataForm": {
+      "mode": {
+        "form": "Formulario",
+        "json": "JSON"
+      },
+      "empty": "Sin datos. Añade un campo para empezar.",
+      "fieldName": "Nombre del campo",
+      "addField": "Añadir campo",
+      "deleteField": "Eliminar campo",
+      "addRow": "Añadir fila",
+      "deleteRow": "Eliminar fila",
+      "column": "Columna",
+      "typeOf": "Tipo de {key}",
+      "fieldType": "Tipo de campo",
+      "types": {
+        "texto": "Texto",
+        "numero": "Número",
+        "booleano": "Booleano",
+        "lista": "Lista",
+        "objeto": "Objeto",
+        "tabla": "Tabla"
+      }
     }
   }
 }
