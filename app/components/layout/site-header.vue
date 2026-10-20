@@ -27,7 +27,7 @@
           to="/demo"
           class="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-blue-600 px-3.5 text-sm font-semibold text-white shadow-sm shadow-blue-600/20 transition-all hover:bg-blue-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 active:scale-[0.98] sm:px-4"
         >
-          {{ t('nav.openDemo') }}
+          {{ t('common.demoCta') }}
           <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>

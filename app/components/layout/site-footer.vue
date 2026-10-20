@@ -28,7 +28,7 @@
           <ul class="mt-4 space-y-2.5">
             <li>
               <NuxtLink to="/demo" class="text-sm text-slate-600 transition-colors hover:text-blue-600">
-                {{ t('nav.openDemo') }}
+                {{ t('common.demoCta') }}
               </NuxtLink>
             </li>
           </ul>
