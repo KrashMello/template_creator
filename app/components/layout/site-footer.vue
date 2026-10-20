@@ -39,7 +39,18 @@
       </div>
 
       <div class="mt-10 border-t border-slate-200 pt-6">
-        <p class="text-xs text-slate-400">{{ t('footer.rights', { year: new Date().getFullYear() }) }}</p>
+        <i18n-t keypath="footer.credits" tag="p" class="text-xs text-slate-400">
+          <template #link>
+            <a
+              href="https://krashmello.vercel.app"
+              target="_blank"
+              rel="noopener"
+              class="font-medium text-slate-500 transition-colors hover:text-blue-600"
+            >
+              Krashmello
+            </a>
+          </template>
+        </i18n-t>
       </div>
     </div>
   </footer>

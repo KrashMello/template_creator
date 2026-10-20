@@ -150,7 +150,7 @@
     "tagline": "Visual PDF template builder with dynamic data.",
     "product": "Product",
     "demo": "Demo",
-    "rights": "© {year} Template Creator. All rights reserved."
+    "credits": "Template Creator · Powered by {link}"
   },
   "editor": {
     "backToSite": "Home",
