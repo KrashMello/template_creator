@@ -302,6 +302,29 @@
       "data": "Data",
       "styles": "Styles",
       "variables": "Available variables"
+    },
+    "dataForm": {
+      "mode": {
+        "form": "Form",
+        "json": "JSON"
+      },
+      "empty": "No data yet. Add a field to get started.",
+      "fieldName": "Field name",
+      "addField": "Add field",
+      "deleteField": "Delete field",
+      "addRow": "Add row",
+      "deleteRow": "Delete row",
+      "column": "Column",
+      "typeOf": "Type of {key}",
+      "fieldType": "Field type",
+      "types": {
+        "texto": "Text",
+        "numero": "Number",
+        "booleano": "Boolean",
+        "lista": "List",
+        "objeto": "Object",
+        "tabla": "Table"
+      }
     }
   }
 }

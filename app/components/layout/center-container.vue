@@ -62,8 +62,24 @@
     <div v-if="selectedView === 3" class="min-h-0 flex-1">
       <ui-style-editor />
     </div>
-    <div v-if="selectedView === 4" class="min-h-0 flex-1">
-      <ui-data-editor v-model="data" :title="t('editor.views.data')" />
+    <div v-if="selectedView === 4" class="min-h-0 flex-1 flex flex-col">
+      <div class="flex shrink-0 items-center justify-between gap-2 px-4 pt-4">
+        <h2 class="text-sm font-bold text-slate-800">{{ t('editor.views.data') }}</h2>
+        <div class="flex gap-1">
+          <button type="button" :class="segmentClass(dataMode === 'form')" @click="dataMode = 'form'">
+            {{ t('editor.dataForm.mode.form') }}
+          </button>
+          <button type="button" :class="segmentClass(dataMode === 'json')" @click="dataMode = 'json'">
+            {{ t('editor.dataForm.mode.json') }}
+          </button>
+        </div>
+      </div>
+      <div v-if="dataMode === 'form'" class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+        <ui-data-form :obj="store.data" @change="onDataChange" />
+      </div>
+      <div v-else class="min-h-0 flex-1">
+        <ui-data-editor v-model="data" :title="''" />
+      </div>
     </div>
   </div>
 </template>
@@ -77,6 +93,8 @@ const previewHtmlHeader = computed(() => store.previewHtmlHeader);
 const schemaJson = computed(() => store.schemaJson);
 const selectedView = ref(1);
 const exporting = ref(false);
+/** Modo de la pestaña Datos: formulario tipado o editor JSON. */
+const dataMode = ref("form");
 
 const selectView = (opt) => {
   selectedView.value = opt;
@@ -94,6 +112,29 @@ const data = computed({
     catch (e) { }
   },
 });
+
+/** El formulario muta store.data en vivo; debounce para no recompilar por tecla. */
+let dataRenderTimer = null;
+function onDataChange() {
+  if (dataRenderTimer) clearTimeout(dataRenderTimer);
+  dataRenderTimer = setTimeout(() => {
+    dataRenderTimer = null;
+    store.renderPreview();
+  }, 300);
+}
+onBeforeUnmount(() => {
+  if (dataRenderTimer) clearTimeout(dataRenderTimer);
+});
+
+/** Botones segmentados (mismo estilo que la tarjeta Documento del right-bar). */
+function segmentClass(active) {
+  return [
+    "px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40",
+    active
+      ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+      : "bg-white text-slate-600 border-slate-200 hover:border-slate-300",
+  ];
+}
 const onDragEnter = (event) => {
   event.preventDefault();
   event.stopPropagation();

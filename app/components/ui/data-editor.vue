@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-full flex-col gap-2 p-4">
-    <h2 class="text-sm font-bold text-slate-800">{{ title }}</h2>
+    <h2 v-if="title" class="text-sm font-bold text-slate-800">{{ title }}</h2>
     <div ref="containerRef" class="code-editor-wrapper min-h-0 flex-1" :style="heightStyle">
       <div ref="editorRef" class="code-editor-inner" />
     </div>
