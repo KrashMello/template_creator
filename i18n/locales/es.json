@@ -3,18 +3,19 @@
     "title": "Template Creator — Crea plantillas PDF con drag & drop",
     "description": "Constructor visual de plantillas PDF con drag & drop, datos dinámicos y exportación en un clic."
   },
+  "common": {
+    "demoCta": "Probar la demo"
+  },
   "nav": {
     "features": "Características",
     "screenshots": "Capturas",
     "pricing": "Precios",
-    "faq": "Preguntas",
-    "openDemo": "Abrir demo"
+    "faq": "Preguntas"
   },
   "hero": {
     "badge": "Constructor visual de PDF",
     "title": "Crea plantillas PDF arrastrando y soltando",
     "subtitle": "Template Creator es el editor visual para diseñar documentos profesionales con encabezados, pies, tablas y datos dinámicos — y exportarlos en PDF de alta fidelidad sin escribir una sola línea de código.",
-    "ctaPrimary": "Probar la demo",
     "ctaSecondary": "Ver precios",
     "note": "Sin registro · Gratis para empezar"
   },
@@ -143,8 +144,7 @@
   },
   "cta": {
     "title": "¿Listo para crear tu primera plantilla?",
-    "subtitle": "Abre el editor y ten un PDF profesional en minutos.",
-    "button": "Abrir la demo"
+    "subtitle": "Abre el editor y ten un PDF profesional en minutos."
   },
   "footer": {
     "tagline": "Constructor visual de plantillas PDF con datos dinámicos.",

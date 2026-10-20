@@ -3,18 +3,19 @@
     "title": "Template Creator — Build PDF templates with drag & drop",
     "description": "Visual PDF template builder with drag & drop, dynamic data and one-click export."
   },
+  "common": {
+    "demoCta": "Try the demo"
+  },
   "nav": {
     "features": "Features",
     "screenshots": "Screenshots",
     "pricing": "Pricing",
-    "faq": "FAQ",
-    "openDemo": "Open demo"
+    "faq": "FAQ"
   },
   "hero": {
     "badge": "Visual PDF builder",
     "title": "Build PDF templates by dragging and dropping",
     "subtitle": "Template Creator is the visual editor for designing professional documents with headers, footers, tables and dynamic data — then exporting them as pixel-faithful PDFs without writing a single line of code.",
-    "ctaPrimary": "Try the demo",
     "ctaSecondary": "See pricing",
     "note": "No sign-up · Free to start"
   },
@@ -143,8 +144,7 @@
   },
   "cta": {
     "title": "Ready to create your first template?",
-    "subtitle": "Open the editor and have a professional PDF in minutes.",
-    "button": "Open the demo"
+    "subtitle": "Open the editor and have a professional PDF in minutes."
   },
   "footer": {
     "tagline": "Visual PDF template builder with dynamic data.",
