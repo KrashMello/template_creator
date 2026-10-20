@@ -150,7 +150,7 @@
     "tagline": "Constructor visual de plantillas PDF con datos dinámicos.",
     "product": "Producto",
     "demo": "Demo",
-    "rights": "© {year} Template Creator. Todos los derechos reservados."
+    "credits": "Template Creator · Powered by {link}"
   },
   "editor": {
     "backToSite": "Inicio",
