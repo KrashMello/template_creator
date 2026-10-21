@@ -29,7 +29,7 @@
       },
       {
         "title": "Header, body y footer",
-        "desc": "Tres zonas independientes: encabezado y pie globales que se repiten automáticamente en todas las páginas del PDF."
+        "desc": "Tres zonas independientes: encabezado y pie de página que se repiten automáticamente en todas las páginas del PDF."
       },
       {
         "title": "Datos dinámicos con Handlebars",
@@ -91,7 +91,7 @@
         "features": [
           "Todo lo del plan Gratis",
           "Plantillas ilimitadas",
-          "Encabezados y pies globales",
+          "Encabezados y pies de página",
           "CSS personalizado",
           "Soporte prioritario"
         ],
@@ -240,7 +240,7 @@
       "exporting": "Generando…"
     },
     "zones": {
-      "header": "Encabezado global",
+      "header": "Encabezado de página",
       "body": "Contenido dinámico",
       "footer": "Pie de página"
     },

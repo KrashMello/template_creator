@@ -29,7 +29,7 @@
       },
       {
         "title": "Header, body and footer",
-        "desc": "Three independent zones: global header and footer that repeat automatically on every page of the PDF."
+        "desc": "Three independent zones: page header and footer that repeat automatically on every page of the PDF."
       },
       {
         "title": "Dynamic data with Handlebars",
@@ -91,7 +91,7 @@
         "features": [
           "Everything in Free",
           "Unlimited templates",
-          "Global headers and footers",
+          "Page headers and footers",
           "Custom CSS",
           "Priority support"
         ],
@@ -240,7 +240,7 @@
       "exporting": "Generating…"
     },
     "zones": {
-      "header": "Global header",
+      "header": "Page header",
       "body": "Dynamic content",
       "footer": "Page footer"
     },
