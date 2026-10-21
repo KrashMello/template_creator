@@ -2,17 +2,17 @@
   <section id="features" class="scroll-mt-20 py-20 sm:py-24">
     <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
       <div class="mx-auto max-w-2xl text-center">
-        <h2 class="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+        <h2 class="text-3xl font-bold tracking-tight text-content sm:text-4xl">
           {{ t('features.title') }}
         </h2>
-        <p class="mt-3 text-base text-slate-500 sm:text-lg">{{ t('features.subtitle') }}</p>
+        <p class="mt-3 text-base text-content-muted sm:text-lg">{{ t('features.subtitle') }}</p>
       </div>
 
       <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <div
           v-for="(item, i) in items"
           :key="item.title"
-          class="group relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5"
+          class="group relative rounded-2xl border border-content/10 bg-surface p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg hover:shadow-primary/10"
         >
           <div
             :class="[
@@ -34,8 +34,8 @@
               <path :d="icons[i % icons.length]" />
             </svg>
           </div>
-          <h3 class="mt-4 text-base font-bold text-slate-900">{{ item.title }}</h3>
-          <p class="mt-2 text-sm leading-relaxed text-slate-500">{{ item.desc }}</p>
+          <h3 class="mt-4 text-base font-bold text-content">{{ item.title }}</h3>
+          <p class="mt-2 text-sm leading-relaxed text-content-muted">{{ item.desc }}</p>
         </div>
       </div>
     </div>
@@ -70,11 +70,11 @@ const icons = [
 ]
 
 const accents = [
-  { bg: 'bg-blue-50', fg: 'text-blue-600' },
-  { bg: 'bg-indigo-50', fg: 'text-indigo-600' },
-  { bg: 'bg-emerald-50', fg: 'text-emerald-600' },
-  { bg: 'bg-amber-50', fg: 'text-amber-600' },
-  { bg: 'bg-rose-50', fg: 'text-rose-600' },
-  { bg: 'bg-sky-50', fg: 'text-sky-600' }
+  { bg: 'bg-blue-100 dark:bg-blue-950/50', fg: 'text-blue-700 dark:text-blue-300' },
+  { bg: 'bg-indigo-100 dark:bg-indigo-950/50', fg: 'text-indigo-700 dark:text-indigo-300' },
+  { bg: 'bg-emerald-100 dark:bg-emerald-950/50', fg: 'text-emerald-700 dark:text-emerald-300' },
+  { bg: 'bg-amber-100 dark:bg-amber-950/50', fg: 'text-amber-700 dark:text-amber-300' },
+  { bg: 'bg-rose-100 dark:bg-rose-950/50', fg: 'text-rose-700 dark:text-rose-300' },
+  { bg: 'bg-sky-100 dark:bg-sky-950/50', fg: 'text-sky-700 dark:text-sky-300' }
 ]
 </script>

@@ -39,14 +39,21 @@ export interface PaletteComponent {
   data: Record<string, any>;
 }
 
+/**
+ * Chip/card styling for the palette buttons (Básicos) and the gallery cards
+ * (Plantillas). All accents share the same arctic card look (krashmello
+ * style: neutral surface + frost accent) — the keys are kept because the
+ * palette components and the nine prebuilt templates assign an `accent` to
+ * each item; only the icon glyph differentiates them.
+ */
 export const ACCENT_MAP = {
-  slate: { border: "border-slate-200 hover:border-slate-300", bg: "bg-white hover:bg-slate-50", iconBg: "bg-slate-100", icon: "text-slate-600" },
-  blue: { border: "border-blue-100 hover:border-blue-200", bg: "bg-blue-50/50 hover:bg-blue-50", iconBg: "bg-blue-100", icon: "text-blue-600" },
-  indigo: { border: "border-indigo-100 hover:border-indigo-200", bg: "bg-indigo-50/50 hover:bg-indigo-50", iconBg: "bg-indigo-100", icon: "text-indigo-600" },
-  emerald: { border: "border-emerald-100 hover:border-emerald-200", bg: "bg-emerald-50/50 hover:bg-emerald-50", iconBg: "bg-emerald-100", icon: "text-emerald-600" },
-  purple: { border: "border-purple-100 hover:border-purple-200", bg: "bg-purple-50/50 hover:bg-purple-50", iconBg: "bg-purple-100", icon: "text-purple-600" },
-  amber: { border: "border-amber-100 hover:border-amber-200", bg: "bg-amber-50/50 hover:bg-amber-50", iconBg: "bg-amber-100", icon: "text-amber-600" },
-  pink: { border: "border-pink-100 hover:border-pink-200", bg: "bg-pink-50/50 hover:bg-pink-50", iconBg: "bg-pink-100", icon: "text-pink-600" },
+  slate: { border: "border-content/10 hover:border-accent", bg: "bg-surface hover:bg-surface-alt", iconBg: "bg-accent/10", icon: "text-accent" },
+  blue: { border: "border-content/10 hover:border-accent", bg: "bg-surface hover:bg-surface-alt", iconBg: "bg-accent/10", icon: "text-accent" },
+  indigo: { border: "border-content/10 hover:border-accent", bg: "bg-surface hover:bg-surface-alt", iconBg: "bg-accent/10", icon: "text-accent" },
+  emerald: { border: "border-content/10 hover:border-accent", bg: "bg-surface hover:bg-surface-alt", iconBg: "bg-accent/10", icon: "text-accent" },
+  purple: { border: "border-content/10 hover:border-accent", bg: "bg-surface hover:bg-surface-alt", iconBg: "bg-accent/10", icon: "text-accent" },
+  amber: { border: "border-content/10 hover:border-accent", bg: "bg-surface hover:bg-surface-alt", iconBg: "bg-accent/10", icon: "text-accent" },
+  pink: { border: "border-content/10 hover:border-accent", bg: "bg-surface hover:bg-surface-alt", iconBg: "bg-accent/10", icon: "text-accent" },
 } as const;
 
 export const PALETTE_COMPONENTS: PaletteComponent[] = [

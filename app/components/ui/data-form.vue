@@ -1,99 +1,132 @@
 <template>
   <div class="flex flex-col gap-2.5">
-    <p v-if="!entries.length"
-      class="rounded-xl border-2 border-dashed border-slate-200 bg-white/50 px-4 py-10 text-center text-sm text-slate-400">
-      {{ t("editor.dataForm.empty") }}
-    </p>
+    <div v-if="!entries.length" class="py-6">
+      <UEmpty icon="i-lucide-database" :title="t('editor.dataForm.empty')" />
+    </div>
 
     <div v-for="entry in entries" :key="entry.key">
       <!-- Escalar: string / number / boolean / null -->
       <div v-if="entry.kind === 'scalar'" class="flex items-start gap-1.5">
         <div class="min-w-0 flex-1">
           <div class="mb-1 flex items-center justify-between gap-2">
-            <span class="truncate text-xs font-medium text-slate-600">{{ entry.key }}</span>
-            <select :value="fieldTypeOf(entry.value)" :class="TYPE_SELECT_CLASS"
-              :aria-label="t('editor.dataForm.typeOf', { key: entry.key })" @change="changeType(entry.key, $event)">
-              <option v-for="ft in TYPES" :key="ft" :value="ft">{{ typeLabel(ft) }}</option>
-            </select>
+            <span class="truncate text-xs font-medium text-content-muted">{{ entry.key }}</span>
+            <USelect
+              :model-value="fieldTypeOf(entry.value)"
+              :items="typeItems"
+              size="xs"
+              class="w-24"
+              :aria-label="t('editor.dataForm.typeOf', { key: entry.key })"
+              @update:model-value="changeType(entry.key, $event)"
+            />
           </div>
-          <input v-if="typeof entry.value === 'boolean'" type="checkbox"
-            class="size-4 shrink-0 cursor-pointer accent-blue-600" :checked="entry.value === true"
-            :aria-label="entry.key" @change="onBoolChange(entry.key, $event)" />
-          <textarea v-else-if="isLongText(entry.value)" rows="3" :value="stringValue(entry.value)"
-            :class="`${FIELD_CLASS} resize-y`" @input="onTextInput(entry.key, $event)" />
-          <input v-else :type="typeof entry.value === 'number' ? 'number' : 'text'" :value="stringValue(entry.value)"
-            :class="FIELD_CLASS" @input="onScalarInput(entry.key, $event)" />
+          <UCheckbox
+            v-if="typeof entry.value === 'boolean'"
+            :model-value="entry.value === true"
+            size="sm"
+            :aria-label="entry.key"
+            @update:model-value="onBoolChange(entry.key, $event)"
+          />
+          <UTextarea
+            v-else-if="isLongText(entry.value)"
+            :model-value="stringValue(entry.value)"
+            :rows="3"
+            size="sm"
+            class="w-full resize-y"
+            @update:model-value="onTextInput(entry.key, $event)"
+          />
+          <UInput
+            v-else
+            :type="typeof entry.value === 'number' ? 'number' : 'text'"
+            :model-value="stringValue(entry.value)"
+            size="sm"
+            class="w-full"
+            @update:model-value="onScalarInput(entry.key, $event)"
+          />
         </div>
-        <button type="button" :class="[ICON_BTN, 'mt-6']" :title="t('editor.dataForm.deleteField')"
-          @click="removeField(entry.key)">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18" />
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-          </svg>
-        </button>
+        <UButton
+          icon="i-lucide-trash-2"
+          color="error"
+          variant="ghost"
+          square
+          size="xs"
+          class="mt-6"
+          :title="t('editor.dataForm.deleteField')"
+          @click="removeField(entry.key)"
+        />
       </div>
 
       <!-- Objeto: tarjeta plegable con campos anidados (recursivo) -->
-      <div v-else-if="entry.kind === 'object'" class="rounded-xl border border-slate-200 bg-white p-3">
+      <div v-else-if="entry.kind === 'object'" class="rounded-xl border border-content/10 bg-surface p-3">
         <div class="flex items-center justify-between gap-2">
           <button type="button" class="flex min-w-0 items-center gap-1.5" @click="toggleCollapse(entry.key)">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-              class="shrink-0 text-slate-400 transition-transform" :class="{ 'rotate-90': !isCollapsed(entry.key) }">
+              class="shrink-0 text-content-muted transition-transform" :class="{ 'rotate-90': !isCollapsed(entry.key) }">
               <polyline points="9 18 15 12 9 6" />
             </svg>
-            <span class="truncate text-xs font-bold text-slate-700">{{ entry.key }}</span>
+            <span class="truncate text-xs font-bold text-content">{{ entry.key }}</span>
           </button>
           <div class="flex shrink-0 items-center gap-1.5">
-            <select :value="fieldTypeOf(entry.value)" :class="TYPE_SELECT_CLASS"
-              :aria-label="t('editor.dataForm.typeOf', { key: entry.key })" @change="changeType(entry.key, $event)">
-              <option v-for="ft in TYPES" :key="ft" :value="ft">{{ typeLabel(ft) }}</option>
-            </select>
-            <button type="button" :class="ICON_BTN" :title="t('editor.dataForm.deleteField')"
-              @click="removeField(entry.key)">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 6h18" />
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-              </svg>
-            </button>
+            <USelect
+              :model-value="fieldTypeOf(entry.value)"
+              :items="typeItems"
+              size="xs"
+              class="w-24"
+              :aria-label="t('editor.dataForm.typeOf', { key: entry.key })"
+              @update:model-value="changeType(entry.key, $event)"
+            />
+            <UButton
+              icon="i-lucide-trash-2"
+              color="error"
+              variant="ghost"
+              square
+              size="xs"
+              :title="t('editor.dataForm.deleteField')"
+              @click="removeField(entry.key)"
+            />
           </div>
         </div>
-        <div v-show="!isCollapsed(entry.key)" class="mt-3 border-l-2 border-slate-100 pl-3">
+        <div v-show="!isCollapsed(entry.key)" class="mt-3 border-l-2 border-content/10 pl-3">
           <DataForm :obj="entry.value" @change="forward" />
         </div>
       </div>
 
       <!-- Array: rejilla (matriz u objetos) o lista de primitivos -->
-      <div v-else-if="entry.kind === 'array'" class="rounded-xl border border-slate-200 bg-white p-3">
+      <div v-else-if="entry.kind === 'array'" class="rounded-xl border border-content/10 bg-surface p-3">
         <div class="flex items-center justify-between gap-2">
           <div class="flex min-w-0 items-center gap-1.5">
-            <span class="truncate text-xs font-bold text-slate-700">{{ entry.key }}</span>
-            <span class="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
+            <span class="truncate text-xs font-bold text-content">{{ entry.key }}</span>
+            <span class="rounded-full bg-surface-alt px-1.5 py-0.5 text-[10px] font-semibold text-content-muted">
               {{ entry.value.length }}
             </span>
           </div>
           <div class="flex shrink-0 items-center gap-1">
-            <select :value="fieldTypeOf(entry.value)" :class="TYPE_SELECT_CLASS"
-              :aria-label="t('editor.dataForm.typeOf', { key: entry.key })" @change="changeType(entry.key, $event)">
-              <option v-for="ft in TYPES" :key="ft" :value="ft">{{ typeLabel(ft) }}</option>
-            </select>
-            <button type="button" :class="ADD_ROW_BTN" @click="addRow(entry.key)">
-              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="3" stroke-linecap="round">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
+            <USelect
+              :model-value="fieldTypeOf(entry.value)"
+              :items="typeItems"
+              size="xs"
+              class="w-24"
+              :aria-label="t('editor.dataForm.typeOf', { key: entry.key })"
+              @update:model-value="changeType(entry.key, $event)"
+            />
+            <UButton
+              icon="i-lucide-plus"
+              color="primary"
+              variant="soft"
+              size="xs"
+              @click="addRow(entry.key)"
+            >
               {{ t("editor.dataForm.addRow") }}
-            </button>
-            <button type="button" :class="ICON_BTN" :title="t('editor.dataForm.deleteField')"
-              @click="removeField(entry.key)">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 6h18" />
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-              </svg>
-            </button>
+            </UButton>
+            <UButton
+              icon="i-lucide-trash-2"
+              color="error"
+              variant="ghost"
+              square
+              size="xs"
+              :title="t('editor.dataForm.deleteField')"
+              @click="removeField(entry.key)"
+            />
           </div>
         </div>
 
@@ -104,26 +137,33 @@
               <thead>
                 <tr>
                   <th v-for="(h, i) in matrixHeaders(entry.key, entry.value)" :key="i"
-                    class="border-b border-slate-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    class="border-b border-content/10 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-content-muted">
                     {{ h }}
                   </th>
-                  <th class="w-8 border-b border-slate-200" />
+                  <th class="w-8 border-b border-content/10" />
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(row, ri) in entry.value" :key="ri" class="border-b border-slate-100 last:border-0">
+                <tr v-for="(row, ri) in entry.value" :key="ri" class="border-b border-content/10 last:border-0">
                   <td v-for="(cell, ci) in row" :key="ci" class="p-1 align-top">
-                    <input :type="typeof cell === 'number' ? 'number' : 'text'" :value="cell" :class="CELL_CLASS"
-                      @input="onCellInput(entry.key, ri, ci, $event)" />
+                    <UInput
+                      :type="typeof cell === 'number' ? 'number' : 'text'"
+                      :model-value="cell"
+                      size="xs"
+                      class="w-full"
+                      @update:model-value="onCellInput(entry.key, ri, ci, $event)"
+                    />
                   </td>
                   <td class="p-1 text-right align-top">
-                    <button type="button" :class="SMALL_ICON_BTN" :title="t('editor.dataForm.deleteRow')"
-                      @click="removeRow(entry.key, ri)">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 6 6 18M6 6l12 12" />
-                      </svg>
-                    </button>
+                    <UButton
+                      icon="i-lucide-x"
+                      color="error"
+                      variant="ghost"
+                      square
+                      size="xs"
+                      :title="t('editor.dataForm.deleteRow')"
+                      @click="removeRow(entry.key, ri)"
+                    />
                   </td>
                 </tr>
               </tbody>
@@ -136,28 +176,41 @@
               <thead>
                 <tr>
                   <th v-for="col in objectColumns(entry.value)" :key="col"
-                    class="border-b border-slate-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    class="border-b border-content/10 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-content-muted">
                     {{ col }}
                   </th>
-                  <th class="w-8 border-b border-slate-200" />
+                  <th class="w-8 border-b border-content/10" />
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(row, ri) in entry.value" :key="ri" class="border-b border-slate-100 last:border-0">
+                <tr v-for="(row, ri) in entry.value" :key="ri" class="border-b border-content/10 last:border-0">
                   <td v-for="col in objectColumns(entry.value)" :key="col" class="p-1 align-top">
-                    <input v-if="typeof row[col] === 'boolean'" type="checkbox" class="mt-1 size-4 accent-blue-600"
-                      :checked="row[col] === true" @change="onObjectCellBool(entry.key, ri, col, $event)" />
-                    <input v-else :type="typeof row[col] === 'number' ? 'number' : 'text'" :value="row[col] ?? ''"
-                      :class="CELL_CLASS" @input="onObjectCellInput(entry.key, ri, col, $event)" />
+                    <UCheckbox
+                      v-if="typeof row[col] === 'boolean'"
+                      :model-value="row[col] === true"
+                      size="sm"
+                      class="mt-1"
+                      @update:model-value="onObjectCellBool(entry.key, ri, col, $event)"
+                    />
+                    <UInput
+                      v-else
+                      :type="typeof row[col] === 'number' ? 'number' : 'text'"
+                      :model-value="row[col] ?? ''"
+                      size="xs"
+                      class="w-full"
+                      @update:model-value="onObjectCellInput(entry.key, ri, col, $event)"
+                    />
                   </td>
                   <td class="p-1 text-right align-top">
-                    <button type="button" :class="SMALL_ICON_BTN" :title="t('editor.dataForm.deleteRow')"
-                      @click="removeRow(entry.key, ri)">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 6 6 18M6 6l12 12" />
-                      </svg>
-                    </button>
+                    <UButton
+                      icon="i-lucide-x"
+                      color="error"
+                      variant="ghost"
+                      square
+                      size="xs"
+                      :title="t('editor.dataForm.deleteRow')"
+                      @click="removeRow(entry.key, ri)"
+                    />
                   </td>
                 </tr>
               </tbody>
@@ -167,17 +220,29 @@
           <!-- Lista de primitivos -->
           <ul v-else class="flex flex-col gap-2">
             <li v-for="(item, i) in entry.value" :key="i" class="flex items-center gap-1.5">
-              <input v-if="typeof item === 'boolean'" type="checkbox" class="size-4 shrink-0 accent-blue-600"
-                :checked="item === true" @change="onListItemBool(entry.key, i, $event)" />
-              <input v-else :type="typeof item === 'number' ? 'number' : 'text'" :value="item"
-                :class="`${CELL_CLASS} flex-1`" @input="onListItemInput(entry.key, i, $event)" />
-              <button type="button" :class="SMALL_ICON_BTN" :title="t('editor.dataForm.deleteRow')"
-                @click="removeRow(entry.key, i)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M18 6 6 18M6 6l12 12" />
-                </svg>
-              </button>
+              <UCheckbox
+                v-if="typeof item === 'boolean'"
+                :model-value="item === true"
+                size="sm"
+                @update:model-value="onListItemBool(entry.key, i, $event)"
+              />
+              <UInput
+                v-else
+                :type="typeof item === 'number' ? 'number' : 'text'"
+                :model-value="item"
+                size="xs"
+                class="flex-1"
+                @update:model-value="onListItemInput(entry.key, i, $event)"
+              />
+              <UButton
+                icon="i-lucide-x"
+                color="error"
+                variant="ghost"
+                square
+                size="xs"
+                :title="t('editor.dataForm.deleteRow')"
+                @click="removeRow(entry.key, i)"
+              />
             </li>
           </ul>
         </div>
@@ -186,18 +251,29 @@
 
     <!-- Añadir campo nuevo a este objeto (con tipo) -->
     <form class="flex items-center gap-2" @submit.prevent="addField">
-      <input v-model="newFieldName" :class="`${FIELD_CLASS} flex-1`" :placeholder="t('editor.dataForm.fieldName')" />
-      <select v-model="newFieldType" :class="TYPE_ADD_SELECT_CLASS" :aria-label="t('editor.dataForm.fieldType')">
-        <option v-for="ft in TYPES" :key="ft" :value="ft">{{ typeLabel(ft) }}</option>
-      </select>
-      <button type="submit" :disabled="!newFieldName.trim()"
-        class="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40">
-        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="3" stroke-linecap="round">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
+      <UInput
+        v-model="newFieldName"
+        size="sm"
+        class="flex-1"
+        :placeholder="t('editor.dataForm.fieldName')"
+      />
+      <USelect
+        v-model="newFieldType"
+        :items="typeItems"
+        size="sm"
+        class="w-24"
+        :aria-label="t('editor.dataForm.fieldType')"
+      />
+      <UButton
+        type="submit"
+        icon="i-lucide-plus"
+        color="neutral"
+        variant="outline"
+        size="sm"
+        :disabled="!newFieldName.trim()"
+      >
         {{ t("editor.dataForm.addField") }}
-      </button>
+      </UButton>
     </form>
   </div>
 </template>
@@ -221,21 +297,6 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const FIELD_CLASS =
-  "block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30";
-const CELL_CLASS =
-  "w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30";
-const ICON_BTN =
-  "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-red-50 hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50";
-const SMALL_ICON_BTN =
-  "flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-300 transition-colors hover:bg-red-50 hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50";
-const ADD_ROW_BTN =
-  "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold text-blue-600 transition-colors hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
-const TYPE_SELECT_CLASS =
-  "shrink-0 cursor-pointer rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30";
-const TYPE_ADD_SELECT_CLASS =
-  "shrink-0 cursor-pointer rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-600 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30";
-
 // ── Tipos de campo ───────────────────────────────────────────────────────────
 
 /** Tipos que el formulario puede mostrar/crear para una clave. */
@@ -256,6 +317,8 @@ function fieldTypeOf(value: any): FieldType {
 function typeLabel(type: FieldType) {
   return t(`editor.dataForm.types.${type}`);
 }
+
+const typeItems = computed(() => TYPES.map((ft) => ({ label: typeLabel(ft), value: ft })));
 
 /** Valor vacío con el que se inicializa un campo al crearlo o cambiarle el tipo. */
 function emptyValueOf(type: FieldType): any {
@@ -327,19 +390,18 @@ function setField(key: string, value: any) {
   forward();
 }
 
-function onScalarInput(key: string, e: Event) {
-  const raw = (e.target as HTMLInputElement).value;
+function onScalarInput(key: string, raw: string | number) {
   // Un campo numérico conserva su tipo mientras haya valor; vacío pasa a string.
   const value = typeof props.obj[key] === "number" && raw !== "" ? Number(raw) : raw;
   setField(key, value);
 }
 
-function onTextInput(key: string, e: Event) {
-  setField(key, (e.target as HTMLTextAreaElement).value);
+function onTextInput(key: string, value: string) {
+  setField(key, value);
 }
 
-function onBoolChange(key: string, e: Event) {
-  setField(key, (e.target as HTMLInputElement).checked);
+function onBoolChange(key: string, value: boolean) {
+  setField(key, value);
 }
 
 function removeField(key: string) {
@@ -348,8 +410,7 @@ function removeField(key: string) {
 }
 
 /** Cambia el tipo de un campo, inicializándolo al valor vacío del nuevo tipo. */
-function changeType(key: string, e: Event) {
-  const type = (e.target as HTMLSelectElement).value as FieldType;
+function changeType(key: string, type: FieldType) {
   setField(key, emptyValueOf(type));
 }
 
@@ -425,35 +486,33 @@ function removeRow(key: string, index: number) {
   forward();
 }
 
-function onCellInput(key: string, ri: number, ci: number, e: Event) {
+function onCellInput(key: string, ri: number, ci: number, value: string) {
   const arr = (props.obj as Record<string, any>)[key];
-  arr[ri][ci] = (e.target as HTMLInputElement).value;
+  arr[ri][ci] = value;
   forward();
 }
 
-function onObjectCellInput(key: string, ri: number, col: string, e: Event) {
+function onObjectCellInput(key: string, ri: number, col: string, raw: string | number) {
   const arr = (props.obj as Record<string, any>)[key];
-  const raw = (e.target as HTMLInputElement).value;
   arr[ri][col] = typeof arr[ri][col] === "number" && raw !== "" ? Number(raw) : raw;
   forward();
 }
 
-function onObjectCellBool(key: string, ri: number, col: string, e: Event) {
+function onObjectCellBool(key: string, ri: number, col: string, value: boolean) {
   const arr = (props.obj as Record<string, any>)[key];
-  arr[ri][col] = (e.target as HTMLInputElement).checked;
+  arr[ri][col] = value;
   forward();
 }
 
-function onListItemInput(key: string, i: number, e: Event) {
+function onListItemInput(key: string, i: number, raw: string | number) {
   const arr = (props.obj as Record<string, any>)[key];
-  const raw = (e.target as HTMLInputElement).value;
   arr[i] = typeof arr[i] === "number" && raw !== "" ? Number(raw) : raw;
   forward();
 }
 
-function onListItemBool(key: string, i: number, e: Event) {
+function onListItemBool(key: string, i: number, value: boolean) {
   const arr = (props.obj as Record<string, any>)[key];
-  arr[i] = (e.target as HTMLInputElement).checked;
+  arr[i] = value;
   forward();
 }
 </script>

@@ -1,19 +1,16 @@
 <template>
-  <aside class="left-panel flex flex-col h-full bg-white border-r border-slate-200">
-    <div class="flex items-center gap-2.5 border-b border-slate-200 px-4 py-3.5">
-      <NuxtLink to="/" class="group flex items-center gap-2.5 focus-visible:outline-none">
-        <img
-          src="/short-logo.png"
-          alt=""
-          class="h-7 w-7 rounded-md shadow-sm ring-1 ring-slate-200 transition-transform group-hover:scale-105"
-        />
-        <span class="text-sm font-bold tracking-tight text-slate-900">Template Creator</span>
+  <aside class="left-panel flex flex-col h-full bg-surface border-r border-content/10">
+    <div class="flex h-14 items-center gap-2.5 border-b border-content/10 px-4">
+      <NuxtLink to="/" class="flex items-center gap-2.5 focus-visible:outline-none">
+        <img src="/logo-light.png" alt="" class="h-7 w-7 dark:hidden" />
+        <img src="/logo-dark.png" alt="" class="hidden h-7 w-7 dark:block" />
+        <span class="text-sm font-bold tracking-tight text-content">Template Creator</span>
       </NuxtLink>
     </div>
 
     <div class="flex-1 overflow-y-auto px-3 py-4 space-y-4">
       <section>
-        <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3 px-1">
+        <h3 class="text-[10px] font-bold uppercase tracking-widest text-content-muted mb-3 px-1">
           {{ t('editor.leftBar.section') }}
         </h3>
         <div class="grid grid-cols-2 gap-2">
@@ -27,12 +24,10 @@
             :accent="comp.accent"
           />
         </div>
-        <p class="mt-4 rounded-lg bg-slate-50 px-3 py-2.5 text-center text-[11px] leading-relaxed text-slate-400">
+        <p class="mt-4 rounded-lg bg-surface-alt px-3 py-2.5 text-center text-[11px] leading-relaxed text-content-muted">
           {{ t('editor.leftBar.hint') }}
         </p>
       </section>
-
-      <layout-templates-gallery />
     </div>
   </aside>
 </template>

@@ -1,10 +1,10 @@
 <template>
   <div class="flex h-full flex-col gap-2 p-4">
-    <h2 class="text-sm font-bold text-slate-800">{{ t('editor.views.styles') }}</h2>
+    <h2 class="text-sm font-bold text-content">{{ t('editor.views.styles') }}</h2>
     <div class="min-h-0 flex-1">
       <textarea
         v-model="cssCode"
-        class="h-full w-full resize-none rounded-lg border border-slate-200 bg-white p-3 font-mono text-sm text-slate-700 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+        class="h-full w-full resize-none rounded-lg border border-content/10 bg-surface p-3 font-mono text-sm text-content transition-colors hover:border-content/25 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/40"
         spellcheck="false"
         placeholder="/* Tailwind / CSS */"
       />

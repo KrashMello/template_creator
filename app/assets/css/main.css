@@ -1,11 +1,89 @@
 @import "tailwindcss";
+@import "@nuxt/ui";
 
-/* Design tokens (referenced by ui/button.vue and friends) */
-@theme {
-  --color-primary: #2563eb;
-  --color-primary-foreground: #ffffff;
-  --color-ring: #2563eb;
+/* Dark mode is toggled with a `.dark` class on <html> (same as krashmello.vercel.app) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Arctic (Nord) design tokens */
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-content: var(--content);
+  --color-content-muted: var(--content-muted);
+  --color-accent: var(--accent);
+  --color-primary: var(--accent);
+  --color-primary-hover: var(--accent-strong);
+  --color-primary-foreground: var(--accent-fg);
+  --color-ring: var(--accent);
+  --color-danger: #bf616a; /* aurora red, readable on both themes */
+  /* Paper stays white: generated documents, previews and thumbnails */
   --color-background: #ffffff;
+
+  --color-nord-0: #2e3440;
+  --color-nord-1: #3b4252;
+  --color-nord-3: #4c566a;
+  --color-nord-9: #81a1c1;
+  --color-nord-15: #b48ead;
+  --color-aurora-green: #a3be8c;
+}
+
+:root {
+  --surface: #eceff4;
+  --surface-alt: #d8dee9;
+  --content: #2e3440;
+  --content-muted: #4c566a;
+  --accent: #5e81ac;
+  --accent-strong: #4c74ab;
+  --accent-fg: #ffffff;
+  color-scheme: light;
+
+  /* Nuxt UI semantic tokens → arctic palette. Declared once on :root: the
+   * var() substitution is lazy, so `.dark`/system redefinitions of --surface
+   * & co. on the same element flip these too. */
+  --ui-bg: var(--surface);
+  --ui-bg-muted: var(--surface-alt);
+  --ui-bg-elevated: var(--surface);
+  --ui-bg-accented: var(--surface-alt);
+  --ui-bg-inverted: var(--content);
+  --ui-text: var(--content);
+  --ui-text-dimmed: var(--content-muted);
+  --ui-text-muted: var(--content-muted);
+  --ui-text-toned: var(--content-muted);
+  --ui-text-highlighted: var(--content);
+  --ui-text-inverted: var(--surface);
+  --ui-primary: var(--accent);
+  --ui-secondary: var(--surface-alt);
+  --ui-error: #bf616a; /* aurora red, readable on both themes */
+  --ui-border: rgb(46 52 64 / 0.1); /* = border-content/10 */
+}
+
+.dark {
+  --surface: #2e3440;
+  --surface-alt: #3b4252;
+  --content: #e5e9f0;
+  --content-muted: #d8dee9;
+  --accent: #88c0d0;
+  --accent-strong: #7fb0d0;
+  --accent-fg: #2e3440;
+  color-scheme: dark;
+
+  --ui-border: rgb(229 233 240 / 0.1); /* = border-content/10 on dark */
+}
+
+/* No explicit choice saved yet → follow the OS preference */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --surface: #2e3440;
+    --surface-alt: #3b4252;
+    --content: #e5e9f0;
+    --content-muted: #d8dee9;
+    --accent: #88c0d0;
+    --accent-strong: #7fb0d0;
+    --accent-fg: #2e3440;
+    color-scheme: dark;
+
+    --ui-border: rgb(229 233 240 / 0.1);
+  }
 }
 
 html {
@@ -13,6 +91,11 @@ html {
 }
 
 body {
+  background-color: var(--surface);
+  color: var(--content);
+  transition:
+    background-color 0.5s ease-in-out,
+    color 0.5s ease-in-out;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-family:

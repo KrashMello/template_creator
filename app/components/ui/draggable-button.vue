@@ -14,7 +14,7 @@
       <component :is="props.icon" :class="['w-4 h-4', accentClasses.icon]" />
     </div>
 
-    <span class="text-xs font-semibold text-slate-700 text-center leading-tight">
+    <span class="text-xs font-semibold text-content text-center leading-tight">
       {{ props.name }}
     </span>
   </div>

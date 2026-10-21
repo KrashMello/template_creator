@@ -4,7 +4,8 @@
     "description": "Visual PDF template builder with drag & drop, dynamic data and one-click export."
   },
   "common": {
-    "demoCta": "Try the demo"
+    "demoCta": "Try the demo",
+    "theme": "Change theme"
   },
   "nav": {
     "features": "Features",
@@ -13,7 +14,6 @@
     "faq": "FAQ"
   },
   "hero": {
-    "badge": "Visual PDF builder",
     "title": "Build PDF templates by dragging and dropping",
     "subtitle": "Template Creator is the visual editor for designing professional documents with headers, footers, tables and dynamic data — then exporting them as pixel-faithful PDFs without writing a single line of code.",
     "ctaSecondary": "See pricing",
@@ -29,7 +29,7 @@
       },
       {
         "title": "Header, body and footer",
-        "desc": "Three independent zones: global header and footer that repeat automatically on every page of the PDF."
+        "desc": "Three independent zones: page header and footer that repeat automatically on every page of the PDF."
       },
       {
         "title": "Dynamic data with Handlebars",
@@ -91,7 +91,7 @@
         "features": [
           "Everything in Free",
           "Unlimited templates",
-          "Global headers and footers",
+          "Page headers and footers",
           "Custom CSS",
           "Priority support"
         ],
@@ -170,63 +170,63 @@
         "container": "Container",
         "barcode": "Barcode",
         "defaultText": "type here..."
-      },
-      "templates": {
-        "title": "Prebuilt templates",
-        "hint": "Load a template and edit it on the canvas",
-        "items": {
-          "invoice": {
-            "title": "Invoice",
-            "desc": "Header with logo, line-items table, totals and client data.",
-            "features": ["Header & footer", "Table", "Handlebars", "CSS"]
-          },
-          "report": {
-            "title": "Report",
-            "desc": "KPIs in rows and columns, two tables and custom CSS rules.",
-            "features": ["Rows & columns", "Tables", "CSS"]
-          },
-          "certificate": {
-            "title": "Certificate",
-            "desc": "Centered design with a seal, verification checkbox and double border.",
-            "features": ["Three zones", "Image", "Checkbox"]
-          },
-          "contract": {
-            "title": "Contract",
-            "desc": "Two-page contract with a preamble, eight numbered clauses and both parties' signatures.",
-            "features": ["Three zones", "Signatures", "Handlebars"]
-          },
-          "nda": {
-            "title": "NDA",
-            "desc": "Two-page non-disclosure agreement with eight clauses and both parties' signatures.",
-            "features": ["Clauses", "Signatures", "Three zones"]
-          },
-          "rental": {
-            "title": "Lease",
-            "desc": "Two-page lease with rent, deposit, renewal and both parties' signatures.",
-            "features": ["Three zones", "Signatures", "Handlebars"]
-          },
-          "receipt": {
-            "title": "Receipt",
-            "desc": "Short list with items, totals, a checkbox and a fiscal footer.",
-            "features": ["Table", "Checkbox", "Data"]
-          },
-          "shipping-label": {
-            "title": "Shipping label",
-            "desc": "Compact format with a dynamic address and a real Code 39 barcode.",
-            "features": ["Checkboxes", "Barcode", "Handlebars"]
-          },
-          "showcase": {
-            "title": "Full demo",
-            "desc": "All eight palette components across the three canvas zones.",
-            "features": ["Whole system", "Three zones", "Handlebars"]
-          }
+      }
+    },
+    "templates": {
+      "title": "Prebuilt templates",
+      "placeholder": "Load template…",
+      "items": {
+        "invoice": {
+          "title": "Invoice",
+          "desc": "Header with logo, line-items table, totals and client data.",
+          "features": ["Header & footer", "Table", "Handlebars", "CSS"]
         },
-        "confirm": {
-          "title": "Replace the content?",
-          "message": "The template will replace the body, header, footer and data. Only the body can be undone.",
-          "cancel": "Cancel",
-          "accept": "Load template"
+        "report": {
+          "title": "Report",
+          "desc": "KPIs in rows and columns, two tables and custom CSS rules.",
+          "features": ["Rows & columns", "Tables", "CSS"]
+        },
+        "certificate": {
+          "title": "Certificate",
+          "desc": "Centered design with a seal, verification checkbox and double border.",
+          "features": ["Three zones", "Image", "Checkbox"]
+        },
+        "contract": {
+          "title": "Contract",
+          "desc": "Two-page contract with a preamble, eight numbered clauses and both parties' signatures.",
+          "features": ["Three zones", "Signatures", "Handlebars"]
+        },
+        "nda": {
+          "title": "NDA",
+          "desc": "Two-page non-disclosure agreement with eight clauses and both parties' signatures.",
+          "features": ["Clauses", "Signatures", "Three zones"]
+        },
+        "rental": {
+          "title": "Lease",
+          "desc": "Two-page lease with rent, deposit, renewal and both parties' signatures.",
+          "features": ["Three zones", "Signatures", "Handlebars"]
+        },
+        "receipt": {
+          "title": "Receipt",
+          "desc": "Short list with items, totals, a checkbox and a fiscal footer.",
+          "features": ["Table", "Checkbox", "Data"]
+        },
+        "shipping-label": {
+          "title": "Shipping label",
+          "desc": "Compact format with a dynamic address and a real Code 39 barcode.",
+          "features": ["Checkboxes", "Barcode", "Handlebars"]
+        },
+        "showcase": {
+          "title": "Full demo",
+          "desc": "All eight palette components across the three canvas zones.",
+          "features": ["Whole system", "Three zones", "Handlebars"]
         }
+      },
+      "confirm": {
+        "title": "Replace the content?",
+        "message": "The template will replace the body, header, footer and data. Only the body can be undone.",
+        "cancel": "Cancel",
+        "accept": "Load template"
       }
     },
     "toolbar": {
@@ -240,7 +240,7 @@
       "exporting": "Generating…"
     },
     "zones": {
-      "header": "Global header",
+      "header": "Page header",
       "body": "Dynamic content",
       "footer": "Page footer"
     },
@@ -270,7 +270,8 @@
       "onlyFirstHint": "Unchecked: the header is placed at the start of the content and the footer at the end; neither repeats on later pages."
     },
     "settings": {
-      "title": "Component settings",
+      "title": "Settings",
+      "componentTitle": "Component settings",
       "noSelection": "Select a component on the canvas to edit its properties",
       "delete": "Delete component",
       "fields": {
