@@ -270,7 +270,8 @@
       "onlyFirstHint": "Desmarcado: el encabezado se coloca al inicio del contenido y el pie al final; no se repiten en las demás páginas."
     },
     "settings": {
-      "title": "Ajustes del componente",
+      "title": "Ajustes",
+      "componentTitle": "Ajustes del componente",
       "noSelection": "Selecciona un componente del lienzo para editar sus propiedades",
       "delete": "Eliminar componente",
       "fields": {

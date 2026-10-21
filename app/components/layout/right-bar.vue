@@ -1,22 +1,7 @@
 <template>
   <div class="right-panel flex flex-col h-full bg-surface border-l border-content/10 overflow-hidden">
-    <div class="h-14 px-5 border-b border-content/10 flex items-center justify-between flex-shrink-0">
-      <div class="min-w-0">
-        <h2 class="text-sm font-bold text-content">{{ t('editor.settings.title') }}</h2>
-        <p class="mt-0.5 truncate text-[10px] uppercase tracking-wider text-content-muted">
-          {{ selectedElement ? `${selectedElement.tagName} ${selectedNode.name}` : '—' }}
-        </p>
-      </div>
-      <UButton
-        v-if="selectedElement"
-        icon="i-lucide-trash-2"
-        color="error"
-        variant="ghost"
-        square
-        size="sm"
-        :title="t('editor.settings.delete')"
-        @click="deleteElement"
-      />
+    <div class="h-14 px-5 border-b border-content/10 flex items-center flex-shrink-0">
+      <h2 class="text-sm font-bold text-content">{{ t('editor.settings.title') }}</h2>
     </div>
 
     <!-- Ajustes de documento: siempre visibles, aunque no haya selección -->
@@ -85,67 +70,91 @@
         </div>
       </section>
 
-      <div v-if="!selectedElement" class="px-6 py-16">
-        <UEmpty icon="i-lucide-mouse-pointer-2" :title="t('editor.settings.noSelection')" />
-      </div>
-
-      <form v-else id="options" @submit.prevent="saveDataOptions" class="flex flex-col gap-4 px-5 py-4">
-        <ui-input v-model="options.nodeName" type="text"
-          :title="t('editor.settings.fields.nodeName')" :placeholder="selectedNode.name" @update:model-value="saveContent" />
-        <ui-input v-if="selectedNode.data.content" v-model="options.content" type="textarea"
-          :title="t('editor.settings.fields.content')" @blur="saveContent" :placeholder="t('editor.settings.fields.content')" />
-        <ui-input v-if="selectedNode.data.height != null" v-model="options.height" type="number"
-          :title="t('editor.settings.fields.height')" :placeholder="t('editor.settings.fields.height')" @update:model-value="saveContent" />
-        <ui-input v-if="selectedNode.data.name" v-model="options.name" type="text"
-          :title="t('editor.settings.fields.name')" :placeholder="t('editor.settings.fields.name')" @update:model-value="saveContent" />
-        <ui-input v-if="selectedNode.data.value != null" v-model="options.checkValue" type="checkbox"
-          :title="t('editor.settings.fields.value')" @update:model-value="saveContent" />
-        <ui-input v-if="selectedNode.data.columns" v-model="options.columns" type="textarea"
-          :title="t('editor.settings.fields.columns')" :placeholder="t('editor.settings.fields.columns')" />
-        <ui-input v-if="selectedNode.data.src" @change="onImageFile" :title="t('editor.settings.fields.file')"
-          :placeholder="t('editor.settings.fields.file')" type="file" accept="image/*" />
-        <ui-input v-if="selectedNode.data.rows" v-model="options.rows" type="textarea"
-          :title="t('editor.settings.fields.rows')" :placeholder="t('editor.settings.fields.rows')" />
-
-        <section class="rounded-xl border border-content/10 bg-surface-alt/60 p-4">
+      <!-- Ajustes del componente: sección propia debajo del documento -->
+      <section class="border-b border-content/10 bg-surface-alt/60 px-5 py-4">
+        <div class="flex items-center justify-between gap-2">
           <span class="text-[10px] font-bold uppercase tracking-widest text-content-muted">
-            {{ t('editor.settings.fields.styleLayout') }}
+            {{ t('editor.settings.componentTitle') }}
           </span>
-          <div class="mt-3 space-y-3">
-            <ui-input v-model="options.class" :title="t('editor.settings.fields.class')" placeholder="classes" />
+          <div v-if="selectedElement" class="flex items-center gap-1 min-w-0">
+            <span class="truncate text-xs font-medium text-content">
+              {{ selectedElement.tagName }} {{ selectedNode.name }}
+            </span>
+            <UButton
+              icon="i-lucide-trash-2"
+              color="error"
+              variant="ghost"
+              square
+              size="sm"
+              class="flex-shrink-0"
+              :title="t('editor.settings.delete')"
+              @click="deleteElement"
+            />
+          </div>
+        </div>
 
-            <div v-if="selectedNode.tag === 'p'" class="space-y-4 pt-1">
-              <div>
-                <label class="block text-xs font-medium text-content-muted mb-1.5">{{ t('editor.settings.fields.fontWeight') }}</label>
-                <div class="flex gap-1">
-                  <UButton v-for="fw in fontWeights" :key="fw.value" size="xs" block
-                    :color="localFontWeight === fw.value ? 'primary' : 'neutral'"
-                    :variant="localFontWeight === fw.value ? 'solid' : 'outline'"
-                    @click.prevent="localFontWeight = fw.value; saveFontWeight()">
-                    {{ fw.label }}
-                  </UButton>
+        <div v-if="!selectedElement" class="px-1 py-10">
+          <UEmpty icon="i-lucide-mouse-pointer-2" :title="t('editor.settings.noSelection')" />
+        </div>
+
+        <form v-else id="options" @submit.prevent="saveDataOptions" class="flex flex-col gap-4 mt-3">
+          <ui-input v-model="options.nodeName" type="text"
+            :title="t('editor.settings.fields.nodeName')" :placeholder="selectedNode.name" @update:model-value="saveContent" />
+          <ui-input v-if="selectedNode.data.content" v-model="options.content" type="textarea"
+            :title="t('editor.settings.fields.content')" @blur="saveContent" :placeholder="t('editor.settings.fields.content')" />
+          <ui-input v-if="selectedNode.data.height != null" v-model="options.height" type="number"
+            :title="t('editor.settings.fields.height')" :placeholder="t('editor.settings.fields.height')" @update:model-value="saveContent" />
+          <ui-input v-if="selectedNode.data.name" v-model="options.name" type="text"
+            :title="t('editor.settings.fields.name')" :placeholder="t('editor.settings.fields.name')" @update:model-value="saveContent" />
+          <ui-input v-if="selectedNode.data.value != null" v-model="options.checkValue" type="checkbox"
+            :title="t('editor.settings.fields.value')" @update:model-value="saveContent" />
+          <ui-input v-if="selectedNode.data.columns" v-model="options.columns" type="textarea"
+            :title="t('editor.settings.fields.columns')" :placeholder="t('editor.settings.fields.columns')" />
+          <ui-input v-if="selectedNode.data.src" @change="onImageFile" :title="t('editor.settings.fields.file')"
+            :placeholder="t('editor.settings.fields.file')" type="file" accept="image/*" />
+          <ui-input v-if="selectedNode.data.rows" v-model="options.rows" type="textarea"
+            :title="t('editor.settings.fields.rows')" :placeholder="t('editor.settings.fields.rows')" />
+  
+          <section class="rounded-xl border border-content/10 bg-surface-alt/60 p-4">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-content-muted">
+              {{ t('editor.settings.fields.styleLayout') }}
+            </span>
+            <div class="mt-3 space-y-3">
+              <ui-input v-model="options.class" :title="t('editor.settings.fields.class')" placeholder="classes" />
+  
+              <div v-if="selectedNode.tag === 'p'" class="space-y-4 pt-1">
+                <div>
+                  <label class="block text-xs font-medium text-content-muted mb-1.5">{{ t('editor.settings.fields.fontWeight') }}</label>
+                  <div class="flex gap-1">
+                    <UButton v-for="fw in fontWeights" :key="fw.value" size="xs" block
+                      :color="localFontWeight === fw.value ? 'primary' : 'neutral'"
+                      :variant="localFontWeight === fw.value ? 'solid' : 'outline'"
+                      @click.prevent="localFontWeight = fw.value; saveFontWeight()">
+                      {{ fw.label }}
+                    </UButton>
+                  </div>
                 </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-medium text-content-muted mb-1.5">{{ t('editor.settings.fields.textColor') }}</label>
-                <div class="flex gap-2 items-center flex-wrap">
-                  <!-- Colores de papel: clases Tailwind reales, no dependen del tema de la app -->
-                  <button v-for="color in presetColors" :key="color.class" :class="[
-                    'w-6 h-6 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                    localColor === color.class ? 'border-primary scale-110' : 'border-transparent hover:scale-110',
-                    color.bg,
-                  ]" @click.prevent="localColor = color.class; saveColor()" :title="t(`editor.settings.colors.${color.key}`)" />
-                  <input type="color"
-                    class="w-6 h-6 rounded-full border border-content/10 cursor-pointer bg-transparent p-0"
-                    :title="t('editor.settings.fields.customColor')"
-                    @change="(e) => console.log(e.target.value)" />
+  
+                <div>
+                  <label class="block text-xs font-medium text-content-muted mb-1.5">{{ t('editor.settings.fields.textColor') }}</label>
+                  <div class="flex gap-2 items-center flex-wrap">
+                    <!-- Colores de papel: clases Tailwind reales, no dependen del tema de la app -->
+                    <button v-for="color in presetColors" :key="color.class" :class="[
+                      'w-6 h-6 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                      localColor === color.class ? 'border-primary scale-110' : 'border-transparent hover:scale-110',
+                      color.bg,
+                    ]" @click.prevent="localColor = color.class; saveColor()" :title="t(`editor.settings.colors.${color.key}`)" />
+                    <input type="color"
+                      class="w-6 h-6 rounded-full border border-content/10 cursor-pointer bg-transparent p-0"
+                      :title="t('editor.settings.fields.customColor')"
+                      @change="(e) => console.log(e.target.value)" />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
-      </form>
+          </section>
+        </form>
+      </section>
     </div>
   </div>
 </template>

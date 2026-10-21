@@ -270,7 +270,8 @@
       "onlyFirstHint": "Unchecked: the header is placed at the start of the content and the footer at the end; neither repeats on later pages."
     },
     "settings": {
-      "title": "Component settings",
+      "title": "Settings",
+      "componentTitle": "Component settings",
       "noSelection": "Select a component on the canvas to edit its properties",
       "delete": "Delete component",
       "fields": {
