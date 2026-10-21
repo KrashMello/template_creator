@@ -81,7 +81,7 @@ export const generateElementHtml = (elementDataSet: ElementDataSet, pdf = false)
 
   return `
     <div id="${id}" class="${GLOBAL_COMPONENT_STYLE}" draggable="true">
-      <div class="flex group items-center font-bold text-sm gap-4">
+      <div class="flex group items-center font-bold text-sm gap-4 text-slate-800">
         ${ICONS.drag}
         <span class="flex-1">${name ?? tag}</span>
         <button class="hidden group-hover:flex items-center justify-center size-5 rounded-sm bg-red-100 text-red-500 text-sm font-bold leading-none border-none cursor-pointer [transition:all_0.15s] z-50" data-id="${id}" data-function="delete">×</button>
