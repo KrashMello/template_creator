@@ -12,11 +12,7 @@
         <div class="zone-header flex flex-col">
           <div>
             <div class="zone-label zone-label--header">
-              <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2">
-                <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z" />
-                <path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4" />
-              </svg>
+              <UIcon name="i-lucide-panel-top" class="size-3" />
               {{ t('editor.zones.header') }}
             </div>
           </div>
@@ -27,11 +23,7 @@
         <div class="zone-body flex flex-col">
           <div>
             <div class="zone-label zone-label--body">
-              <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M9 9h6M9 12h6M9 15h4" />
-              </svg>
+              <UIcon name="i-lucide-panel-top-open" class="size-3" />
               {{ t('editor.zones.body') }}
             </div>
           </div>
@@ -42,11 +34,7 @@
         <div class="zone-footer flex flex-col">
           <div>
             <div class="zone-label zone-label--footer">
-              <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2">
-                <path d="M3 5h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5z" />
-                <path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4" />
-              </svg>
+              <UIcon name="i-lucide-panel-bottom" class="size-3" />
               {{ t('editor.zones.footer') }}
             </div>
           </div>
@@ -66,12 +54,16 @@
       <div class="flex shrink-0 items-center justify-between gap-2 px-4 pt-4">
         <h2 class="text-sm font-bold text-content">{{ t('editor.views.data') }}</h2>
         <div class="flex gap-1">
-          <button type="button" :class="segmentClass(dataMode === 'form')" @click="dataMode = 'form'">
-            {{ t('editor.dataForm.mode.form') }}
-          </button>
-          <button type="button" :class="segmentClass(dataMode === 'json')" @click="dataMode = 'json'">
-            {{ t('editor.dataForm.mode.json') }}
-          </button>
+          <UButton
+            v-for="mode in ['form', 'json']"
+            :key="mode"
+            size="xs"
+            :color="dataMode === mode ? 'primary' : 'neutral'"
+            :variant="dataMode === mode ? 'solid' : 'outline'"
+            @click="dataMode = mode"
+          >
+            {{ t(`editor.dataForm.mode.${mode}`) }}
+          </UButton>
         </div>
       </div>
       <div v-if="dataMode === 'form'" class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
@@ -126,15 +118,6 @@ onBeforeUnmount(() => {
   if (dataRenderTimer) clearTimeout(dataRenderTimer);
 });
 
-/** Botones segmentados (mismo estilo que la tarjeta Documento del right-bar). */
-function segmentClass(active) {
-  return [
-    "px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
-    active
-      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-      : "bg-surface text-content-muted border-content/10 hover:border-content/25",
-  ];
-}
 const onDragEnter = (event) => {
   event.preventDefault();
   event.stopPropagation();

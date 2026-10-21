@@ -11,14 +11,7 @@
     </div>
 
     <div class="mx-auto w-full max-w-6xl px-4 pb-20 pt-14 text-center sm:px-6 sm:pt-20">
-      <span
-        class="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-surface/80 px-3 py-1 text-xs font-semibold text-accent shadow-sm"
-      >
-        <span class="h-1.5 w-1.5 rounded-full bg-accent/100" />
-        {{ t('hero.badge') }}
-      </span>
-
-      <h1 class="mx-auto mt-6 max-w-3xl text-4xl font-extrabold tracking-tight text-content sm:text-5xl lg:text-6xl">
+      <h1 class="mx-auto max-w-3xl text-4xl font-extrabold tracking-tight text-content sm:text-5xl lg:text-6xl">
         {{ t('hero.title') }}
       </h1>
 
@@ -27,15 +20,15 @@
       </p>
 
       <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <NuxtLink
+        <UButton
           to="/demo"
-          class="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary-hover hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-surface active:scale-[0.98]"
+          trailing-icon="i-lucide-arrow-right"
+          color="primary"
+          variant="solid"
+          class="h-12 rounded-full px-7 font-semibold shadow-lg shadow-primary/25 hover:shadow-xl active:scale-[0.98]"
         >
           {{ t('common.demoCta') }}
-          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </NuxtLink>
+        </UButton>
         <!-- secondary CTA ("See pricing") hidden while pricing section is disabled
         <a
           href="#pricing"

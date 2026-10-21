@@ -1,6 +1,6 @@
 <template>
   <aside class="left-panel flex flex-col h-full bg-surface border-r border-content/10">
-    <div class="flex items-center gap-2.5 border-b border-content/10 px-4 py-3.5">
+    <div class="flex h-14 items-center gap-2.5 border-b border-content/10 px-4">
       <NuxtLink to="/" class="flex items-center gap-2.5 focus-visible:outline-none">
         <img src="/logo-light.png" alt="" class="h-7 w-7 dark:hidden" />
         <img src="/logo-dark.png" alt="" class="hidden h-7 w-7 dark:block" />

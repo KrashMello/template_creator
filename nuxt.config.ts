@@ -40,7 +40,7 @@ export default defineNuxtConfig({
       tailwindcss()
     ]
   },
-  modules: ['@pinia/nuxt', 'pinia-plugin-persistedstate', '@nuxtjs/i18n'],
+  modules: ['@nuxt/ui', '@pinia/nuxt', 'pinia-plugin-persistedstate', '@nuxtjs/i18n'],
   i18n: {
     locales: [
       { code: 'es', language: 'es-ES', name: 'Español', file: 'es.json' },

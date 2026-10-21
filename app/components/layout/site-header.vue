@@ -8,28 +8,28 @@
       </NuxtLink>
 
       <nav class="hidden items-center gap-7 md:flex">
-        <a
+        <ULink
           v-for="link in links"
           :key="link.href"
           :href="link.href"
           class="text-sm font-medium text-content-muted transition-colors hover:text-content"
         >
           {{ link.label }}
-        </a>
+        </ULink>
       </nav>
 
       <div class="flex items-center gap-2 sm:gap-3">
         <ui-theme-toggle />
         <ui-locale-switcher />
-        <NuxtLink
+        <UButton
           to="/demo"
-          class="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-primary px-3.5 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all hover:bg-primary-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-surface active:scale-[0.98] sm:px-4"
+          trailing-icon="i-lucide-arrow-right"
+          color="primary"
+          variant="solid"
+          class="h-9 rounded-full px-3.5 font-semibold shadow-sm shadow-primary/25 hover:shadow-md active:scale-[0.98] sm:px-4"
         >
           {{ t('common.demoCta') }}
-          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </NuxtLink>
+        </UButton>
       </div>
     </div>
   </header>

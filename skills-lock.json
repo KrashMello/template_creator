@@ -36,6 +36,12 @@
       "sourceType": "autoskills-registry",
       "computedHash": "8a52f7cd26bc9bbc477a086b9c33a901fd6c68df8cd7d49417270e44c1ad88c6"
     },
+    "nuxt-ui": {
+      "source": "onmax/nuxt-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nuxt-ui/SKILL.md",
+      "computedHash": "54f1702fbcbb49e7bae05cb333d02ccf16bcfb6b54984116021e3aeead24b652"
+    },
     "seo": {
       "source": "addyosmani/web-quality-skills",
       "sourceType": "autoskills-registry",

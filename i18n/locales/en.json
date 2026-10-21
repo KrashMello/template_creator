@@ -14,7 +14,6 @@
     "faq": "FAQ"
   },
   "hero": {
-    "badge": "Visual PDF builder",
     "title": "Build PDF templates by dragging and dropping",
     "subtitle": "Template Creator is the visual editor for designing professional documents with headers, footers, tables and dynamic data — then exporting them as pixel-faithful PDFs without writing a single line of code.",
     "ctaSecondary": "See pricing",

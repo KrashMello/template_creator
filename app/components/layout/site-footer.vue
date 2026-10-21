@@ -17,9 +17,9 @@
           <h3 class="text-xs font-bold uppercase tracking-widest text-content-muted">{{ t('footer.product') }}</h3>
           <ul class="mt-4 space-y-2.5">
             <li v-for="link in productLinks" :key="link.href">
-              <a :href="link.href" class="text-sm text-content-muted transition-colors hover:text-accent">
+              <ULink :href="link.href" class="text-sm text-content-muted transition-colors hover:text-accent">
                 {{ link.label }}
-              </a>
+              </ULink>
             </li>
           </ul>
         </div>
@@ -28,9 +28,9 @@
           <h3 class="text-xs font-bold uppercase tracking-widest text-content-muted">{{ t('footer.demo') }}</h3>
           <ul class="mt-4 space-y-2.5">
             <li>
-              <NuxtLink to="/demo" class="text-sm text-content-muted transition-colors hover:text-accent">
+              <ULink to="/demo" class="text-sm text-content-muted transition-colors hover:text-accent">
                 {{ t('common.demoCta') }}
-              </NuxtLink>
+              </ULink>
             </li>
           </ul>
           <div class="mt-5">

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@nuxt/ui";
 
 /* Dark mode is toggled with a `.dark` class on <html> (same as krashmello.vercel.app) */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -35,6 +36,25 @@
   --accent-strong: #4c74ab;
   --accent-fg: #ffffff;
   color-scheme: light;
+
+  /* Nuxt UI semantic tokens → arctic palette. Declared once on :root: the
+   * var() substitution is lazy, so `.dark`/system redefinitions of --surface
+   * & co. on the same element flip these too. */
+  --ui-bg: var(--surface);
+  --ui-bg-muted: var(--surface-alt);
+  --ui-bg-elevated: var(--surface);
+  --ui-bg-accented: var(--surface-alt);
+  --ui-bg-inverted: var(--content);
+  --ui-text: var(--content);
+  --ui-text-dimmed: var(--content-muted);
+  --ui-text-muted: var(--content-muted);
+  --ui-text-toned: var(--content-muted);
+  --ui-text-highlighted: var(--content);
+  --ui-text-inverted: var(--surface);
+  --ui-primary: var(--accent);
+  --ui-secondary: var(--surface-alt);
+  --ui-error: #bf616a; /* aurora red, readable on both themes */
+  --ui-border: rgb(46 52 64 / 0.1); /* = border-content/10 */
 }
 
 .dark {
@@ -46,6 +66,8 @@
   --accent-strong: #7fb0d0;
   --accent-fg: #2e3440;
   color-scheme: dark;
+
+  --ui-border: rgb(229 233 240 / 0.1); /* = border-content/10 on dark */
 }
 
 /* No explicit choice saved yet → follow the OS preference */
@@ -59,6 +81,8 @@
     --accent-strong: #7fb0d0;
     --accent-fg: #2e3440;
     color-scheme: dark;
+
+    --ui-border: rgb(229 233 240 / 0.1);
   }
 }
 

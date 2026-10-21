@@ -207,6 +207,11 @@ export const templateStore = defineStore("template", {
         this.updateSchemaDisplay();
       }
     },
+    /** Borra el elemento seleccionado (botón del panel derecho y Backspace). */
+    deleteElement() {
+      if (this.selectedElement) this.deleteElementById(this.selectedElement.id, this.selectedType);
+    },
+
     setStyleEl(el) {
       this.styleEl = el;
     },
