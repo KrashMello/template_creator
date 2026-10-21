@@ -28,8 +28,6 @@
           {{ t('editor.leftBar.hint') }}
         </p>
       </section>
-
-      <layout-templates-gallery />
     </div>
   </aside>
 </template>

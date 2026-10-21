@@ -59,6 +59,11 @@
       </svg>
     </ui-button>
 
+    <span class="mx-1 hidden h-5 w-px bg-content/15 sm:block" />
+
+    <!-- Plantillas precreadas -->
+    <layout-template-select />
+
     <div class="ml-auto flex items-center gap-2">
       <ui-locale-switcher class="hidden sm:inline-flex" />
       <ui-theme-toggle class="hidden sm:inline-flex" />

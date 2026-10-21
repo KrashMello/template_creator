@@ -1,48 +1,17 @@
 <template>
-  <section>
-    <button
-      type="button"
-      class="flex w-full items-center justify-between rounded-lg px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-      :aria-expanded="open"
-      :aria-controls="'templates-gallery'"
-      @click="open = !open"
+  <div class="flex items-center">
+    <label for="tc-template-select" class="sr-only">{{ t('editor.templates.title') }}</label>
+    <select
+      id="tc-template-select"
+      v-model="selected"
+      :class="SELECT_CLASS"
+      @change="onChange"
     >
-      <span class="text-[10px] font-bold uppercase tracking-widest text-content-muted">
-        {{ t('editor.leftBar.templates.title') }}
-      </span>
-      <svg
-        class="h-3.5 w-3.5 text-content-muted transition-transform duration-200"
-        :class="{ 'rotate-180': !open }"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
-      >
-        <path d="m6 9 6 6 6-6" />
-      </svg>
-    </button>
-
-    <div v-if="open" id="templates-gallery" class="mt-3 space-y-3">
-      <p class="rounded-lg bg-surface-alt px-3 py-2.5 text-center text-[11px] leading-relaxed text-content-muted">
-        {{ t('editor.leftBar.templates.hint') }}
-      </p>
-
-      <!-- Mismo aspecto que los botones de la paleta; el pulso carga la plantilla. -->
-      <div class="grid grid-cols-2 gap-2">
-        <ui-template-button
-          v-for="tpl in templates"
-          :key="tpl.id"
-          :name="itemTitle(tpl.id)"
-          :icon="ICONS[tpl.id]"
-          :accent="ACCENTS[tpl.id]"
-          :description="itemDesc(tpl.id)"
-          :click="() => requestLoad(tpl)"
-        />
-      </div>
-    </div>
+      <option value="" disabled>{{ t('editor.templates.placeholder') }}</option>
+      <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">
+        {{ itemTitle(tpl.id) }}
+      </option>
+    </select>
 
     <Teleport to="body">
       <div
@@ -87,28 +56,19 @@
 
           <div class="mt-5 flex justify-end gap-2">
             <ui-button variant="outline" class="h-8 px-3" :click="cancel">
-              <span class="text-xs font-semibold">{{ t('editor.leftBar.templates.confirm.cancel') }}</span>
+              <span class="text-xs font-semibold">{{ t('editor.templates.confirm.cancel') }}</span>
             </ui-button>
             <ui-button variant="primary" class="h-8 px-3" :click="accept">
-              <span class="text-xs font-semibold">{{ t('editor.leftBar.templates.confirm.accept') }}</span>
+              <span class="text-xs font-semibold">{{ t('editor.templates.confirm.accept') }}</span>
             </ui-button>
           </div>
         </div>
       </div>
     </Teleport>
-  </section>
+  </div>
 </template>
 
 <script setup lang="ts">
-import certificateIcon from "../svg/certificate.vue";
-import contractIcon from "../svg/contract.vue";
-import invoiceIcon from "../svg/invoice.vue";
-import ndaIcon from "../svg/nda.vue";
-import rentalIcon from "../svg/rental.vue";
-import reportIcon from "../svg/report.vue";
-import shippingIcon from "../svg/shipping.vue";
-import showcaseIcon from "../svg/showcase.vue";
-import ticketIcon from "../svg/ticket.vue";
 import { templateStore } from "../../stores/templateStore";
 import { PREBUILT_TEMPLATES, renderTemplateDoc, toTemplateLocale } from "../../templates";
 import type { PrebuiltTemplate } from "../../templates";
@@ -116,35 +76,16 @@ import type { PrebuiltTemplate } from "../../templates";
 const { t, tm, locale } = useI18n();
 const store = templateStore();
 
-const open = ref(true);
-const pending = ref<PrebuiltTemplate | null>(null);
-const dialogRef = ref<HTMLElement | null>(null);
+const SELECT_CLASS =
+  "h-8 max-w-[170px] cursor-pointer rounded-lg border border-content/10 bg-surface px-2 text-xs font-semibold text-content transition-colors hover:border-content/25 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/40";
 
 const templates = PREBUILT_TEMPLATES;
 
-const ICONS: Record<string, any> = {
-  invoice: invoiceIcon,
-  report: reportIcon,
-  certificate: certificateIcon,
-  contract: contractIcon,
-  nda: ndaIcon,
-  rental: rentalIcon,
-  receipt: ticketIcon,
-  "shipping-label": shippingIcon,
-  showcase: showcaseIcon,
-};
-
-const ACCENTS: Record<string, string> = {
-  invoice: "blue",
-  report: "indigo",
-  certificate: "amber",
-  contract: "slate",
-  nda: "purple",
-  rental: "emerald",
-  receipt: "pink",
-  "shipping-label": "emerald",
-  showcase: "purple",
-};
+/** Plantilla realmente cargada; sirve para restaurar el select al cancelar. */
+const applied = ref("");
+const selected = ref("");
+const pending = ref<PrebuiltTemplate | null>(null);
+const dialogRef = ref<HTMLElement | null>(null);
 
 /**
  * Miniatura en vivo: el HTML real de la plantilla (con Handlebars resuelto y
@@ -174,30 +115,33 @@ const hasContent = computed(
     !!store.cssCode.trim(),
 );
 
-const confirmTitle = computed(() => t("editor.leftBar.templates.confirm.title"));
-const confirmMessage = computed(() => t("editor.leftBar.templates.confirm.message"));
+const confirmTitle = computed(() => t("editor.templates.confirm.title"));
+const confirmMessage = computed(() => t("editor.templates.confirm.message"));
 
-const itemTitle = (id: string) => t(`editor.leftBar.templates.items.${id}.title`);
-const itemDesc = (id: string) => t(`editor.leftBar.templates.items.${id}.desc`);
+const itemTitle = (id: string) => t(`editor.templates.items.${id}.title`);
 const itemFeatures = (id: string): string[] => {
-  const key = `editor.leftBar.templates.items.${id}.features`;
+  const key = `editor.templates.items.${id}.features`;
   const list = tm(key) as unknown[];
   if (!Array.isArray(list)) return [];
   return list.map((_, i) => t(`${key}.${i}`));
 };
 
-function requestLoad(tpl: PrebuiltTemplate) {
+function onChange() {
+  const tpl = templates.find((item) => item.id === selected.value);
+  if (!tpl) return;
   if (hasContent.value) pending.value = tpl;
   else apply(tpl);
 }
 
 function apply(tpl: PrebuiltTemplate) {
   store.loadTemplate(tpl.build({ locale: toTemplateLocale(locale.value) }));
+  applied.value = tpl.id;
   pending.value = null;
 }
 
 function cancel() {
   pending.value = null;
+  selected.value = applied.value;
 }
 
 function accept() {
