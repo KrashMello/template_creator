@@ -1,9 +1,9 @@
 <template>
-  <div class="flex w-full flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-2 shadow-sm">
+  <div class="flex w-full flex-wrap items-center gap-1.5 rounded-xl border border-content/10 bg-surface px-2.5 py-2 shadow-sm">
     <NuxtLink
       to="/"
       :title="t('editor.backToSite')"
-      class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+      class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-content-muted transition-colors hover:bg-surface-alt hover:text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -12,7 +12,7 @@
       </svg>
     </NuxtLink>
 
-    <span class="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
+    <span class="mx-1 hidden h-5 w-px bg-content/15 sm:block" />
 
     <!-- View tabs -->
     <div class="flex items-center gap-1">
@@ -29,7 +29,7 @@
       </ui-button>
     </div>
 
-    <span class="mx-1 hidden h-5 w-px bg-slate-200 sm:block" />
+    <span class="mx-1 hidden h-5 w-px bg-content/15 sm:block" />
 
     <!-- History -->
     <ui-button
@@ -61,6 +61,7 @@
 
     <div class="ml-auto flex items-center gap-2">
       <ui-locale-switcher class="hidden sm:inline-flex" />
+      <ui-theme-toggle class="hidden sm:inline-flex" />
       <ui-button variant="primary" class="h-8 px-3" :title="t('editor.toolbar.export')" @click="$emit('export')">
         <span class="text-xs font-semibold">
           {{ exporting ? t('editor.toolbar.exporting') : t('editor.toolbar.export') }}

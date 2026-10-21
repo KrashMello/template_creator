@@ -1,24 +1,24 @@
 <template>
   <div class="flex flex-col gap-2">
-    <label class=" block text-xs font-medium text-slate-600 mb-1" :for="inputId">{{ props.title }}</label>
+    <label class=" block text-xs font-medium text-content-muted mb-1" :for="inputId">{{ props.title }}</label>
     <div v-if="props.type === 'textarea'" class="relative">
       <!-- <textarea :id="inputId" v-model="proxyValue" :class="CLASS" :placeholder="props.placeholder"></textarea> -->
       <textarea ref="inputRef" :id="inputId" v-bind="$attrs" :value="props.modelValue" @input="onInput" @keydown="onKeyDown"
         @blur="onBlur" :class="`${CLASS} ${$attrs.class}`" />
       <Teleport to="body">
         <div v-if="showDropdown && filteredKeys.length" :style="dropdownStyle"
-          class="fixed z-[9999] bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden w-56">
-          <div class="px-3 py-2 border-b border-slate-100 bg-slate-50">
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{{ t('editor.views.variables') }}</span>
+          class="fixed z-[9999] bg-surface border border-content/10 rounded-xl shadow-2xl overflow-hidden w-56">
+          <div class="px-3 py-2 border-b border-content/10 bg-surface-alt">
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-content-muted">{{ t('editor.views.variables') }}</span>
           </div>
           <ul class="max-h-48 overflow-y-auto py-1">
             <li v-for="(key, i) in filteredKeys" :key="key" :class="[
               'flex items-center gap-2 px-3 py-2 cursor-pointer text-sm transition-colors',
-              i === activeIndex ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50',
+              i === activeIndex ? 'bg-accent/10 text-accent' : 'text-content hover:bg-surface-alt',
             ]" @mousedown.prevent="selectKey(key)">
-              <span class="text-blue-400 font-mono text-xs">&#123;&#123;</span>
+              <span class="text-accent/80 font-mono text-xs">&#123;&#123;</span>
               <span class="font-mono font-medium">{{ key }}</span>
-              <span class="text-blue-400 font-mono text-xs">&#125;&#125;</span>
+              <span class="text-accent/80 font-mono text-xs">&#125;&#125;</span>
             </li>
           </ul>
         </div>
@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { templateStore } from "../../stores/templateStore";
 const CLASS =
-  "w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+  "w-full px-3 py-2 text-sm border border-content/10 rounded-lg bg-surface transition-colors hover:border-content/25 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
 
 const emit = defineEmits(["update:modelValue"]);
 const activeIndex = ref(0);

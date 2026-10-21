@@ -6,7 +6,7 @@
     :class="[
       'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium',
       'transition-all duration-150 ease-in-out active:scale-[0.97]',
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40',
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
       'disabled:pointer-events-none disabled:opacity-40',
       '[&_svg]:pointer-events-none [&_svg]:shrink-0',
       variantClasses,
@@ -47,18 +47,18 @@ const props = defineProps({
 const variantClasses = computed(() => {
   switch (props.variant) {
     case "ghost":
-      return "text-slate-500 hover:bg-slate-100 hover:text-slate-800";
+      return "text-content-muted hover:bg-surface-alt hover:text-content";
     case "outline":
-      return "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50";
+      return "border border-content/10 bg-surface text-content-muted hover:border-content/25 hover:bg-surface-alt";
     default:
-      return "bg-blue-600 text-white shadow-sm shadow-blue-600/20 hover:bg-blue-700 hover:shadow-md";
+      return "bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary-hover hover:shadow-md";
   }
 });
 
 const activeClasses = computed(() => {
   if (!props.active) return "";
   return props.variant === "ghost"
-    ? "bg-slate-900 text-white shadow-sm hover:bg-slate-900 hover:text-white"
-    : "ring-2 ring-blue-500/40";
+    ? "bg-content text-surface shadow-sm hover:bg-content hover:text-surface"
+    : "ring-2 ring-accent/40";
 });
 </script>

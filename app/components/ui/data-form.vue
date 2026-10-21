@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-2.5">
     <p v-if="!entries.length"
-      class="rounded-xl border-2 border-dashed border-slate-200 bg-white/50 px-4 py-10 text-center text-sm text-slate-400">
+      class="rounded-xl border-2 border-dashed border-content/10 bg-surface/50 px-4 py-10 text-center text-sm text-content-muted">
       {{ t("editor.dataForm.empty") }}
     </p>
 
@@ -10,14 +10,14 @@
       <div v-if="entry.kind === 'scalar'" class="flex items-start gap-1.5">
         <div class="min-w-0 flex-1">
           <div class="mb-1 flex items-center justify-between gap-2">
-            <span class="truncate text-xs font-medium text-slate-600">{{ entry.key }}</span>
+            <span class="truncate text-xs font-medium text-content-muted">{{ entry.key }}</span>
             <select :value="fieldTypeOf(entry.value)" :class="TYPE_SELECT_CLASS"
               :aria-label="t('editor.dataForm.typeOf', { key: entry.key })" @change="changeType(entry.key, $event)">
               <option v-for="ft in TYPES" :key="ft" :value="ft">{{ typeLabel(ft) }}</option>
             </select>
           </div>
           <input v-if="typeof entry.value === 'boolean'" type="checkbox"
-            class="size-4 shrink-0 cursor-pointer accent-blue-600" :checked="entry.value === true"
+            class="size-4 shrink-0 cursor-pointer accent-primary" :checked="entry.value === true"
             :aria-label="entry.key" @change="onBoolChange(entry.key, $event)" />
           <textarea v-else-if="isLongText(entry.value)" rows="3" :value="stringValue(entry.value)"
             :class="`${FIELD_CLASS} resize-y`" @input="onTextInput(entry.key, $event)" />
@@ -35,15 +35,15 @@
       </div>
 
       <!-- Objeto: tarjeta plegable con campos anidados (recursivo) -->
-      <div v-else-if="entry.kind === 'object'" class="rounded-xl border border-slate-200 bg-white p-3">
+      <div v-else-if="entry.kind === 'object'" class="rounded-xl border border-content/10 bg-surface p-3">
         <div class="flex items-center justify-between gap-2">
           <button type="button" class="flex min-w-0 items-center gap-1.5" @click="toggleCollapse(entry.key)">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-              class="shrink-0 text-slate-400 transition-transform" :class="{ 'rotate-90': !isCollapsed(entry.key) }">
+              class="shrink-0 text-content-muted transition-transform" :class="{ 'rotate-90': !isCollapsed(entry.key) }">
               <polyline points="9 18 15 12 9 6" />
             </svg>
-            <span class="truncate text-xs font-bold text-slate-700">{{ entry.key }}</span>
+            <span class="truncate text-xs font-bold text-content">{{ entry.key }}</span>
           </button>
           <div class="flex shrink-0 items-center gap-1.5">
             <select :value="fieldTypeOf(entry.value)" :class="TYPE_SELECT_CLASS"
@@ -60,17 +60,17 @@
             </button>
           </div>
         </div>
-        <div v-show="!isCollapsed(entry.key)" class="mt-3 border-l-2 border-slate-100 pl-3">
+        <div v-show="!isCollapsed(entry.key)" class="mt-3 border-l-2 border-content/10 pl-3">
           <DataForm :obj="entry.value" @change="forward" />
         </div>
       </div>
 
       <!-- Array: rejilla (matriz u objetos) o lista de primitivos -->
-      <div v-else-if="entry.kind === 'array'" class="rounded-xl border border-slate-200 bg-white p-3">
+      <div v-else-if="entry.kind === 'array'" class="rounded-xl border border-content/10 bg-surface p-3">
         <div class="flex items-center justify-between gap-2">
           <div class="flex min-w-0 items-center gap-1.5">
-            <span class="truncate text-xs font-bold text-slate-700">{{ entry.key }}</span>
-            <span class="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
+            <span class="truncate text-xs font-bold text-content">{{ entry.key }}</span>
+            <span class="rounded-full bg-surface-alt px-1.5 py-0.5 text-[10px] font-semibold text-content-muted">
               {{ entry.value.length }}
             </span>
           </div>
@@ -104,14 +104,14 @@
               <thead>
                 <tr>
                   <th v-for="(h, i) in matrixHeaders(entry.key, entry.value)" :key="i"
-                    class="border-b border-slate-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    class="border-b border-content/10 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-content-muted">
                     {{ h }}
                   </th>
-                  <th class="w-8 border-b border-slate-200" />
+                  <th class="w-8 border-b border-content/10" />
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(row, ri) in entry.value" :key="ri" class="border-b border-slate-100 last:border-0">
+                <tr v-for="(row, ri) in entry.value" :key="ri" class="border-b border-content/10 last:border-0">
                   <td v-for="(cell, ci) in row" :key="ci" class="p-1 align-top">
                     <input :type="typeof cell === 'number' ? 'number' : 'text'" :value="cell" :class="CELL_CLASS"
                       @input="onCellInput(entry.key, ri, ci, $event)" />
@@ -136,16 +136,16 @@
               <thead>
                 <tr>
                   <th v-for="col in objectColumns(entry.value)" :key="col"
-                    class="border-b border-slate-200 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    class="border-b border-content/10 px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-content-muted">
                     {{ col }}
                   </th>
-                  <th class="w-8 border-b border-slate-200" />
+                  <th class="w-8 border-b border-content/10" />
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(row, ri) in entry.value" :key="ri" class="border-b border-slate-100 last:border-0">
+                <tr v-for="(row, ri) in entry.value" :key="ri" class="border-b border-content/10 last:border-0">
                   <td v-for="col in objectColumns(entry.value)" :key="col" class="p-1 align-top">
-                    <input v-if="typeof row[col] === 'boolean'" type="checkbox" class="mt-1 size-4 accent-blue-600"
+                    <input v-if="typeof row[col] === 'boolean'" type="checkbox" class="mt-1 size-4 accent-primary"
                       :checked="row[col] === true" @change="onObjectCellBool(entry.key, ri, col, $event)" />
                     <input v-else :type="typeof row[col] === 'number' ? 'number' : 'text'" :value="row[col] ?? ''"
                       :class="CELL_CLASS" @input="onObjectCellInput(entry.key, ri, col, $event)" />
@@ -167,7 +167,7 @@
           <!-- Lista de primitivos -->
           <ul v-else class="flex flex-col gap-2">
             <li v-for="(item, i) in entry.value" :key="i" class="flex items-center gap-1.5">
-              <input v-if="typeof item === 'boolean'" type="checkbox" class="size-4 shrink-0 accent-blue-600"
+              <input v-if="typeof item === 'boolean'" type="checkbox" class="size-4 shrink-0 accent-primary"
                 :checked="item === true" @change="onListItemBool(entry.key, i, $event)" />
               <input v-else :type="typeof item === 'number' ? 'number' : 'text'" :value="item"
                 :class="`${CELL_CLASS} flex-1`" @input="onListItemInput(entry.key, i, $event)" />
@@ -191,7 +191,7 @@
         <option v-for="ft in TYPES" :key="ft" :value="ft">{{ typeLabel(ft) }}</option>
       </select>
       <button type="submit" :disabled="!newFieldName.trim()"
-        class="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40">
+        class="inline-flex shrink-0 items-center gap-1 rounded-lg border border-content/10 bg-surface px-3 py-2 text-xs font-semibold text-content-muted transition-colors hover:border-content/25 hover:text-content disabled:cursor-not-allowed disabled:opacity-40">
         <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="3" stroke-linecap="round">
           <path d="M12 5v14M5 12h14" />
@@ -222,19 +222,19 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const FIELD_CLASS =
-  "block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30";
+  "block w-full rounded-lg border border-content/10 bg-surface px-3 py-2 text-sm text-content transition-colors hover:border-content/25 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/40";
 const CELL_CLASS =
-  "w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30";
+  "w-full rounded-md border border-content/10 bg-surface px-2 py-1.5 text-xs text-content transition-colors hover:border-content/25 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/40";
 const ICON_BTN =
-  "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-red-50 hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50";
+  "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-content/40 transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50";
 const SMALL_ICON_BTN =
-  "flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-300 transition-colors hover:bg-red-50 hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50";
+  "flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-content/40 transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50";
 const ADD_ROW_BTN =
-  "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold text-blue-600 transition-colors hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
+  "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold text-accent transition-colors hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
 const TYPE_SELECT_CLASS =
-  "shrink-0 cursor-pointer rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30";
+  "shrink-0 cursor-pointer rounded-md border border-content/10 bg-surface-alt px-1.5 py-0.5 text-[10px] font-semibold text-content-muted transition-colors hover:border-content/25 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/40";
 const TYPE_ADD_SELECT_CLASS =
-  "shrink-0 cursor-pointer rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-600 transition-colors hover:border-slate-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30";
+  "shrink-0 cursor-pointer rounded-lg border border-content/10 bg-surface px-2 py-2 text-xs font-semibold text-content-muted transition-colors hover:border-content/25 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/40";
 
 // ── Tipos de campo ───────────────────────────────────────────────────────────
 

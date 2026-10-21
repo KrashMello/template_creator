@@ -2,10 +2,10 @@
   <section id="pricing" class="scroll-mt-20 py-20 sm:py-24">
     <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
       <div class="mx-auto max-w-2xl text-center">
-        <h2 class="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+        <h2 class="text-3xl font-bold tracking-tight text-content sm:text-4xl">
           {{ t('pricing.title') }}
         </h2>
-        <p class="mt-3 text-base text-slate-500 sm:text-lg">{{ t('pricing.subtitle') }}</p>
+        <p class="mt-3 text-base text-content-muted sm:text-lg">{{ t('pricing.subtitle') }}</p>
       </div>
 
       <div class="mt-12 grid gap-6 lg:grid-cols-3">
@@ -13,30 +13,30 @@
           v-for="(plan, i) in plans"
           :key="plan.name"
           :class="[
-            'relative flex flex-col rounded-2xl border bg-white p-7 transition-all',
+            'relative flex flex-col rounded-2xl border bg-surface p-7 transition-all',
             i === 1
-              ? 'border-blue-600 shadow-xl shadow-blue-600/10 ring-1 ring-blue-600 lg:-translate-y-2'
-              : 'border-slate-200 shadow-sm hover:shadow-md'
+              ? 'border-primary shadow-xl shadow-primary/10 ring-1 ring-primary lg:-translate-y-2'
+              : 'border-content/10 shadow-sm hover:shadow-md'
           ]"
         >
           <span
             v-if="i === 1"
-            class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm"
+            class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm"
           >
             {{ t('pricing.popular') }}
           </span>
 
-          <h3 class="text-sm font-bold uppercase tracking-widest text-slate-400">{{ plan.name }}</h3>
+          <h3 class="text-sm font-bold uppercase tracking-widest text-content-muted">{{ plan.name }}</h3>
           <div class="mt-3 flex items-baseline gap-1">
-            <span class="text-4xl font-extrabold tracking-tight text-slate-900">{{ plan.price }}</span>
-            <span class="text-sm font-medium text-slate-400">{{ t('pricing.monthly') }}</span>
+            <span class="text-4xl font-extrabold tracking-tight text-content">{{ plan.price }}</span>
+            <span class="text-sm font-medium text-content-muted">{{ t('pricing.monthly') }}</span>
           </div>
-          <p class="mt-3 text-sm leading-relaxed text-slate-500">{{ plan.desc }}</p>
+          <p class="mt-3 text-sm leading-relaxed text-content-muted">{{ plan.desc }}</p>
 
           <ul class="mt-6 flex-1 space-y-3">
             <li v-for="feature in plan.features" :key="feature" class="flex items-start gap-2.5">
               <svg
-                class="mt-0.5 h-4 w-4 shrink-0 text-blue-600"
+                class="mt-0.5 h-4 w-4 shrink-0 text-accent"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -47,17 +47,17 @@
               >
                 <path d="M20 6L9 17l-5-5" />
               </svg>
-              <span class="text-sm text-slate-600">{{ feature }}</span>
+              <span class="text-sm text-content-muted">{{ feature }}</span>
             </li>
           </ul>
 
           <NuxtLink
             to="/demo"
             :class="[
-              'mt-7 inline-flex h-11 items-center justify-center rounded-full text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 active:scale-[0.98]',
+              'mt-7 inline-flex h-11 items-center justify-center rounded-full text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-surface active:scale-[0.98]',
               i === 1
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25 hover:bg-blue-700'
-                : 'border border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary-hover'
+                : 'border border-content/25 bg-surface text-content hover:border-content/30 hover:bg-surface-alt'
             ]"
           >
             {{ plan.cta }}
@@ -65,7 +65,7 @@
         </div>
       </div>
 
-      <p class="mt-8 text-center text-xs text-slate-400">{{ t('pricing.note') }}</p>
+      <p class="mt-8 text-center text-xs text-content-muted">{{ t('pricing.note') }}</p>
     </div>
   </section>
 </template>

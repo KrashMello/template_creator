@@ -5,6 +5,8 @@
  * (requires the dev server running on http://localhost:3000)
  *
  * Output: public/screenshots/editor-{preview,schema,styles,data}.png
+ *         public/screenshots/editor-{preview,schema,styles,data}-dark.png
+ * (the light theme keeps the original names, which the landing also uses)
  */
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
@@ -131,25 +133,31 @@ async function main() {
 
     await page.goto(`${BASE}/demo`, { waitUntil: 'networkidle2', timeout: 60000 })
 
-    // Seed the persisted store and reload so the canvas has content
+    // Seed the persisted store so the canvas has content (survives the reloads)
     await page.evaluate((payload) => {
       sessionStorage.setItem('template', JSON.stringify(payload))
     }, seed)
-    await page.reload({ waitUntil: 'networkidle2', timeout: 60000 })
-    await hideDevtools(page)
-    await page.waitForSelector('#preview .draggable-component', { timeout: 20000 })
 
-    // Let the Tailwind CDN runtime compile the preview classes
-    await sleep(2500)
+    for (const theme of ['light', 'dark']) {
+      // tc_theme picks the editor theme; the landing shows the matching capture
+      await page.setCookie({ name: 'tc_theme', value: theme, domain: 'localhost', path: '/' })
+      await page.reload({ waitUntil: 'networkidle2', timeout: 60000 })
+      await hideDevtools(page)
+      await page.waitForSelector('#preview .draggable-component', { timeout: 20000 })
 
-    for (const view of VIEWS) {
-      const selector = `[title="${view.title}"]`
-      await page.waitForSelector(selector, { timeout: 10000 })
-      await page.click(selector)
-      // Give Monaco / the view time to render
-      await sleep(view.file === 'editor-preview.png' ? 300 : 1800)
-      await page.screenshot({ path: path.join(OUT, view.file) })
-      console.log(`✓ ${view.file}`)
+      // Let the Tailwind CDN runtime compile the preview classes
+      await sleep(2500)
+
+      for (const view of VIEWS) {
+        const selector = `[title="${view.title}"]`
+        await page.waitForSelector(selector, { timeout: 10000 })
+        await page.click(selector)
+        // Give Monaco / the view time to render
+        await sleep(view.file === 'editor-preview.png' ? 300 : 1800)
+        const file = theme === 'dark' ? view.file.replace('.png', '-dark.png') : view.file
+        await page.screenshot({ path: path.join(OUT, file) })
+        console.log(`✓ ${file}`)
+      }
     }
   } finally {
     await browser.close()

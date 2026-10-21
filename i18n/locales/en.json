@@ -4,7 +4,8 @@
     "description": "Visual PDF template builder with drag & drop, dynamic data and one-click export."
   },
   "common": {
-    "demoCta": "Try the demo"
+    "demoCta": "Try the demo",
+    "theme": "Change theme"
   },
   "nav": {
     "features": "Features",

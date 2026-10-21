@@ -7,7 +7,7 @@
       accentClasses.border,
       accentClasses.bg,
       'hover:shadow-sm hover:scale-[1.02] active:scale-[0.97]',
-      'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40',
+      'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
     ]"
     :title="description || undefined"
     @click="onClick"
@@ -19,7 +19,7 @@
       <component :is="props.icon" :class="['w-4 h-4', accentClasses.icon]" />
     </div>
 
-    <span class="text-xs font-semibold text-slate-700 text-center leading-tight">
+    <span class="text-xs font-semibold text-content text-center leading-tight">
       {{ props.name }}
     </span>
   </button>

@@ -17,7 +17,14 @@ const { t, locale } = useI18n()
 const renderPreview = store.renderPreview
 const updateSchemaDisplay = store.updateSchemaDisplay
 
-useHead(() => ({ title: t('editor.pageTitle') }))
+useHead(() => ({
+  title: t('editor.pageTitle'),
+  // The preview markup is injected with v-html, so it needs the runtime
+  // Tailwind build. It stays out of the landing, and the config style gives
+  // it our class-based dark variant instead of the default media-based one.
+  script: [{ src: 'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4', tagPosition: 'bodyClose' }],
+  style: [{ type: 'text/tailwindcss', children: '@custom-variant dark (&:where(.dark, .dark *));' }]
+}))
 
 // Localized "empty canvas" hint (rendered inside the preview HTML)
 store.emptyHint = t('editor.emptyHint')

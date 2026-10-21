@@ -4,7 +4,8 @@
     "description": "Constructor visual de plantillas PDF con drag & drop, datos dinámicos y exportación en un clic."
   },
   "common": {
-    "demoCta": "Probar la demo"
+    "demoCta": "Probar la demo",
+    "theme": "Cambiar tema"
   },
   "nav": {
     "features": "Características",

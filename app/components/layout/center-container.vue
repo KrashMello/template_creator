@@ -64,7 +64,7 @@
     </div>
     <div v-if="selectedView === 4" class="min-h-0 flex-1 flex flex-col">
       <div class="flex shrink-0 items-center justify-between gap-2 px-4 pt-4">
-        <h2 class="text-sm font-bold text-slate-800">{{ t('editor.views.data') }}</h2>
+        <h2 class="text-sm font-bold text-content">{{ t('editor.views.data') }}</h2>
         <div class="flex gap-1">
           <button type="button" :class="segmentClass(dataMode === 'form')" @click="dataMode = 'form'">
             {{ t('editor.dataForm.mode.form') }}
@@ -129,10 +129,10 @@ onBeforeUnmount(() => {
 /** Botones segmentados (mismo estilo que la tarjeta Documento del right-bar). */
 function segmentClass(active) {
   return [
-    "px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40",
+    "px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
     active
-      ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-      : "bg-white text-slate-600 border-slate-200 hover:border-slate-300",
+      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+      : "bg-surface text-content-muted border-content/10 hover:border-content/25",
   ];
 }
 const onDragEnter = (event) => {
@@ -172,16 +172,17 @@ async function onExport() {
 }
 </script>
 <style scoped>
+/* Workspace around the paper follows the theme; the A4 page itself stays white */
 .center-panel {
-  background: #f8fafc;
+  background: var(--surface);
 }
 
 /* Canvas background grid */
 .canvas-bg {
-  background-color: #f1f5f9;
+  background-color: var(--surface-alt);
   background-image:
-    linear-gradient(rgba(99, 125, 161, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 125, 161, 0.08) 1px, transparent 1px);
+    linear-gradient(rgba(129, 161, 193, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(129, 161, 193, 0.14) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 

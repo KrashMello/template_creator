@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-full flex-col gap-2 p-4">
-    <h2 v-if="title" class="text-sm font-bold text-slate-800">{{ title }}</h2>
+    <h2 v-if="title" class="text-sm font-bold text-content">{{ title }}</h2>
     <div ref="containerRef" class="code-editor-wrapper min-h-0 flex-1" :style="heightStyle">
       <div ref="editorRef" class="code-editor-inner" />
     </div>
@@ -36,6 +36,8 @@ const editorRef = ref<HTMLElement | null>(null);
 const containerRef = ref<HTMLElement | null>(null);
 let monacoEditor: any = null;
 
+const { isDark } = useTheme();
+
 onMounted(async () => {
   if (!editorRef.value) return;
 
@@ -44,7 +46,7 @@ onMounted(async () => {
   monacoEditor = monaco.editor.create(editorRef.value, {
     value: props.modelValue ?? "",
     language: props.language,
-    theme: "vs-light",
+    theme: isDark.value ? "vs-dark" : "vs-light",
     minimap: { enabled: false },
     scrollBeyondLastLine: false,
     readOnly: props.readOnly,
@@ -110,6 +112,12 @@ watch(
   }
 );
 
+// Sync theme
+watch(isDark, (dark) => {
+  const monaco = (window as any).monaco;
+  if (monaco) monaco.editor.setTheme(dark ? "vs-dark" : "vs-light");
+});
+
 onBeforeUnmount(() => {
   monacoEditor?.dispose();
 });
@@ -118,7 +126,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .code-editor-wrapper {
   width: 100%;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--surface-alt);
   border-radius: 8px;
   overflow: hidden;
 }
