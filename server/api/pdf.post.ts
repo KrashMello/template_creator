@@ -1,8 +1,9 @@
-import { defineEventHandler, readBody, createError } from 'h3'
+import { defineEventHandler, readBody, createError, getRequestHeader } from 'h3'
 import { withPuppeteer } from '../utils/puppeteer'
 import type { Page, PDFOptions } from 'puppeteer-core'
 import { parse as parseHtml } from "node-html-parser";
 import { tws } from "tailwind-to-style";
+import { lookup } from 'node:dns/promises'
 
 /**
  * Page geometry (CSS pixels at 96dpi).
@@ -231,6 +232,115 @@ type PageSettings = {
   footerRepeat?: boolean
 }
 
+/**
+ * El endpoint es público (no hay cuentas), así que se acota el daño que puede
+ * hacer una sola instancia: tamaño del payload, peticiones por IP y renders
+ * simultáneos.
+ * `shortcut: los contadores viven en memoria, o sea por instancia; si el abuso
+ * importa, poner rate limit delante (Vercel Firewall) o auth real.`
+ */
+const MAX_HTML_CHARS = 1_000_000
+const MAX_ZONE_CHARS = 200_000
+const MAX_CSS_CHARS = 200_000
+const RATE_WINDOW_MS = 60_000
+const RATE_MAX_REQUESTS = 20
+const MAX_CONCURRENT_RENDERS = 3
+
+const rateHits = new Map<string, { count: number, reset: number }>()
+let activeRenders = 0
+
+/** Ventana fija por IP en memoria. La limpieza va en el mismo paso para no crecer. */
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  for (const [key, hit] of rateHits) {
+    if (hit.reset <= now) rateHits.delete(key)
+  }
+  const hit = rateHits.get(ip) ?? { count: 0, reset: now + RATE_WINDOW_MS }
+  hit.count++
+  rateHits.set(ip, hit)
+  return hit.count > RATE_MAX_REQUESTS
+}
+
+const PRIVATE_V4 = [
+  /^0\./,
+  /^10\./,
+  /^127\./,
+  /^169\.254\./, // link-local + metadata de las nubes
+  /^192\.168\./,
+  /^172\.(1[6-9]|2\d|3[01])\./,
+  /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./, // CGNAT
+]
+
+function isPrivateAddress(ip: string): boolean {
+  if (ip.includes(':')) {
+    const v6 = ip.toLowerCase()
+    if (v6 === '::' || v6 === '::1') return true
+    if (/^f[cd][0-9a-f]{2}:/.test(v6)) return true // fc00::/7 (ULA)
+    if (/^fe[89ab][0-9a-f]:/.test(v6)) return true // fe80::/10 (link-local)
+    const mapped = v6.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)
+    return mapped ? isPrivateAddress(mapped[1]) : false
+  }
+  return PRIVATE_V4.some((re) => re.test(ip))
+}
+
+/**
+ * Solo se permite salir a la red pública. El HTML del PDF trae URLs que elige
+ * el cliente: sin esto, un `<script>fetch('http://169.254.169.254/...')</script>`
+ * convierte la función en un proxy hacia la red interna y el PDF devuelto
+ * traería la respuesta.
+ *
+ * `shortcut: se resuelve el DNS y se miran las IPs, pero Chromium vuelve a
+ * resolver para conectar (ventana de DNS rebinding). Suficiente mientras el
+ * contenido lo genere un usuario de la propia app.`
+ */
+const BLOCKED_HOSTS = ['.localhost', '.local', '.internal', '.home.arpa']
+
+async function isAllowedUrl(raw: string): Promise<boolean> {
+  let url: URL
+  try {
+    url = new URL(raw)
+  } catch {
+    return false
+  }
+  // Recursos inline que el propio Chromium genera al pintar.
+  if (url.protocol === 'data:' || url.protocol === 'blob:' || url.protocol === 'about:') return true
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+
+  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '')
+  if (host === 'localhost' || BLOCKED_HOSTS.some((suffix) => host.endsWith(suffix))) return false
+  if (host.includes(':') || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return !isPrivateAddress(host)
+
+  try {
+    const addresses = await lookup(host, { all: true })
+    return addresses.length > 0 && addresses.every((entry) => !isPrivateAddress(entry.address))
+  } catch {
+    return false
+  }
+}
+
+/** Corta toda petición de la página que salga de la red pública. */
+async function blockPrivateRequests(page: Page): Promise<void> {
+  const cache = new Map<string, boolean>()
+  await page.setRequestInterception(true)
+  page.on('request', (request) => {
+    const url = request.url()
+    const decide = async () => {
+      let allowed = cache.get(url)
+      if (allowed === undefined) {
+        allowed = await isAllowedUrl(url)
+        cache.set(url, allowed)
+      }
+      if (!allowed) console.warn('pdf: petición bloqueada', url)
+      try {
+        await (allowed ? request.continue() : request.abort('blockedbyclient'))
+      } catch {
+        // La petición ya se resolvió o la página se cerró: no hay nada que hacer.
+      }
+    }
+    void decide()
+  })
+}
+
 export default defineEventHandler(async (event) => {
   const body = await readBody<{
     html?: string
@@ -239,14 +349,37 @@ export default defineEventHandler(async (event) => {
     css?: string
     page?: PageSettings
   }>(event)
-  if (!body?.html) {
+  if (typeof body?.html !== 'string' || !body.html) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Missing html payload',
     })
   }
 
-  const css = body.css || ''
+  const ip = getRequestHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  if (isRateLimited(ip)) {
+    throw createError({ statusCode: 429, statusMessage: 'Too many PDF requests, retry in a minute' })
+  }
+  // Un navegador desde otro sitio no tiene por qué usar la exportación.
+  if (getRequestHeader(event, 'sec-fetch-site') === 'cross-site') {
+    throw createError({ statusCode: 403, statusMessage: 'Cross-site requests are not allowed' })
+  }
+
+  const headerMarkup = typeof body.header === 'string' ? body.header : ''
+  const footerMarkup = typeof body.footer === 'string' ? body.footer : ''
+  const css = typeof body.css === 'string' ? body.css : ''
+  if (
+    body.html.length > MAX_HTML_CHARS ||
+    headerMarkup.length > MAX_ZONE_CHARS ||
+    footerMarkup.length > MAX_ZONE_CHARS ||
+    css.length > MAX_CSS_CHARS
+  ) {
+    throw createError({ statusCode: 413, statusMessage: 'Document too large' })
+  }
+  if (activeRenders >= MAX_CONCURRENT_RENDERS) {
+    throw createError({ statusCode: 503, statusMessage: 'PDF renderer busy, retry shortly' })
+  }
+
   const rawFormat = body.page?.format
   const format: PageFormat =
     rawFormat && (PAGE_FORMATS as string[]).includes(rawFormat) ? (rawFormat as PageFormat) : 'letter'
@@ -259,8 +392,6 @@ export default defineEventHandler(async (event) => {
     left: marginMm(body.page?.margins?.left),
   }
 
-  const headerMarkup = body.header || ''
-  const footerMarkup = body.footer || ''
   // Zona repetida → plantilla en el margen (se mide para dimensionarlo).
   // Zona no repetida → se inyecta en el flujo del cuerpo y su margen es el
   // configurado (sin medir: la medida solo sirve para la plantilla).
@@ -278,7 +409,11 @@ export default defineEventHandler(async (event) => {
     html = injectZoneInFlow(html, footerMarkup, 'end', margins)
   }
 
+  activeRenders++
   const pdfBuffer = await withPuppeteer(async (page) => {
+    // Antes de cualquier `setContent`: la página no puede pedir red privada.
+    await blockPrivateRequests(page)
+
     // Measure first: this navigates the page, so it has to happen before the
     // document HTML is loaded.
     const widthPx = pageWidthPx(format, orientation)
@@ -323,6 +458,8 @@ export default defineEventHandler(async (event) => {
     const buffer = await page.pdf(pdfOptions)
 
     return buffer
+  }).finally(() => {
+    activeRenders--
   })
 
   event.node.res.setHeader(

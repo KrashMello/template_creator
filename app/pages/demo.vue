@@ -7,6 +7,7 @@
 <script setup>
 import { onMounted, watch } from 'vue'
 import { templateStore } from '../stores/templateStore'
+import { TAILWIND_CDN_INTEGRITY, TAILWIND_CDN_URL } from '../stores/template'
 
 definePageMeta({
   layout: 'editor'
@@ -22,7 +23,12 @@ useHead(() => ({
   // The preview markup is injected with v-html, so it needs the runtime
   // Tailwind build. It stays out of the landing, and the config style gives
   // it our class-based dark variant instead of the default media-based one.
-  script: [{ src: 'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4', tagPosition: 'bodyClose' }],
+  script: [{
+    src: TAILWIND_CDN_URL,
+    integrity: TAILWIND_CDN_INTEGRITY,
+    crossorigin: 'anonymous',
+    tagPosition: 'bodyClose',
+  }],
   style: [{ type: 'text/tailwindcss', children: '@custom-variant dark (&:where(.dark, .dark *));' }]
 }))
 

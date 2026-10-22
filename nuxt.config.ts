@@ -5,7 +5,7 @@ const baseUrl =
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { enabled: process.env.NODE_ENV !== 'production' },
   ssr: true,
   css: ['~/assets/css/main.css'],
   compatibilityDate: '2026-10-12',
@@ -17,6 +17,20 @@ export default defineNuxtConfig({
   },
   nitro: {
     preset: 'vercel', // Auto-detect en Vercel
+  },
+  // Cabeceras para toda la app. La CSP solo declara `frame-ancestors`: una
+  // política completa no es viable con el preview (`v-html` + Tailwind en
+  // runtime + estilos inline), pero esto ya evita el clickjacking.
+  routeRules: {
+    '/**': {
+      headers: {
+        'x-content-type-options': 'nosniff',
+        'x-frame-options': 'SAMEORIGIN',
+        'referrer-policy': 'strict-origin-when-cross-origin',
+        'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+        'content-security-policy': "frame-ancestors 'self'",
+      },
+    },
   },
   app: {
     head: {
@@ -63,6 +77,8 @@ export default defineNuxtConfig({
   piniaPluginPersistedstate: {
     storage: 'sessionStorage',
     maxAge: 24 * 60 * 60,
-    debug: true,
+    // Solo en dev: en producción escribiría el contenido del documento (datos
+    // de clientes incluidos) en la consola del navegador.
+    debug: process.env.NODE_ENV === 'development',
   },
 })

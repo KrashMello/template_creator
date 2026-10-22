@@ -1,5 +1,18 @@
 import { code39Svg } from "./barcode";
 
+/**
+ * Tailwind en runtime para el preview y para el PDF: el markup se inyecta con
+ * `v-html`, así que las clases hay que compilarlas en el navegador.
+ *
+ * Versión exacta + SRI: este script corre en `/demo` y dentro del render del
+ * PDF, y tiene acceso a `sessionStorage` (donde vive el documento). `@4`
+ * flotante significaba ejecutar lo que el CDN sirviera ese día.
+ * Al subir Tailwind hay que recalcular el hash y la versión del `<script>`.
+ */
+export const TAILWIND_CDN_URL = "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3";
+export const TAILWIND_CDN_INTEGRITY =
+  "sha384-aJ9rL4k6lF+91guGvUFVSkpIcge7Zd9EiI4TQDLoK9kFaFJgKHgjEXVvG/qA5COj";
+
 export interface ElementDataSet {
   id: string;
   type?: string;
@@ -99,7 +112,7 @@ export const generateLayoutHtml = (opt: { schema: ElementDataSet, cssCode?: stri
 <style>
 ${cssCode || ''}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="${TAILWIND_CDN_URL}" integrity="${TAILWIND_CDN_INTEGRITY}" crossorigin="anonymous"></script>
 </head>
 <body>
 <div class="flex-1 flex flex-col gap-2 pb-2">

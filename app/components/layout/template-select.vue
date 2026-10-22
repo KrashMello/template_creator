@@ -22,6 +22,7 @@
             :title="itemTitle(pending.id)"
             aria-hidden="true"
             tabindex="-1"
+            sandbox="allow-scripts"
           />
         </span>
 
