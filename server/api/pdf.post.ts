@@ -3,7 +3,7 @@ import { withPuppeteer } from '../utils/puppeteer'
 import type { Page, PDFOptions } from 'puppeteer-core'
 import { parse as parseHtml } from "node-html-parser";
 import { tws } from "tailwind-to-style";
-import { lookup } from 'node:dns/promises'
+import { isAllowedUrl } from '../utils/allow-public-url'
 
 /**
  * Page geometry (CSS pixels at 96dpi).
@@ -261,63 +261,6 @@ function isRateLimited(ip: string): boolean {
   return hit.count > RATE_MAX_REQUESTS
 }
 
-const PRIVATE_V4 = [
-  /^0\./,
-  /^10\./,
-  /^127\./,
-  /^169\.254\./, // link-local + metadata de las nubes
-  /^192\.168\./,
-  /^172\.(1[6-9]|2\d|3[01])\./,
-  /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./, // CGNAT
-]
-
-function isPrivateAddress(ip: string): boolean {
-  if (ip.includes(':')) {
-    const v6 = ip.toLowerCase()
-    if (v6 === '::' || v6 === '::1') return true
-    if (/^f[cd][0-9a-f]{2}:/.test(v6)) return true // fc00::/7 (ULA)
-    if (/^fe[89ab][0-9a-f]:/.test(v6)) return true // fe80::/10 (link-local)
-    const mapped = v6.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)
-    return mapped ? isPrivateAddress(mapped[1]) : false
-  }
-  return PRIVATE_V4.some((re) => re.test(ip))
-}
-
-/**
- * Solo se permite salir a la red pública. El HTML del PDF trae URLs que elige
- * el cliente: sin esto, un `<script>fetch('http://169.254.169.254/...')</script>`
- * convierte la función en un proxy hacia la red interna y el PDF devuelto
- * traería la respuesta.
- *
- * `shortcut: se resuelve el DNS y se miran las IPs, pero Chromium vuelve a
- * resolver para conectar (ventana de DNS rebinding). Suficiente mientras el
- * contenido lo genere un usuario de la propia app.`
- */
-const BLOCKED_HOSTS = ['.localhost', '.local', '.internal', '.home.arpa']
-
-async function isAllowedUrl(raw: string): Promise<boolean> {
-  let url: URL
-  try {
-    url = new URL(raw)
-  } catch {
-    return false
-  }
-  // Recursos inline que el propio Chromium genera al pintar.
-  if (url.protocol === 'data:' || url.protocol === 'blob:' || url.protocol === 'about:') return true
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
-
-  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '')
-  if (host === 'localhost' || BLOCKED_HOSTS.some((suffix) => host.endsWith(suffix))) return false
-  if (host.includes(':') || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return !isPrivateAddress(host)
-
-  try {
-    const addresses = await lookup(host, { all: true })
-    return addresses.length > 0 && addresses.every((entry) => !isPrivateAddress(entry.address))
-  } catch {
-    return false
-  }
-}
-
 /** Corta toda petición de la página que salga de la red pública. */
 async function blockPrivateRequests(page: Page): Promise<void> {
   const cache = new Map<string, boolean>()
@@ -356,7 +299,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const ip = getRequestHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  // El último salto lo escribe el proxy; el primero lo puede inventar el cliente.
+  const ip = getRequestHeader(event, 'x-forwarded-for')?.split(',').pop()?.trim() || 'unknown'
   if (isRateLimited(ip)) {
     throw createError({ statusCode: 429, statusMessage: 'Too many PDF requests, retry in a minute' })
   }

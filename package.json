@@ -11,7 +11,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "screenshots": "node scripts/capture-screenshots.mjs"
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "check:url-guard": "node scripts/check-url-guard.mjs"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
