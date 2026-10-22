@@ -109,18 +109,18 @@
           <ui-input v-if="selectedNode.data.value != null" v-model="options.checkValue" type="checkbox"
             :title="t('editor.settings.fields.value')" @update:model-value="saveContent" />
           <ui-input v-if="selectedNode.data.columns" v-model="options.columns" type="textarea"
-            :title="t('editor.settings.fields.columns')" :placeholder="t('editor.settings.fields.columns')" />
+            :title="t('editor.settings.fields.columns')" :placeholder="t('editor.settings.fields.columns')" @blur="saveContent" />
           <ui-input v-if="selectedNode.data.src" @change="onImageFile" :title="t('editor.settings.fields.file')"
             :placeholder="t('editor.settings.fields.file')" type="file" accept="image/*" />
           <ui-input v-if="selectedNode.data.rows" v-model="options.rows" type="textarea"
-            :title="t('editor.settings.fields.rows')" :placeholder="t('editor.settings.fields.rows')" />
+            :title="t('editor.settings.fields.rows')" :placeholder="t('editor.settings.fields.rows')" @blur="saveContent" />
   
           <section class="rounded-xl border border-content/10 bg-surface-alt/60 p-4">
             <span class="text-[10px] font-bold uppercase tracking-widest text-content-muted">
               {{ t('editor.settings.fields.styleLayout') }}
             </span>
             <div class="mt-3 space-y-3">
-              <ui-input v-model="options.class" :title="t('editor.settings.fields.class')" placeholder="classes" />
+              <ui-input v-model="options.class" :title="t('editor.settings.fields.class')" placeholder="classes" @blur="saveContent" />
   
               <div v-if="selectedNode.tag === 'p'" class="space-y-4 pt-1">
                 <div>
