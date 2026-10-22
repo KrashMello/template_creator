@@ -74,6 +74,32 @@ Data tab → **Source** loads a REST endpoint or a Postgres query straight into 
 - `invoke("run_sql", { request })` → `src-tauri/src/sql.rs::run_sql`: `tokio-postgres` + `tokio-postgres-rustls` (webpki-roots), `simple_query`, 8 s connect / 15 s query / 10 s statement, 1000-row cap. No server, no rate limit, no SSRF guard (the app is local; the user is the one writing the query).
 - `missingTemplatePaths()` warns about `{{paths}}` used by the templates that the adapted data does not provide (block sections are skipped). `pnpm check:data` covers the adapter.
 
+### Using it
+
+1. Data tab → **Source**, choose REST or PostgreSQL.
+2. REST: URL, method, optional headers (`Name: value` per line) and response path. SQL: host, port, database, user, password and one query.
+3. **Load data** replaces `store.data`; the raw response appears under **Response** and missing paths are listed.
+4. Fix the map until the warnings clear, then go back to Preview/Export.
+
+PokeAPI (`/pokemon/ditto`, empty response path):
+
+```json
+{
+  "name": "name",
+  "pokemon.type": "types[0].type.name",
+  "table.cols": ["Stat", "Value"],
+  "table.rows": { "from": "stats", "select": ["stat.name", "base_stat"] }
+}
+```
+
+Odoo (`select id, login from res_users limit 5`; SQL payload is `{ rows }`):
+
+```json
+{ "table.cols": ["ID", "Login"], "table.rows": { "from": "rows", "select": ["id", "login"] } }
+```
+
+Passwords and headers are not persisted, and loading a template replaces `data` (the loaded rows) but keeps the map.
+
 ## Gotchas
 
 - **The Tailwind runtime script is vendored** in `public/vendor/tailwind.js` (from `@tailwindcss/browser`, copied by `scripts/prepare-desktop.mjs`, runs on postinstall). `useHead` in `app/pages/index.vue` loads it; the preview is `v-html`, and the template thumbnails are `<iframe :srcdoc>` which resolves it against the parent. The PDF sidecar (`desktop/pdf-render.ts`) replaces `<script src="${TAILWIND_URL}"></script>` with the file content before `setContent`.

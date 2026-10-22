@@ -14,7 +14,9 @@
       "type": "local",
       "command": [
         "trivy",
-        "mcp"
+        "mcp",
+        "--trivy-binary",
+        "/home/linuxbrew/.linuxbrew/bin/trivy"
       ],
       "enabled": true
     }
