@@ -71,6 +71,32 @@ Data tab → **Source** loads a REST endpoint or a Postgres query straight into 
 - `POST /api/data/sql` takes host/port/user/password/database from the client. Guards: private hosts rejected in production (`isPrivateAddress`), extended protocol (one statement per call), 8–12 s timeouts, 1000-row cap, 10 req/min + 3 concurrent per instance, and `DATA_SQL_ENABLED=1` required in production (off by default). Credentials are never logged or persisted.
 - `missingTemplatePaths()` warns about `{{paths}}` used by the templates that the adapted data does not provide (block sections are skipped). `pnpm check:data` covers the adapter.
 
+### Using it
+
+1. Data tab → **Source**, choose REST or PostgreSQL.
+2. REST: URL, method, optional headers (`Name: value` per line) and response path. SQL: host, port, database, user, password and one query.
+3. **Load data** replaces `store.data`; the raw response appears under **Response** and missing paths are listed.
+4. Fix the map until the warnings clear, then go back to Preview/Export.
+
+PokeAPI (`/pokemon/ditto`, empty response path):
+
+```json
+{
+  "name": "name",
+  "pokemon.type": "types[0].type.name",
+  "table.cols": ["Stat", "Value"],
+  "table.rows": { "from": "stats", "select": ["stat.name", "base_stat"] }
+}
+```
+
+Odoo (`select id, login from res_users limit 5`; SQL payload is `{ rows }`):
+
+```json
+{ "table.cols": ["ID", "Login"], "table.rows": { "from": "rows", "select": ["id", "login"] } }
+```
+
+Passwords and headers are not persisted, and loading a template replaces `data` (the loaded rows) but keeps the map.
+
 ## Gotchas
 
 - **The `@tailwindcss/browser@4` CDN belongs to `/demo` only** (`useHead` in `app/pages/demo.vue`) because the preview is `v-html`. Its default `dark:` variant is media-based, so the page registers the app's class-based `@custom-variant`; loading it globally would compile a second utilities sheet that overrides the app's `dark:` rules. Don't move it into `nuxt.config.ts`.
