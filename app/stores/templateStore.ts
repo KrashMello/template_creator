@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, nextTick } from "vue";
 import handlebars from "handlebars";
 import { applyBorderStyles, applyRowChildFlex, clearBorderStyles, findDataById, findIndexElement, findPathById, generateLayoutHeaderFooterHtml, generateLayoutHtml, getDropTarget, getElementByPath, getInsertType, insertElementAtPath, insertNodeRelativeTo, removeElementAtPath, replace, sleep } from "./template";
+import { readEachPath } from "./tag-class";
 import type { ElementDataSet } from "./template";
 import type { TemplateDoc } from "../templates/types";
 
@@ -98,6 +99,11 @@ export const templateStore = defineStore("template", {
       content: "",
       columns: "",
       rows: "",
+      /** Rutas del `{{#each}}` de columnas y filas (solo UI; el markup manda). */
+      colsPath: "",
+      rowsPath: "",
+      /** Estado de la Casilla (`data.value`); solo lo usa `tag: "checkbox"`. */
+      checkValue: false,
       src: "",
       /** Nombre visible del nodo (la etiqueta que muestra el lienzo). */
       nodeName: "",
@@ -432,13 +438,14 @@ export const templateStore = defineStore("template", {
         this.options.content = this.selectedNode.data.content || "";
         this.options.columns = this.selectedNode.data.columns;
         this.options.rows = this.selectedNode.data.rows;
+        this.options.colsPath = readEachPath(this.selectedNode.data.columns);
+        this.options.rowsPath = readEachPath(this.selectedNode.data.rows);
         this.options.src = this.selectedNode.data.src;
         this.options.name = this.selectedNode.data.name;
         this.options.nodeName = this.selectedNode.name || "";
         this.options.height =
           this.selectedNode.data.height != null ? String(this.selectedNode.data.height) : "";
-        this.options.checkValue =
-          this.selectedNode.data.value != null ? String(this.selectedNode.data.value) : "false";
+        this.options.checkValue = this.selectedNode.data.value === true;
       }
     },
     async saveDataOptions() {
@@ -475,8 +482,13 @@ export const templateStore = defineStore("template", {
         const height = Number(this.options.height);
         if (Number.isFinite(height)) data.height = height;
       }
-      if (this.options.checkValue != null) {
-        data.value = this.options.checkValue == 'true' ? true : false;
+      // `value` solo lo usa la Casilla. Antes se escribía en todo nodo guardado
+      // (checkValue valía "false", no null) y hacía aparecer el campo "Valor" en
+      // tablas y demás; aquí también se limpia el que quedara guardado.
+      if (element_schema.tag === "checkbox") {
+        data.value = this.options.checkValue === true;
+      } else {
+        delete data.value;
       }
       // `name` es la etiqueta que ven el lienzo y el JSON; se edita con el campo
       // "Nombre del componente" y un valor vacío conserva la que ya tenía.

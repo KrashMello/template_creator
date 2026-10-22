@@ -106,14 +106,22 @@
             :title="t('editor.settings.fields.height')" :placeholder="t('editor.settings.fields.height')" @update:model-value="saveContent" />
           <ui-input v-if="selectedNode.data.name" v-model="options.name" type="text"
             :title="t('editor.settings.fields.name')" :placeholder="t('editor.settings.fields.name')" @update:model-value="saveContent" />
-          <ui-input v-if="selectedNode.data.value != null" v-model="options.checkValue" type="checkbox"
+          <ui-input v-if="selectedNode.tag === 'checkbox'" v-model="options.checkValue" type="checkbox"
             :title="t('editor.settings.fields.value')" @update:model-value="saveContent" />
-          <ui-input v-if="selectedNode.data.columns" v-model="options.columns" type="textarea"
-            :title="t('editor.settings.fields.columns')" :placeholder="t('editor.settings.fields.columns')" @blur="saveContent" />
+          <ui-input v-if="isTable && selectedNode.data.columns" :model-value="options.colsPath" type="text"
+            :title="t('editor.settings.fields.colsPath')" placeholder="table.cols"
+            @update:model-value="setColsPath" />
+          <ui-input v-if="isTable && selectedNode.data.columns" v-model="thClass"
+            :title="t('editor.settings.fields.thClass')" placeholder="p-4" />
           <ui-input v-if="selectedNode.data.src" @change="onImageFile" :title="t('editor.settings.fields.file')"
             :placeholder="t('editor.settings.fields.file')" type="file" accept="image/*" />
-          <ui-input v-if="selectedNode.data.rows" v-model="options.rows" type="textarea"
-            :title="t('editor.settings.fields.rows')" :placeholder="t('editor.settings.fields.rows')" @blur="saveContent" />
+          <ui-input v-if="isTable && selectedNode.data.rows" :model-value="options.rowsPath" type="text"
+            :title="t('editor.settings.fields.rowsPath')" placeholder="table.rows"
+            @update:model-value="setRowsPath" />
+          <ui-input v-if="isTable && selectedNode.data.rows" v-model="trClass"
+            :title="t('editor.settings.fields.trClass')" placeholder="hover:bg-zinc-50" />
+          <ui-input v-if="isTable && selectedNode.data.rows" v-model="tdClass"
+            :title="t('editor.settings.fields.tdClass')" placeholder="p-4" />
   
           <section class="rounded-xl border border-content/10 bg-surface-alt/60 p-4">
             <span class="text-[10px] font-bold uppercase tracking-widest text-content-muted">
@@ -153,6 +161,21 @@
               </div>
             </div>
           </section>
+
+          <!-- Handlebars crudo: plegado para no obligar a aprenderlo -->
+          <details v-if="isTable && (selectedNode.data.columns || selectedNode.data.rows)"
+            class="group rounded-xl border border-dashed border-content/15 bg-surface-alt/40 p-4">
+            <summary class="flex cursor-pointer list-none items-center justify-between text-[10px] font-bold uppercase tracking-widest text-content-muted [&::-webkit-details-marker]:hidden">
+              {{ t('editor.settings.fields.advanced') }}
+              <UIcon name="i-lucide-chevron-down" class="size-4 transition-transform group-open:rotate-180" />
+            </summary>
+            <div class="mt-3 space-y-3">
+              <ui-input v-if="selectedNode.data.columns" v-model="options.columns" type="textarea"
+                :title="t('editor.settings.fields.columns')" :placeholder="t('editor.settings.fields.columns')" @blur="saveContent" />
+              <ui-input v-if="selectedNode.data.rows" v-model="options.rows" type="textarea"
+                :title="t('editor.settings.fields.rows')" :placeholder="t('editor.settings.fields.rows')" @blur="saveContent" />
+            </div>
+          </details>
         </form>
       </section>
     </div>
@@ -161,15 +184,53 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, computed } from "vue";
+import { patchEachPath, patchTagClass, readEachPath, readTagClass } from "../../stores/tag-class";
 const store = templateStore();
 const { t } = useI18n();
 const selectedElement = computed(() => store.selectedElement);
 const selectedNode = computed(() => store.selectedNode);
+const isTable = computed(() => selectedNode.value?.tag === "table");
 const options = computed(() => store.options);
 const saveDataOptions = store.saveDataOptions;
 const deleteElement = store.deleteElement;
 const localFontWeight = ref("");
 const localColor = ref("");
+
+/**
+ * th/tr/td y rutas del `{{#each}}` editan directamente el markup de los
+ * textareas (única fuente de verdad): el cambio se ve en ambos lados.
+ */
+const thClass = computed({
+  get: () => readTagClass(options.value.columns, "th"),
+  set: (value: string) => setMarkupClass("columns", "th", value),
+});
+const trClass = computed({
+  get: () => readTagClass(options.value.rows, "tr"),
+  set: (value: string) => setMarkupClass("rows", "tr", value),
+});
+const tdClass = computed({
+  get: () => readTagClass(options.value.rows, "td"),
+  set: (value: string) => setMarkupClass("rows", "td", value),
+});
+
+function setMarkupClass(field: "columns" | "rows", tag: string, value: string) {
+  options.value[field] = patchTagClass(options.value[field], tag, value);
+  saveContent();
+}
+function setColsPath(value: string) {
+  options.value.colsPath = value;
+  const path = value.trim();
+  if (!path) return; // vaciar dejaría "{{#each }}" roto; se conserva el markup
+  options.value.columns = patchEachPath(options.value.columns, path);
+  saveContent();
+}
+function setRowsPath(value: string) {
+  options.value.rowsPath = value;
+  const path = value.trim();
+  if (!path) return;
+  options.value.rows = patchEachPath(options.value.rows, path);
+  saveContent();
+}
 
 
 function removeWeightClasses(cls: string): string {
@@ -182,6 +243,10 @@ function removeColorClasses(cls: string): string {
 
 function saveContent() {
   if (!selectedNode.value) return;
+  // El textarea es la fuente de verdad: si se edita el {{#each}} a mano, los
+  // inputs de ruta se refrescan con lo que quedó en el markup.
+  options.value.colsPath = readEachPath(options.value.columns);
+  options.value.rowsPath = readEachPath(options.value.rows);
   store.saveDataOptions()
 }
 function saveColor() {

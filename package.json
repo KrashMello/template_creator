@@ -13,7 +13,8 @@
     "postinstall": "nuxt prepare",
     "screenshots": "node scripts/capture-screenshots.mjs",
     "check:url-guard": "node scripts/check-url-guard.mjs",
-    "check:data": "node scripts/check-data-adapter.mjs"
+    "check:data": "node scripts/check-data-adapter.mjs",
+    "check:classes": "node scripts/check-table-classes.mjs"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
