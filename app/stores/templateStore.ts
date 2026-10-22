@@ -33,6 +33,23 @@ export const templateStore = defineStore("template", {
         ],
       }
     },
+    /**
+     * Fuente de datos de la pestaña Datos → Fuente. `map` se guarda como texto
+     * para que Monaco pueda contener JSON a medio editar; se parsea al cargar.
+     */
+    dataSource: {
+      kind: "rest" as "rest" | "sql",
+      rest: { url: "", method: "GET", path: "" },
+      sql: { host: "", port: "5432", user: "", database: "", ssl: false, query: "" },
+      map: `{
+  "name": "rows[0].name",
+  "create_date": "rows[0].create_date",
+  "table.cols": ["Service", "Volume", "Revenue"],
+  "table.rows": { "from": "rows", "select": ["service", "volume", "revenue"] }
+}`,
+    },
+    /** Credenciales: solo en memoria, nunca en sessionStorage. */
+    dataSecrets: { sqlPassword: "", restHeaders: "" },
     position: -1,
     selectedElement: null,
     selectedNode: null,
@@ -478,7 +495,7 @@ export const templateStore = defineStore("template", {
     },
   },
   persist: {
-    pick: ["styleEl", "cssCode", "page", "schema", "data", "history", "redoStack", "footer", "header"],
+    pick: ["styleEl", "cssCode", "page", "schema", "data", "dataSource", "history", "redoStack", "footer", "header"],
   },
 });
 

@@ -307,7 +307,8 @@
     "dataForm": {
       "mode": {
         "form": "Form",
-        "json": "JSON"
+        "json": "JSON",
+        "source": "Source"
       },
       "empty": "No data yet. Add a field to get started.",
       "fieldName": "Field name",
@@ -326,6 +327,35 @@
         "objeto": "Object",
         "tabla": "Table"
       }
+    },
+    "dataSource": {
+      "kinds": {
+        "rest": "REST",
+        "sql": "PostgreSQL"
+      },
+      "url": "https://api.example.com/orders",
+      "method": "Method",
+      "headers": "Headers (one per line: Name: value)",
+      "path": "Response path (empty = whole body)",
+      "host": "Host",
+      "port": "Port",
+      "database": "Database",
+      "user": "User",
+      "password": "Password",
+      "ssl": "Require SSL",
+      "query": "SQL query",
+      "load": "Load data",
+      "payload": "Response",
+      "loaded": "Data applied",
+      "loadedRows": "{n} rows loaded",
+      "truncated": "Only the first {n} rows were loaded",
+      "missingSource": "Source path not found: {path}",
+      "missingTemplate": "The template expects the path {path} and the data does not provide it",
+      "badMap": "The map is not valid JSON",
+      "needUrl": "Enter a URL",
+      "badPath": "Response path not found: {path}",
+      "cors": "The API blocked the request (CORS). Check the URL in the browser or use an API that allows this origin.",
+      "hint": "The map turns the response into the document data. Text = source path, array = fixed value, from/select = table rows. Empty map = use the response as is."
     }
   }
 }

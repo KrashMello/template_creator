@@ -62,6 +62,15 @@ Drive the real UI with the **terminal-browser** skill: `terminal-browser open lo
 - Header/footer are laid out **full-bleed** (page width, no left/right margin) while the body keeps margins — their rows need `tc-pagepad` (~40 px side padding) or right-aligned text is clipped.
 - `page.pdf()` has no `orientation` option in puppeteer-core 25: pass `landscape: boolean` (unknown options are silently ignored). Derive measurement width from format + orientation (`pageWidthPx`).
 
+## Data sources
+
+Data tab → **Source** loads a REST endpoint or a Postgres query straight into `store.data` (the Handlebars context). Nothing else about the document changes.
+
+- `app/stores/data-source.ts` is the pure adapter: `adaptData(payload, map)` + `resolvePath`. The map is JSON: `string` = source path (`rows[0].customer_name`), array/primitive = literal, `{ from, select }` = rows matrix. Empty map = payload as-is. `pg` returns `Date`, normalized to `YYYY-MM-DD`.
+- REST is fetched by the browser (no proxy), so CORS is the API's responsibility. Headers/API keys live in `dataSecrets` and are never persisted; `loadTemplate()` replaces `data`, not `dataSource`.
+- `POST /api/data/sql` takes host/port/user/password/database from the client. Guards: private hosts rejected in production (`isPrivateAddress`), extended protocol (one statement per call), 8–12 s timeouts, 1000-row cap, 10 req/min + 3 concurrent per instance, and `DATA_SQL_ENABLED=1` required in production (off by default). Credentials are never logged or persisted.
+- `missingTemplatePaths()` warns about `{{paths}}` used by the templates that the adapted data does not provide (block sections are skipped). `pnpm check:data` covers the adapter.
+
 ## Gotchas
 
 - **The `@tailwindcss/browser@4` CDN belongs to `/demo` only** (`useHead` in `app/pages/demo.vue`) because the preview is `v-html`. Its default `dark:` variant is media-based, so the page registers the app's class-based `@custom-variant`; loading it globally would compile a second utilities sheet that overrides the app's `dark:` rules. Don't move it into `nuxt.config.ts`.

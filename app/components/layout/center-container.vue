@@ -55,7 +55,7 @@
         <h2 class="text-sm font-bold text-content">{{ t('editor.views.data') }}</h2>
         <div class="flex gap-1">
           <UButton
-            v-for="mode in ['form', 'json']"
+            v-for="mode in ['form', 'json', 'source']"
             :key="mode"
             size="xs"
             :color="dataMode === mode ? 'primary' : 'neutral'"
@@ -69,8 +69,11 @@
       <div v-if="dataMode === 'form'" class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
         <ui-data-form :obj="store.data" @change="onDataChange" />
       </div>
-      <div v-else class="min-h-0 flex-1">
+      <div v-else-if="dataMode === 'json'" class="min-h-0 flex-1">
         <ui-data-editor v-model="data" :title="''" />
+      </div>
+      <div v-else class="min-h-0 flex-1">
+        <ui-data-source />
       </div>
     </div>
   </div>

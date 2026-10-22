@@ -307,7 +307,8 @@
     "dataForm": {
       "mode": {
         "form": "Formulario",
-        "json": "JSON"
+        "json": "JSON",
+        "source": "Fuente"
       },
       "empty": "Sin datos. Añade un campo para empezar.",
       "fieldName": "Nombre del campo",
@@ -326,6 +327,35 @@
         "objeto": "Objeto",
         "tabla": "Tabla"
       }
+    },
+    "dataSource": {
+      "kinds": {
+        "rest": "REST",
+        "sql": "PostgreSQL"
+      },
+      "url": "https://api.ejemplo.com/pedidos",
+      "method": "Método",
+      "headers": "Cabeceras (una por línea: Nombre: valor)",
+      "path": "Ruta de la respuesta (vacío = respuesta completa)",
+      "host": "Host",
+      "port": "Puerto",
+      "database": "Base de datos",
+      "user": "Usuario",
+      "password": "Contraseña",
+      "ssl": "Exigir SSL",
+      "query": "Consulta SQL",
+      "load": "Cargar datos",
+      "payload": "Respuesta",
+      "loaded": "Datos aplicados",
+      "loadedRows": "{n} filas cargadas",
+      "truncated": "Solo se cargaron las primeras {n} filas",
+      "missingSource": "No existe la ruta de origen: {path}",
+      "missingTemplate": "La plantilla espera la ruta {path} y los datos no la traen",
+      "badMap": "El mapeo no es JSON válido",
+      "needUrl": "Escribe una URL",
+      "badPath": "No existe la ruta en la respuesta: {path}",
+      "cors": "La API bloqueó la petición (CORS). Prueba la URL en el navegador o usa una API que permita este origen.",
+      "hint": "El mapeo convierte la respuesta en los datos del documento. Texto = ruta de origen, array = valor fijo, from/select = filas de tabla. Mapeo vacío = usar la respuesta tal cual."
     }
   }
 }
