@@ -29,6 +29,7 @@
     "@nuxtjs/i18n": "^10.6.0",
     "@pinia/nuxt": "^1.0.3",
     "@sparticuz/chromium": "^153.0.0",
+    "@vercel/analytics": "^2.0.1",
     "handlebars": "^4.7.10",
     "node-html-parser": "^9.0.5",
     "pg": "^8.23.1",

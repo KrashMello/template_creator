@@ -54,7 +54,7 @@ export default defineNuxtConfig({
       tailwindcss()
     ]
   },
-  modules: ['@nuxt/ui', '@pinia/nuxt', 'pinia-plugin-persistedstate', '@nuxtjs/i18n'],
+  modules: ['@vercel/analytics', '@nuxt/ui', '@pinia/nuxt', 'pinia-plugin-persistedstate', '@nuxtjs/i18n'],
   i18n: {
     locales: [
       { code: 'es', language: 'es-ES', name: 'Español', file: 'es.json' },
