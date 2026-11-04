@@ -1,56 +1,57 @@
-import { defineEventHandler, readBody, createError, getRequestHeader } from 'h3'
-import { withPuppeteer } from '../utils/puppeteer'
-import type { Page, PDFOptions } from 'puppeteer-core'
+/**
+ * Sidecar de exportación a PDF (proceso Node empaquetado con la app).
+ *
+ * Es el antiguo `server/api/pdf.post.ts`, sin HTTP: recibe un JSON con el
+ * documento, escribe el PDF en la ruta indicada y sale. No hay rate limit ni
+ * guardas anti-SSRF porque ya no existe un endpoint público: lo lanza la propia
+ * app con el Chromium empaquetado.
+ *
+ * Uso:
+ *   node pdf-render.cjs <payload.json> <out.pdf> <dir-chromium> <tailwind.js>
+ */
+import { readFileSync, writeFileSync } from "node:fs";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
+import type { Page, PDFOptions } from "puppeteer-core";
 import { parse as parseHtml } from "node-html-parser";
 import { tws } from "tailwind-to-style";
-import { isAllowedUrl } from '../utils/allow-public-url'
+import { TAILWIND_URL } from "../app/stores/template";
 
-/**
- * Page geometry (CSS pixels at 96dpi).
- *
- * Header/footer templates are laid out by Chromium in a box that spans the
- * whole page width (it ignores the left/right margins), and we deliberately
- * add no padding of our own: the template is full-bleed, so a `w-full` row
- * reaches 100% of the page exactly like it does in the editor preview. The
- * body content keeps the configured page margins below it.
- */
 /** Paper sizes in inches: [width, height]. */
-type PageFormat = "letter" | "legal" | "oficio" | "a4"
-type PageOrientation = "portrait" | "landscape"
+type PageFormat = "letter" | "legal" | "oficio" | "a4";
+type PageOrientation = "portrait" | "landscape";
 const PAGE_SIZES_IN: Record<PageFormat, [number, number]> = {
   letter: [8.5, 11],
   legal: [8.5, 14],
   oficio: [216 / 25.4, 330 / 25.4], // 216 × 330 mm
   a4: [210 / 25.4, 297 / 25.4],
-}
-const PAGE_FORMATS = Object.keys(PAGE_SIZES_IN) as PageFormat[]
+};
+const PAGE_FORMATS = Object.keys(PAGE_SIZES_IN) as PageFormat[];
 /**
  * `paperFormats` de puppeteer solo conoce letter/legal/tabloid/ledger/a0-a6;
  * los tamaños de esta lista se pasan como `width`/`height` explícitos en mm.
- * (`landscape` sigue funcionando: puppeteer manda paperWidth/paperHeight y
- * `landscape` por separado, y Chromium rota el papel.)
  */
 const CUSTOM_PAGE_MM: Partial<Record<PageFormat, [number, number]>> = {
   oficio: [216, 330],
-}
+};
 
 function pageWidthPx(format: PageFormat, orientation: PageOrientation): number {
-  const [w, h] = PAGE_SIZES_IN[format] || PAGE_SIZES_IN.letter
-  const [fw] = orientation === "landscape" ? [h, w] : [w, h]
-  return fw * 96
+  const [w, h] = PAGE_SIZES_IN[format] || PAGE_SIZES_IN.letter;
+  const [fw] = orientation === "landscape" ? [h, w] : [w, h];
+  return fw * 96;
 }
 
-const MM_TO_PX = 96 / 25.4
+const MM_TO_PX = 96 / 25.4;
 /** Margen lateral por defecto (y respaldo de cualquier valor ausente/inválido). */
-const DEFAULT_MARGIN_MM = 10
-const MAX_MARGIN_MM = 100
+const DEFAULT_MARGIN_MM = 10;
+const MAX_MARGIN_MM = 100;
 /** Extra breathing room added below/above the measured header/footer height. */
-const HEADER_GAP_MM = 2
-const MIN_VERTICAL_MARGIN_MM = 8
+const HEADER_GAP_MM = 2;
+const MIN_VERTICAL_MARGIN_MM = 8;
 /** Safety cap so a huge header/footer cannot eat the whole page. */
-const MAX_VERTICAL_MARGIN_MM = 60
+const MAX_VERTICAL_MARGIN_MM = 60;
 /** Id of the wrapper `buildTemplate` adds, used to measure it back. */
-const TEMPLATE_ROOT_ID = "header-footer-template"
+const TEMPLATE_ROOT_ID = "header-footer-template";
 
 /**
  * Chromium renders header/footer templates with a ~1px root font size, which
@@ -82,7 +83,7 @@ const TEMPLATE_BASE_CSS =
   `html,body{margin:0;font-size:16px;line-height:1.5}` +
   `*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}` +
   `body>*:not(#${TEMPLATE_ROOT_ID}){margin:0;padding:0;border:0}` +
-  `#${TEMPLATE_ROOT_ID}{display:flow-root}`
+  `#${TEMPLATE_ROOT_ID}{display:flow-root}`;
 
 function tailwindToInlineStyle(cls: string): string {
   return tws(cls).replace(/;/g, "; "); // normaliza formato
@@ -95,8 +96,7 @@ function tailwindToInlineStyle(cls: string): string {
  * inline would win over `.titulo-informe { font-size: 22px }` from `cssCode`).
  * Emitting rules instead keeps `class` attributes untouched and, because the
  * rules are injected *before* the user's CSS with the same specificity, the
- * user's stylesheet overrides them exactly like it does in the body — where
- * Tailwind comes from the runtime CDN.
+ * user's stylesheet overrides them exactly like it does in the body.
  */
 function transformHtmlTailwindToStyle(html: string, prefix: string): { html: string, css: string } {
   const root = parseHtml(html);
@@ -149,7 +149,7 @@ async function measureTemplateHeight(page: Page, template: string, widthPx: numb
     // page; images are awaited explicitly inside the evaluate below instead.
     await page.setContent(
       `<!doctype html><html><head></head><body style="margin:0;width:${widthPx}px">${template}</body></html>`,
-      { waitUntil: "load" }
+      { waitUntil: "load" },
     );
 
     return await page.evaluate(async (rootId: string) => {
@@ -222,6 +222,15 @@ function injectZoneInFlow(
   return doc.replace(/<\/body>/i, `${block}</body>`);
 }
 
+/**
+ * El documento pide Tailwind en runtime con una etiqueta que apunta a
+ * `/vendor/tailwind.js` (el preview la carga del propio webview). Aquí no hay
+ * origen que sirva esa ruta, así que el script se inlinea.
+ */
+function inlineTailwind(html: string, tailwindJs: string): string {
+  return html.split(`<script src="${TAILWIND_URL}"></script>`).join(`<script>${tailwindJs}</script>`);
+}
+
 /** Ajustes de página enviados desde el store (`store.page`). */
 type PageSettings = {
   format?: string
@@ -232,188 +241,134 @@ type PageSettings = {
   footerRepeat?: boolean
 }
 
+type Payload = {
+  html?: string
+  header?: string
+  footer?: string
+  css?: string
+  page?: PageSettings
+}
+
+/** Tope por operación: una plantilla lenta no puede colgar la app. */
+const RENDER_TIMEOUT_MS = 20_000;
+
 /**
- * El endpoint es público (no hay cuentas), así que se acota el daño que puede
- * hacer una sola instancia: tamaño del payload, peticiones por IP y renders
- * simultáneos.
- * `shortcut: los contadores viven en memoria, o sea por instancia; si el abuso
- * importa, poner rate limit delante (Vercel Firewall) o auth real.`
+ * Args de `@sparticuz/chromium` que aquí no queremos: el HTML del documento lo
+ * controla el usuario, pero no hay razón para renderizar con la seguridad web
+ * desactivada.
  */
-const MAX_HTML_CHARS = 1_000_000
-const MAX_ZONE_CHARS = 200_000
-const MAX_CSS_CHARS = 200_000
-const RATE_WINDOW_MS = 60_000
-const RATE_MAX_REQUESTS = 20
-const MAX_CONCURRENT_RENDERS = 3
+const UNSAFE_ARGS = new Set([
+  "--disable-web-security",
+  "--allow-running-insecure-content",
+]);
 
-const rateHits = new Map<string, { count: number, reset: number }>()
-let activeRenders = 0
+async function render(page: Page, body: Payload, tailwindJs: string): Promise<Buffer> {
+  if (typeof body?.html !== "string" || !body.html) throw new Error("Payload sin html");
 
-/** Ventana fija por IP en memoria. La limpieza va en el mismo paso para no crecer. */
-function isRateLimited(ip: string): boolean {
-  const now = Date.now()
-  for (const [key, hit] of rateHits) {
-    if (hit.reset <= now) rateHits.delete(key)
-  }
-  const hit = rateHits.get(ip) ?? { count: 0, reset: now + RATE_WINDOW_MS }
-  hit.count++
-  rateHits.set(ip, hit)
-  return hit.count > RATE_MAX_REQUESTS
-}
+  const headerMarkup = typeof body.header === "string" ? body.header : "";
+  const footerMarkup = typeof body.footer === "string" ? body.footer : "";
+  const css = typeof body.css === "string" ? body.css : "";
 
-/** Corta toda petición de la página que salga de la red pública. */
-async function blockPrivateRequests(page: Page): Promise<void> {
-  const cache = new Map<string, boolean>()
-  await page.setRequestInterception(true)
-  page.on('request', (request) => {
-    const url = request.url()
-    const decide = async () => {
-      let allowed = cache.get(url)
-      if (allowed === undefined) {
-        allowed = await isAllowedUrl(url)
-        cache.set(url, allowed)
-      }
-      if (!allowed) console.warn('pdf: petición bloqueada', url)
-      try {
-        await (allowed ? request.continue() : request.abort('blockedbyclient'))
-      } catch {
-        // La petición ya se resolvió o la página se cerró: no hay nada que hacer.
-      }
-    }
-    void decide()
-  })
-}
-
-export default defineEventHandler(async (event) => {
-  const body = await readBody<{
-    html?: string
-    header?: string
-    footer?: string
-    css?: string
-    page?: PageSettings
-  }>(event)
-  if (typeof body?.html !== 'string' || !body.html) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Missing html payload',
-    })
-  }
-
-  // El último salto lo escribe el proxy; el primero lo puede inventar el cliente.
-  const ip = getRequestHeader(event, 'x-forwarded-for')?.split(',').pop()?.trim() || 'unknown'
-  if (isRateLimited(ip)) {
-    throw createError({ statusCode: 429, statusMessage: 'Too many PDF requests, retry in a minute' })
-  }
-  // Un navegador desde otro sitio no tiene por qué usar la exportación.
-  if (getRequestHeader(event, 'sec-fetch-site') === 'cross-site') {
-    throw createError({ statusCode: 403, statusMessage: 'Cross-site requests are not allowed' })
-  }
-
-  const headerMarkup = typeof body.header === 'string' ? body.header : ''
-  const footerMarkup = typeof body.footer === 'string' ? body.footer : ''
-  const css = typeof body.css === 'string' ? body.css : ''
-  if (
-    body.html.length > MAX_HTML_CHARS ||
-    headerMarkup.length > MAX_ZONE_CHARS ||
-    footerMarkup.length > MAX_ZONE_CHARS ||
-    css.length > MAX_CSS_CHARS
-  ) {
-    throw createError({ statusCode: 413, statusMessage: 'Document too large' })
-  }
-  if (activeRenders >= MAX_CONCURRENT_RENDERS) {
-    throw createError({ statusCode: 503, statusMessage: 'PDF renderer busy, retry shortly' })
-  }
-
-  const rawFormat = body.page?.format
+  const rawFormat = body.page?.format;
   const format: PageFormat =
-    rawFormat && (PAGE_FORMATS as string[]).includes(rawFormat) ? (rawFormat as PageFormat) : 'letter'
+    rawFormat && (PAGE_FORMATS as string[]).includes(rawFormat) ? (rawFormat as PageFormat) : "letter";
   const orientation: PageOrientation =
-    body.page?.orientation === 'landscape' ? 'landscape' : 'portrait'
+    body.page?.orientation === "landscape" ? "landscape" : "portrait";
   const margins = {
     top: marginMm(body.page?.margins?.top),
     right: marginMm(body.page?.margins?.right),
     bottom: marginMm(body.page?.margins?.bottom),
     left: marginMm(body.page?.margins?.left),
-  }
+  };
 
   // Zona repetida → plantilla en el margen (se mide para dimensionarlo).
   // Zona no repetida → se inyecta en el flujo del cuerpo y su margen es el
   // configurado (sin medir: la medida solo sirve para la plantilla).
-  const useHeaderTemplate = body.page?.headerRepeat !== false && !!headerMarkup
-  const useFooterTemplate = body.page?.footerRepeat !== false && !!footerMarkup
+  const useHeaderTemplate = body.page?.headerRepeat !== false && !!headerMarkup;
+  const useFooterTemplate = body.page?.footerRepeat !== false && !!footerMarkup;
 
-  const headerTemplate = useHeaderTemplate ? buildTemplate(headerMarkup, css, 'hd') : ''
-  const footerTemplate = useFooterTemplate ? buildTemplate(footerMarkup, css, 'ft') : ''
+  const headerTemplate = useHeaderTemplate ? buildTemplate(headerMarkup, css, "hd") : "";
+  const footerTemplate = useFooterTemplate ? buildTemplate(footerMarkup, css, "ft") : "";
 
-  let html = body.html
+  let html = body.html;
   if (!useHeaderTemplate && headerMarkup) {
-    html = injectZoneInFlow(html, headerMarkup, 'start', margins)
+    html = injectZoneInFlow(html, headerMarkup, "start", margins);
   }
   if (!useFooterTemplate && footerMarkup) {
-    html = injectZoneInFlow(html, footerMarkup, 'end', margins)
+    html = injectZoneInFlow(html, footerMarkup, "end", margins);
+  }
+  html = inlineTailwind(html, tailwindJs);
+
+  // Measure first: this navigates the page, so it has to happen before the
+  // document HTML is loaded.
+  const widthPx = pageWidthPx(format, orientation);
+  const headerHeightPx = headerTemplate ? await measureTemplateHeight(page, headerTemplate, widthPx) : 0;
+  const footerHeightPx = footerTemplate ? await measureTemplateHeight(page, footerTemplate, widthPx) : 0;
+
+  const pdfOptions: PDFOptions = {
+    // `puppeteer-core` 25 solo acepta `landscape` (no existe `orientation`).
+    landscape: orientation === "landscape",
+    printBackground: true,
+    margin: {
+      top: verticalMarginFor(headerHeightPx, margins.top),
+      right: `${margins.right}mm`,
+      bottom: verticalMarginFor(footerHeightPx, margins.bottom),
+      left: `${margins.left}mm`,
+    },
+  };
+
+  const customSize = CUSTOM_PAGE_MM[format];
+  if (customSize) {
+    pdfOptions.width = `${customSize[0]}mm`;
+    pdfOptions.height = `${customSize[1]}mm`;
+  } else {
+    pdfOptions.format = format;
   }
 
-  activeRenders++
-  const pdfBuffer = await withPuppeteer(async (page) => {
-    // Antes de cualquier `setContent`: la página no puede pedir red privada.
-    await blockPrivateRequests(page)
+  if (headerTemplate || footerTemplate) {
+    pdfOptions.displayHeaderFooter = true;
+    // Explicit empty templates prevent Chromium from printing its own defaults
+    // (date, title, url and page numbers) on the missing side.
+    pdfOptions.headerTemplate = headerTemplate || "<span></span>";
+    pdfOptions.footerTemplate = footerTemplate || "<span></span>";
+  }
 
-    // Measure first: this navigates the page, so it has to happen before the
-    // document HTML is loaded.
-    const widthPx = pageWidthPx(format, orientation)
-    const headerHeightPx = headerTemplate ? await measureTemplateHeight(page, headerTemplate, widthPx) : 0
-    const footerHeightPx = footerTemplate ? await measureTemplateHeight(page, footerTemplate, widthPx) : 0
+  // Tailwind es un script inline, pero las imágenes del documento siguen
+  // siendo red: hay que esperar a que carguen antes de imprimir.
+  await page.setContent(html, { waitUntil: "load" });
+  await page.waitForNetworkIdle({ idleTime: 500, timeout: 15_000 });
 
-    const pdfOptions: PDFOptions = {
-      // `puppeteer-core` 25 solo acepta `landscape` (no existe `orientation`).
-      landscape: orientation === 'landscape',
-      printBackground: true,
-      margin: {
-        top: verticalMarginFor(headerHeightPx, margins.top),
-        right: `${margins.right}mm`,
-        bottom: verticalMarginFor(footerHeightPx, margins.bottom),
-        left: `${margins.left}mm`,
-      },
-    }
+  return page.pdf(pdfOptions);
+}
 
-    const customSize = CUSTOM_PAGE_MM[format]
-    if (customSize) {
-      pdfOptions.width = `${customSize[0]}mm`
-      pdfOptions.height = `${customSize[1]}mm`
-    } else {
-      pdfOptions.format = format
-    }
+async function main() {
+  const [payloadPath, outPath, chromiumDir, tailwindPath] = process.argv.slice(2);
+  if (!payloadPath || !outPath || !chromiumDir || !tailwindPath) {
+    throw new Error("Uso: pdf-render <payload.json> <out.pdf> <dir-chromium> <tailwind.js>");
+  }
 
-    if (headerTemplate || footerTemplate) {
-      pdfOptions.displayHeaderFooter = true
-      // Explicit empty templates prevent Chromium from printing its own
-      // defaults (date, title, url and page numbers) on the missing side.
-      pdfOptions.headerTemplate = headerTemplate || '<span></span>'
-      pdfOptions.footerTemplate = footerTemplate || '<span></span>'
-    }
+  const payload = JSON.parse(readFileSync(payloadPath, "utf8")) as Payload;
+  const tailwindJs = readFileSync(tailwindPath, "utf8");
 
-    // `networkidle0` is no longer part of `setContent`'s public options, and
-    // Tailwind is compiled at runtime by the CDN script, so the print has to
-    // wait for the network to settle instead of racing the stylesheet.
-    await page.setContent(html, {
-      waitUntil: 'load',
-    })
-    await page.waitForNetworkIdle({ idleTime: 500, timeout: 15_000 })
-    const buffer = await page.pdf(pdfOptions)
+  const browser = await puppeteer.launch({
+    executablePath: await chromium.executablePath(chromiumDir),
+    headless: true,
+    // `--no-sandbox` se queda: es obligatorio en este entorno.
+    args: chromium.args.filter((arg) => !UNSAFE_ARGS.has(arg)),
+  });
 
-    return buffer
-  }).finally(() => {
-    activeRenders--
-  })
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1280, height: 720 });
+    page.setDefaultTimeout(RENDER_TIMEOUT_MS);
+    page.setDefaultNavigationTimeout(RENDER_TIMEOUT_MS);
+    writeFileSync(outPath, await render(page, payload, tailwindJs));
+  } finally {
+    await browser.close();
+  }
+}
 
-  event.node.res.setHeader(
-    'Content-Type',
-    'application/pdf'
-  )
-  event.node.res.setHeader(
-    'Content-Disposition',
-    'inline; filename="document.pdf"'
-  )
-
-  return pdfBuffer
-})
+main().catch((error) => {
+  console.error(String(error?.stack || error?.message || error));
+  process.exit(1);
+});

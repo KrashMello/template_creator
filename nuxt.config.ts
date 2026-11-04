@@ -6,31 +6,15 @@ const baseUrl =
 
 export default defineNuxtConfig({
   devtools: { enabled: process.env.NODE_ENV !== 'production' },
-  ssr: true,
+  // App de escritorio (Tauri): no hay servidor Nitro ni SSR. El build es un
+  // SPA estático en `.output/public` que el webview carga desde disco.
+  ssr: false,
   css: ['~/assets/css/main.css'],
   compatibilityDate: '2026-10-12',
   runtimeConfig: {
     public: {
-      apiBase: process.env.API_BASE_URL || '/api', // Para entornos separados
       baseUrl
     }
-  },
-  nitro: {
-    preset: 'vercel', // Auto-detect en Vercel
-  },
-  // Cabeceras para toda la app. La CSP solo declara `frame-ancestors`: una
-  // política completa no es viable con el preview (`v-html` + Tailwind en
-  // runtime + estilos inline), pero esto ya evita el clickjacking.
-  routeRules: {
-    '/**': {
-      headers: {
-        'x-content-type-options': 'nosniff',
-        'x-frame-options': 'SAMEORIGIN',
-        'referrer-policy': 'strict-origin-when-cross-origin',
-        'permissions-policy': 'camera=(), microphone=(), geolocation=()',
-        'content-security-policy': "frame-ancestors 'self'",
-      },
-    },
   },
   app: {
     head: {
@@ -52,7 +36,10 @@ export default defineNuxtConfig({
   vite: {
     plugins: [
       tailwindcss()
-    ]
+    ],
+    optimizeDeps: {
+      include: ['@tauri-apps/api/core'],
+    },
   },
   modules: ['@nuxt/ui', '@pinia/nuxt', 'pinia-plugin-persistedstate', '@nuxtjs/i18n'],
   i18n: {

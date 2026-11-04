@@ -1,17 +1,5 @@
 <template>
   <div class="flex min-h-14 w-full flex-wrap items-center gap-1.5 border-b border-content/10 bg-surface px-2.5">
-    <UButton
-      to="/"
-      icon="i-lucide-house"
-      color="neutral"
-      variant="ghost"
-      square
-      size="sm"
-      :title="t('editor.backToSite')"
-    />
-
-    <span class="mx-1 hidden h-5 w-px bg-content/15 sm:block" />
-
     <!-- View tabs -->
     <div class="flex items-center gap-1">
       <UButton

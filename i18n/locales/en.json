@@ -1,159 +1,8 @@
 {
-  "meta": {
-    "title": "Template Creator — Build PDF templates with drag & drop",
-    "description": "Visual PDF template builder with drag & drop, dynamic data and one-click export."
-  },
   "common": {
-    "demoCta": "Try the demo",
     "theme": "Change theme"
   },
-  "nav": {
-    "features": "Features",
-    "screenshots": "Screenshots",
-    "pricing": "Pricing",
-    "faq": "FAQ"
-  },
-  "hero": {
-    "title": "Build PDF templates by dragging and dropping",
-    "subtitle": "Template Creator is the visual editor for designing professional documents with headers, footers, tables and dynamic data — then exporting them as pixel-faithful PDFs without writing a single line of code.",
-    "ctaSecondary": "See pricing",
-    "note": "No sign-up · Free to start"
-  },
-  "features": {
-    "title": "Everything you need to produce documents",
-    "subtitle": "From the first drag to the final PDF, all in one place.",
-    "items": [
-      {
-        "title": "Visual drag & drop",
-        "desc": "Compose your document with paragraphs, tables, images, checkboxes and containers, and reorder them with a single drag."
-      },
-      {
-        "title": "Header, body and footer",
-        "desc": "Three independent zones: page header and footer that repeat automatically on every page of the PDF."
-      },
-      {
-        "title": "Dynamic data with Handlebars",
-        "desc": "Connect your JSON and use variables like {'{{'}client.name{'}'}{'}'} with autocomplete inside the editor."
-      },
-      {
-        "title": "Styling with Tailwind and CSS",
-        "desc": "Apply Tailwind classes from the properties panel or write your own CSS live."
-      },
-      {
-        "title": "Faithful PDF export",
-        "desc": "Chrome headless prints your design with background colors and letter size, ready to share or print."
-      },
-      {
-        "title": "Undo, redo and instant editing",
-        "desc": "50-step history, per-component properties panel and keyboard shortcuts."
-      }
-    ]
-  },
-  "screenshots": {
-    "title": "A look inside the editor",
-    "subtitle": "Design on the canvas, inspect the JSON schema, tune your styles and edit the sample data — all in the same tab.",
-    "tabs": {
-      "preview": "Preview",
-      "schema": "Schema",
-      "styles": "Styles",
-      "data": "Data"
-    },
-    "alt": {
-      "preview": "Template Creator editor showing the document preview",
-      "schema": "Template Creator editor showing the JSON schema",
-      "styles": "Template Creator editor with the CSS style editor",
-      "data": "Template Creator editor with the JSON data editor"
-    }
-  },
-  "pricing": {
-    "title": "Simple, transparent pricing",
-    "subtitle": "Start free and scale when you need to. No lock-in.",
-    "popular": "Most popular",
-    "monthly": "/mo",
-    "note": "Prices in USD. Cancel anytime.",
-    "plans": [
-      {
-        "name": "Free",
-        "price": "$0",
-        "desc": "For trying things out and personal projects.",
-        "features": [
-          "Full drag & drop editor",
-          "PDF export",
-          "JSON schema and sample data",
-          "1 saved template"
-        ],
-        "cta": "Start for free"
-      },
-      {
-        "name": "Pro",
-        "price": "$9",
-        "desc": "For professionals producing documents every day.",
-        "features": [
-          "Everything in Free",
-          "Unlimited templates",
-          "Page headers and footers",
-          "Custom CSS",
-          "Priority support"
-        ],
-        "cta": "Try the demo"
-      },
-      {
-        "name": "Team",
-        "price": "$29",
-        "desc": "For teams sharing templates.",
-        "features": [
-          "Everything in Pro",
-          "5 seats included",
-          "Shared library",
-          "Export API",
-          "Dedicated support"
-        ],
-        "cta": "Talk to sales"
-      }
-    ]
-  },
-  "faq": {
-    "title": "Frequently asked questions",
-    "subtitle": "What people usually ask before getting started.",
-    "items": [
-      {
-        "q": "What is Template Creator?",
-        "a": "A visual PDF template builder: drag components in, connect your data, and export the final document as a PDF."
-      },
-      {
-        "q": "Do I need to know how to code?",
-        "a": "No. You can design the whole document from the editor. If you want to go further, you can use Tailwind classes, custom CSS and Handlebars templates."
-      },
-      {
-        "q": "How does data reach the template?",
-        "a": "Through a JSON payload injected with Handlebars on preview and export. Everything runs in your browser and on your server."
-      },
-      {
-        "q": "What size and format is the PDF?",
-        "a": "It is generated with Chrome headless in letter size with background colors enabled, ideal for printing and emailing."
-      },
-      {
-        "q": "Can I try it without signing up?",
-        "a": "Yes. The demo is open at /demo, no account and no time limit."
-      },
-      {
-        "q": "Can I customize the styles?",
-        "a": "Yes: apply Tailwind classes from the properties panel, and write your own rules live in the CSS tab."
-      }
-    ]
-  },
-  "cta": {
-    "title": "Ready to create your first template?",
-    "subtitle": "Open the editor and have a professional PDF in minutes."
-  },
-  "footer": {
-    "tagline": "Visual PDF template builder with dynamic data.",
-    "product": "Product",
-    "demo": "Demo",
-    "credits": "Template Creator · Powered by {link}"
-  },
   "editor": {
-    "backToSite": "Home",
     "pageTitle": "Editor demo — Template Creator",
     "emptyHint": "Drag a component and drop it onto the canvas",
     "leftBar": {
@@ -179,47 +28,84 @@
         "invoice": {
           "title": "Invoice",
           "desc": "Header with logo, line-items table, totals and client data.",
-          "features": ["Header & footer", "Table", "Handlebars", "CSS"]
+          "features": [
+            "Header & footer",
+            "Table",
+            "Handlebars",
+            "CSS"
+          ]
         },
         "report": {
           "title": "Report",
           "desc": "KPIs in rows and columns, two tables and custom CSS rules.",
-          "features": ["Rows & columns", "Tables", "CSS"]
+          "features": [
+            "Rows & columns",
+            "Tables",
+            "CSS"
+          ]
         },
         "certificate": {
           "title": "Certificate",
           "desc": "Centered design with a seal, verification checkbox and double border.",
-          "features": ["Three zones", "Image", "Checkbox"]
+          "features": [
+            "Three zones",
+            "Image",
+            "Checkbox"
+          ]
         },
         "contract": {
           "title": "Contract",
           "desc": "Two-page contract with a preamble, eight numbered clauses and both parties' signatures.",
-          "features": ["Three zones", "Signatures", "Handlebars"]
+          "features": [
+            "Three zones",
+            "Signatures",
+            "Handlebars"
+          ]
         },
         "nda": {
           "title": "NDA",
           "desc": "Two-page non-disclosure agreement with eight clauses and both parties' signatures.",
-          "features": ["Clauses", "Signatures", "Three zones"]
+          "features": [
+            "Clauses",
+            "Signatures",
+            "Three zones"
+          ]
         },
         "rental": {
           "title": "Lease",
           "desc": "Two-page lease with rent, deposit, renewal and both parties' signatures.",
-          "features": ["Three zones", "Signatures", "Handlebars"]
+          "features": [
+            "Three zones",
+            "Signatures",
+            "Handlebars"
+          ]
         },
         "receipt": {
           "title": "Receipt",
           "desc": "Short list with items, totals, a checkbox and a fiscal footer.",
-          "features": ["Table", "Checkbox", "Data"]
+          "features": [
+            "Table",
+            "Checkbox",
+            "Data"
+          ]
         },
         "shipping-label": {
           "title": "Shipping label",
           "desc": "Compact format with a dynamic address and a real Code 39 barcode.",
-          "features": ["Checkboxes", "Barcode", "Handlebars"]
+          "features": [
+            "Checkboxes",
+            "Barcode",
+            "Handlebars"
+          ]
         },
         "showcase": {
           "title": "Full demo",
           "desc": "All eight palette components across the three canvas zones.",
-          "features": ["Whole system", "Three zones", "Handlebars"]
+          "features": [
+            "Whole system",
+            "Three zones",
+            "Handlebars"
+          ]
         }
       },
       "confirm": {

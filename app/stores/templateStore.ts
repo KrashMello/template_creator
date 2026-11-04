@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, nextTick } from "vue";
+import { invoke } from "@tauri-apps/api/core";
 import handlebars from "handlebars";
 import { applyBorderStyles, applyRowChildFlex, clearBorderStyles, findDataById, findIndexElement, findPathById, generateLayoutHeaderFooterHtml, generateLayoutHtml, getDropTarget, getElementByPath, getInsertType, insertElementAtPath, insertNodeRelativeTo, removeElementAtPath, replace, sleep } from "./template";
 import { readEachPath } from "./tag-class";
@@ -188,14 +189,16 @@ export const templateStore = defineStore("template", {
         2,
       ).trim();
     },
-    async generateDocument() {
+    /**
+     * Genera el PDF con el sidecar y lo guarda con el diálogo nativo.
+     * Devuelve la ruta guardada, o `null` si el usuario cancela.
+     */
+    async generateDocument(): Promise<string | null> {
       const html = generateLayoutHtml({ schema: this.schema as ElementDataSet, cssCode: this.cssCode, pdf: true })
       const header = generateLayoutHeaderFooterHtml({ schema: this.header as ElementDataSet, cssCode: this.cssCode, pdf: true })
       const footer = generateLayoutHeaderFooterHtml({ schema: this.footer as ElementDataSet, cssCode: this.cssCode, pdf: true })
-      const res = await fetch("/api/pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      return invoke<string | null>("export_pdf", {
+        payload: {
           html: handlebars.compile(html)(this.data),
           header: handlebars.compile(header)(this.data),
           footer: handlebars.compile(footer)(this.data),
@@ -207,11 +210,8 @@ export const templateStore = defineStore("template", {
             headerRepeat: this.page.headerRepeat,
             footerRepeat: this.page.footerRepeat,
           },
-        }),
+        },
       });
-      const url = URL.createObjectURL(await res.blob());
-      window.open(url, "_blank");
-      URL.revokeObjectURL(url);
     },
 
     deleteElementById(id: string, type: "body" | "footer" | "header" = "body") {

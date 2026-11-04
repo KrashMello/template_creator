@@ -1,0 +1,44 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Template Creator",
+  "version": "1.0.0",
+  "identifier": "com.templatecreator.app",
+  "build": {
+    "frontendDist": "../.output/public",
+    "devUrl": "http://localhost:3000",
+    "beforeDevCommand": "pnpm desktop:prepare && pnpm dev",
+    "beforeBuildCommand": "pnpm desktop:prepare && pnpm generate"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Template Creator",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 700,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb", "appimage"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "externalBin": ["binaries/pdf-render"],
+    "resources": [
+      "resources/pdf-render.cjs",
+      "resources/tailwind.js",
+      "resources/chromium"
+    ]
+  }
+}

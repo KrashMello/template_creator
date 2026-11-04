@@ -1,19 +1,55 @@
 <template>
-  <landing-hero />
-  <landing-features />
-  <landing-screenshots />
-  <!-- pricing hidden temporarily
-  <landing-pricing />
-  -->
-  <landing-faq />
-  <landing-cta />
+  <layout-left-bar />
+  <layout-center-container />
+  <layout-right-bar />
 </template>
 
-<script setup lang="ts">
-const { t } = useI18n()
+<script setup>
+import { onMounted, watch } from 'vue'
+import { templateStore } from '../stores/templateStore'
+import { TAILWIND_URL } from '../stores/template'
+
+definePageMeta({
+  layout: 'editor'
+})
+
+const store = templateStore()
+const { t, locale } = useI18n()
+const renderPreview = store.renderPreview
+const updateSchemaDisplay = store.updateSchemaDisplay
 
 useHead(() => ({
-  title: t('meta.title'),
-  meta: [{ name: 'description', content: t('meta.description') }]
+  title: t('editor.pageTitle'),
+  // The preview markup is injected with v-html, so it needs the runtime
+  // Tailwind build (vendored in public/vendor, no CDN). The config style gives
+  // it our class-based dark variant instead of the default media-based one.
+  script: [{
+    src: TAILWIND_URL,
+    tagPosition: 'bodyClose',
+  }],
+  style: [{ type: 'text/tailwindcss', children: '@custom-variant dark (&:where(.dark, .dark *));' }]
 }))
+
+// Localized "empty canvas" hint (rendered inside the preview HTML)
+store.emptyHint = t('editor.emptyHint')
+watch(locale, () => {
+  store.emptyHint = t('editor.emptyHint')
+  store.renderPreview()
+})
+
+onMounted(() => {
+  renderPreview()
+  updateSchemaDisplay()
+
+  document.addEventListener('dragover', (e) => {
+    if (e.target.closest('#dropzone')) {
+      e.preventDefault()
+    }
+  })
+
+  document.addEventListener('keydown', (e) => {
+    if (store.selectedElement && e.key === "Escape")
+      store.clearSelectedElemen()
+  })
+})
 </script>

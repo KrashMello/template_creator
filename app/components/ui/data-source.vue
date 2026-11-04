@@ -99,6 +99,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "#imports";
 import { adaptData, missingTemplatePaths, resolvePath } from "../../stores/data-source";
 import { templateStore } from "../../stores/templateStore";
@@ -147,9 +148,8 @@ async function readRest() {
 
 async function readSql() {
   const sql = store.dataSource.sql;
-  const result = await $fetch<{ rows: unknown[]; truncated: boolean; limit: number }>("/api/data/sql", {
-    method: "POST",
-    body: { ...sql, port: Number(sql.port), password: store.dataSecrets.sqlPassword, params: [] },
+  const result = await invoke<{ rows: unknown[]; truncated: boolean; limit: number }>("run_sql", {
+    request: { ...sql, port: Number(sql.port), password: store.dataSecrets.sqlPassword },
   });
   truncated.value = !!result.truncated;
   limit.value = result.limit ?? 1000;
