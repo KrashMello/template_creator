@@ -1,8 +1,9 @@
-import { defineEventHandler, readBody, createError } from 'h3'
+import { defineEventHandler, readBody, createError, getRequestHeader } from 'h3'
 import { withPuppeteer } from '../utils/puppeteer'
 import type { Page, PDFOptions } from 'puppeteer-core'
 import { parse as parseHtml } from "node-html-parser";
 import { tws } from "tailwind-to-style";
+import { isAllowedUrl } from '../utils/allow-public-url'
 
 /**
  * Page geometry (CSS pixels at 96dpi).
@@ -231,6 +232,58 @@ type PageSettings = {
   footerRepeat?: boolean
 }
 
+/**
+ * El endpoint es público (no hay cuentas), así que se acota el daño que puede
+ * hacer una sola instancia: tamaño del payload, peticiones por IP y renders
+ * simultáneos.
+ * `shortcut: los contadores viven en memoria, o sea por instancia; si el abuso
+ * importa, poner rate limit delante (Vercel Firewall) o auth real.`
+ */
+const MAX_HTML_CHARS = 1_000_000
+const MAX_ZONE_CHARS = 200_000
+const MAX_CSS_CHARS = 200_000
+const RATE_WINDOW_MS = 60_000
+const RATE_MAX_REQUESTS = 20
+const MAX_CONCURRENT_RENDERS = 3
+
+const rateHits = new Map<string, { count: number, reset: number }>()
+let activeRenders = 0
+
+/** Ventana fija por IP en memoria. La limpieza va en el mismo paso para no crecer. */
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  for (const [key, hit] of rateHits) {
+    if (hit.reset <= now) rateHits.delete(key)
+  }
+  const hit = rateHits.get(ip) ?? { count: 0, reset: now + RATE_WINDOW_MS }
+  hit.count++
+  rateHits.set(ip, hit)
+  return hit.count > RATE_MAX_REQUESTS
+}
+
+/** Corta toda petición de la página que salga de la red pública. */
+async function blockPrivateRequests(page: Page): Promise<void> {
+  const cache = new Map<string, boolean>()
+  await page.setRequestInterception(true)
+  page.on('request', (request) => {
+    const url = request.url()
+    const decide = async () => {
+      let allowed = cache.get(url)
+      if (allowed === undefined) {
+        allowed = await isAllowedUrl(url)
+        cache.set(url, allowed)
+      }
+      if (!allowed) console.warn('pdf: petición bloqueada', url)
+      try {
+        await (allowed ? request.continue() : request.abort('blockedbyclient'))
+      } catch {
+        // La petición ya se resolvió o la página se cerró: no hay nada que hacer.
+      }
+    }
+    void decide()
+  })
+}
+
 export default defineEventHandler(async (event) => {
   const body = await readBody<{
     html?: string
@@ -239,14 +292,38 @@ export default defineEventHandler(async (event) => {
     css?: string
     page?: PageSettings
   }>(event)
-  if (!body?.html) {
+  if (typeof body?.html !== 'string' || !body.html) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Missing html payload',
     })
   }
 
-  const css = body.css || ''
+  // El último salto lo escribe el proxy; el primero lo puede inventar el cliente.
+  const ip = getRequestHeader(event, 'x-forwarded-for')?.split(',').pop()?.trim() || 'unknown'
+  if (isRateLimited(ip)) {
+    throw createError({ statusCode: 429, statusMessage: 'Too many PDF requests, retry in a minute' })
+  }
+  // Un navegador desde otro sitio no tiene por qué usar la exportación.
+  if (getRequestHeader(event, 'sec-fetch-site') === 'cross-site') {
+    throw createError({ statusCode: 403, statusMessage: 'Cross-site requests are not allowed' })
+  }
+
+  const headerMarkup = typeof body.header === 'string' ? body.header : ''
+  const footerMarkup = typeof body.footer === 'string' ? body.footer : ''
+  const css = typeof body.css === 'string' ? body.css : ''
+  if (
+    body.html.length > MAX_HTML_CHARS ||
+    headerMarkup.length > MAX_ZONE_CHARS ||
+    footerMarkup.length > MAX_ZONE_CHARS ||
+    css.length > MAX_CSS_CHARS
+  ) {
+    throw createError({ statusCode: 413, statusMessage: 'Document too large' })
+  }
+  if (activeRenders >= MAX_CONCURRENT_RENDERS) {
+    throw createError({ statusCode: 503, statusMessage: 'PDF renderer busy, retry shortly' })
+  }
+
   const rawFormat = body.page?.format
   const format: PageFormat =
     rawFormat && (PAGE_FORMATS as string[]).includes(rawFormat) ? (rawFormat as PageFormat) : 'letter'
@@ -259,8 +336,6 @@ export default defineEventHandler(async (event) => {
     left: marginMm(body.page?.margins?.left),
   }
 
-  const headerMarkup = body.header || ''
-  const footerMarkup = body.footer || ''
   // Zona repetida → plantilla en el margen (se mide para dimensionarlo).
   // Zona no repetida → se inyecta en el flujo del cuerpo y su margen es el
   // configurado (sin medir: la medida solo sirve para la plantilla).
@@ -278,7 +353,11 @@ export default defineEventHandler(async (event) => {
     html = injectZoneInFlow(html, footerMarkup, 'end', margins)
   }
 
+  activeRenders++
   const pdfBuffer = await withPuppeteer(async (page) => {
+    // Antes de cualquier `setContent`: la página no puede pedir red privada.
+    await blockPrivateRequests(page)
+
     // Measure first: this navigates the page, so it has to happen before the
     // document HTML is loaded.
     const widthPx = pageWidthPx(format, orientation)
@@ -323,6 +402,8 @@ export default defineEventHandler(async (event) => {
     const buffer = await page.pdf(pdfOptions)
 
     return buffer
+  }).finally(() => {
+    activeRenders--
   })
 
   event.node.res.setHeader(

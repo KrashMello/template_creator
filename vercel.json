@@ -1,8 +1,0 @@
-{
-  "routes": [
-    {
-      "src": "/api/pdf",
-      "dest": "/api/pdf.post.ts"
-    }
-  ]
-}
